@@ -56,13 +56,13 @@ class MACRelayUnitGA3 : public cSimpleModule, public ILifecycle
 
 
     // port parameters
-    int *ports;         // a mapping between port# & id, indexs indicate port#, values indicate IDs for each port
+    int *ports = nullptr;         // a mapping between port# & id, indexs indicate port#, values indicate IDs for each port
     HLMACAddress **prio = nullptr; // a mapping between port# & highest Priority for each port, indexs indicate port#, values indicate highest Priority for each port
 
     IHLMACAddressTable *hlmacTable = nullptr;
 
     //cMessage *startCoreEvent = nullptr;
-    cMessage *startPortEvent;
+    cMessage *startPortEvent = nullptr;
     int startPortQueue = -1;
     double timeBetweenCores, timeBetweenPorts;
 
@@ -71,6 +71,9 @@ class MACRelayUnitGA3 : public cSimpleModule, public ILifecycle
     long numDiscardedFrames = 0;
 
     bool isOperational = false;    // for lifecycle
+
+  public:
+    virtual ~MACRelayUnitGA3();
 
   protected:
     virtual void initialize(int stage) override;

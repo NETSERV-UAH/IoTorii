@@ -105,8 +105,8 @@ void MACRelayUnitGA3::startGA3Process()   // GA3
 {
     hlmacTable = check_and_cast<IHLMACAddressTable *>(getModuleByPath(par("hlmacTablePath")));
 
-    ports = new (int[numVirtualPorts]);
-    prio = new (HLMACAddress*[numVirtualPorts]); //numVirtualPorts rows of HLMACAddress*
+    ports = new int[numVirtualPorts];
+    prio = new HLMACAddress*[numVirtualPorts]; //numVirtualPorts rows of HLMACAddress*. note that HLMACAddress* is not an array, it is only a pointer to one HLMACAddress
     //startCoreEvent = new cMessage("startCoreEvent");
     startPortEvent = new cMessage("startPortEvent");
     startPortQueue = numVirtualPorts;
@@ -413,22 +413,39 @@ void MACRelayUnitGA3::finish()
 {
     recordScalar("processed frames", numProcessedFrames);
     recordScalar("discarded frames", numDiscardedFrames);
-    //GA3
-    hlmacTable->printState();
+    if (hlmacTable != nullptr)
+        hlmacTable->printState();
+}
+
+MACRelayUnitGA3::~MACRelayUnitGA3()
+{
     //cancelEvent(startCoreEvent);
-    cancelEvent(startPortEvent);
-    delete startPortEvent;
-    startPortEvent = nullptr;
-    delete switchPrio;
+
+    if (startPortEvent != nullptr){
+        cancelEvent(startPortEvent);
+        delete startPortEvent;
+        startPortEvent = nullptr;
+    }
+
+    delete switchPrio;    //pointer to one element
     switchPrio = nullptr;
-    delete ports;
-    ports = nullptr;
+
+   if (numVirtualPorts > 1){
+        delete[] ports;      //pointer to an array of elements
+        ports = nullptr;
+    }
+    else if (ports != nullptr){
+        delete ports;       //pointer to an element
+        ports = nullptr;
+    }
+
     for (int i = 0 ; i < numVirtualPorts ; i ++)
-        delete[] prio[i];
-    delete[] prio;
+    {
+        delete prio[i];   //pointer to one element
+        prio[i] = nullptr;
+    }
+    delete[] prio;       //pointer to an array of pointers
     prio = nullptr;
-
-
 }
 
 } // namespace iotorii

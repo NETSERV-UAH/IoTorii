@@ -423,6 +423,10 @@ void MACRelayUnitGA3::finish()
     switchPrio = nullptr;
     delete ports;
     ports = nullptr;
+    for (int i = 0 ; i < numVirtualPorts ; i ++)
+        delete[] prio[i];
+    delete[] prio;
+    prio = nullptr;
 
 
 }

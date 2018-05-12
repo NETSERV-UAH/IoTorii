@@ -37,152 +37,99 @@
 #ifndef IOTORII_SRC_LINKLAYER_COMMON_HLMACADDRESS_H_
 #define IOTORII_SRC_LINKLAYER_COMMON_HLMACADDRESS_H_
 
+#define HLMAC_ADDRESS_SIZE    2   //2 bytes, short address (16 bits)
+//#define HLMAC_WIDTH 2  // 2 bits, hence, HLMAC_LENGTH = HLMAC_ADDRESS_SIZE . 8 / HLMAC_WIDTH
+#define HLMAC_ADDRESS_MASK    0xffffULL
+
 #include <string>
 #include "inet/common/INETDefs.h"
-
-
-#define HLMAC_ADDRESS_SIZE    6   //note that exact size is 5.5
-#define HLMAC_ADDRESS_MASK    0xffffffffffffULL
-//#define HLMAC_PRIORITY_MASK   0x00fffffffffULL
 
 namespace iotorii {
 using namespace inet;
 
-/**
- * Stores an GA3 HLMAC address (5 octets = 40 bits).
- */
-
-
 class HLMACAddress {
 
       private:
-        uint64 address;    // 5*8=40 bit address, lowest 5 bytes are used, highest 3 bytes are always zero
+        uint64 address;
+        unsigned short int HLMACWidth;  //HLMAC_LENGTH = HLMAC_ADDRESS_SIZE . 8 / HLMACWidth -1 // note that -1 is the space for saving HLMAC Type
 
       public:
-
         /**
          * Default constructor initializes address bytes to zero.
          */
-        HLMACAddress() { address = 0; }
+        HLMACAddress() { this->HLMACWidth = 8; address = 0; }
 
         /**
          * Initializes the address from the lower 48 bits of the 64-bit argument
          */
-        explicit HLMACAddress(uint64 bits) { address = bits & HLMAC_ADDRESS_MASK; }
+        explicit HLMACAddress(unsigned short int HLMACWidth, uint64 bits) { address = bits & HLMAC_ADDRESS_MASK; this->HLMACWidth = HLMACWidth;}
 
-        /**
-         * Constructor which accepts a hex string (12 hex digits, may also
-         * contain spaces, hyphens and colons)
-         */
-        explicit HLMACAddress(const char *hexstr) { setAddress(hexstr); }
 
         /**
          * Copy constructor.
          */
-        HLMACAddress(const HLMACAddress& other) { address = other.address; }
+        HLMACAddress(const HLMACAddress& other) { address = other.address; HLMACWidth = other.HLMACWidth;}
 
         /**
          * Assignment.
          */
-        HLMACAddress& operator=(const HLMACAddress& other) { address = other.address; return *this; }
-
-        /**
-         * Returns the address size in bytes, that is, 6.
-         */
-        unsigned int getAddressSize() const { return HLMAC_ADDRESS_SIZE; }
-
-        /**
-         * Returns the kth byte of the address.
-         */
-        unsigned char getAddressByte(unsigned int k) const;
-
-        HLMACAddress getHLMACSuffix();
-        HLMACAddress getHLMACPrio() { return HLMACAddress(address << 8);}//(address & HLMAC_PRIORITY_MASK); }
-        unsigned short int getHLMACHier();
-        HLMACAddress getPrioSuffix();
-        unsigned short int getPrioHier();
-
-
-
+        HLMACAddress& operator=(const HLMACAddress& other) { address = other.address; HLMACWidth = other.HLMACWidth; return *this; }
 
 
         /**
-         * Sets the kth byte of the address.
+         * Returns the address length.
          */
-        void setAddressByte(unsigned int k, unsigned char addrbyte);
-
-        /* add new port id to frame. note that this method cannot insert new core.
-         * for insertion new core, we can directly use setAddressByte(0, core) or setCore()
-         */
-        void addNewId(unsigned char newPortId) { setAddressByte(getHLMACHier()+1, newPortId); }
-
-        void setCore(unsigned char newCoreId);
-
+        unsigned int getHLMACLength() const { return HLMAC_ADDRESS_SIZE * 8 / HLMACWidth -1; }
 
         /**
+         * Returns the address width in bits.
+         */
+        unsigned int getHLMACWidth() const { return HLMACWidth; }
+
+        unsigned char getIndex(unsigned int k) const;
+
+                /**
+         * Converts address to a hex string.
+         */
+        std::string str() const;
+
+                /**
+         * Converts address to 48 bits integer.
+         */
+        uint64 getInt() const { return address; }
+
+                /**
          * Sets the address and returns true if the syntax of the string
          * is correct. (See setAddress() for the syntax.)
          */
         bool tryParse(const char *hexstr);
 
-        /**
+                /**
+         * Sets the kth byte of the address.
+         */
+        void setIndex(unsigned int k, unsigned char addrbyte);
+
+                /**
          * Converts address value from hex string (12 hex digits, may also
          * contain spaces, hyphens and colons)
          */
         void setAddress(const char *hexstr);
 
-        /**
-         * Copies the address to the given pointer (array of 6 unsigned chars).
+                /* add new port id to frame. note that this method cannot insert new core.
+         * for insertion new core, we can directly use setAddressByte(0, core) or setCore()
          */
-        void getAddressBytes(unsigned char *addrbytes) const;
-        void getAddressBytes(char *addrbytes) const { getAddressBytes((unsigned char *)addrbytes); }
+        void addNewId(unsigned char newPortId) { setIndex(getHLMACHier()+1, newPortId); }
 
-        /**
-         * Sets address bytes. The argument should point to an array of 6 unsigned chars.
-         */
-        void setAddressBytes(unsigned char *addrbytes);
-        void setAddressBytes(char *addrbytes) { setAddressBytes((unsigned char *)addrbytes); }
+        void setCore(unsigned char newCoreId);
+        unsigned short int getHLMACHier();
 
-        /**
-         * Converts address to a hex string.
-         */
-        std::string str() const;
-
-        /**
-         * Converts address to 48 bits integer.
-         */
-        uint64 getInt() const { return address; }
-
-        /**
-         * Returns true if the two addresses are equal.
-         */
-        bool equals(const HLMACAddress& other) const { return address == other.address; }
-
-        /**
-         * Returns true if the two addresses are equal.
-         */
-        bool operator==(const HLMACAddress& other) const { return address == other.address; }
-
-        /**
-         * Returns true if the two addresses are not equal.
-         */
-        bool operator!=(const HLMACAddress& other) const { return address != other.address; }
-
-        /**
-         * Returns -1, 0 or 1 as result of comparison of 2 addresses.
-         */
-        int compareTo(const HLMACAddress& other) const;
-
-        bool operator<(const HLMACAddress& other) const { return address < other.address; }
-
-        bool operator>(const HLMACAddress& other) const { return address > other.address; }
-    };
+};
 
 inline std::ostream& operator<<(std::ostream& os, const HLMACAddress& hlmac)
 {
     return os << hlmac.str();
 }
 
+}
 
-}// namespace iotorii
 #endif /* IOTORII_SRC_LINKLAYER_COMMON_HLMACADDRESS_H_ */

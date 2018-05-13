@@ -44,45 +44,45 @@
 #include "HLMACAddress.h"
 #include <sys/types.h>
 
-#define FRAME_DATA_SIZE    6
-#define FRAME_DATA_MASK    0xffffffffffffULL
-#define FRAME_HLMAC_MASK    0xfffffffffff0ULL
+#define FRAME_DATA_SIZE     2 //2 bytes,
+#define FRAME_DATA_MASK     0xffffULL
+#define FRAME_HLMAC_MASK    0b1111111111111100ULL
 
 namespace iotorii {
 using namespace inet;
 
 enum eGA3FrameType
 {
-    Hello = 1,          //Hello frame
-    SetHLMAC = 2       //SetHLMAC frame
+    SetHLMAC = 1,      //SetHLMAC frame
+    DataHLMAC = 2      //Data frame
 };
 
-class eGA3Frame // : public inet::MACAddress
+class eGA3Frame // : public HLMACAddress
 {
      private:
-      uint64 data;    // 6*8=40 bit data, lowest 5 bytes are used, highest 3 bytes are always zero
+      uint64 data;    // 2*8=16 bit data, lowest 2 bytes are used, highest 6 bytes are always zero
 
      public:
 //constructors
        /**
-        * Default constructor initializes data bytes to zero.
+        * Default constructor initializes data bits to zero.
         */
        eGA3Frame() { data = 0; }
 
        /**
-        * Initializes the data from the lower 48 bits of the 64-bit argument
+        * Initializes the data from the lower 16 bits of the 64-bit argument
         */
        explicit eGA3Frame(uint64 bits) { data = bits & FRAME_DATA_MASK; }
 
        /**
-        * Constructor which accepts a hex string (12 hex digits, may also
+        * Constructor which accepts a hex string (8 hex digits, may also
         * contain dots, spaces, hyphens and colons)
         */
       // explicit eGA3Frame(const char *hexstr) { setData(hexstr); }
 
        /**
-        * Constructor which accepts two hex string (2hex digits for eGA3FrameType and
-        * 10 hex digits for HLMACAddress, may also
+        * Constructor which accepts two hex string (1hex digits for eGA3FrameType and
+        * 7 hex digits for HLMACAddress, may also
         * contain dots, spaces, hyphens and colons)
         */
        eGA3Frame(unsigned char typehexstr,HLMACAddress hlmacaddress );
@@ -97,20 +97,14 @@ class eGA3Frame // : public inet::MACAddress
 
 //getter methods
        /**
-        * Returns the data size in bytes, that is, 6.
+        * Returns the data size in bytes, that is, 2.
         */
        unsigned int getDataSize() const { return FRAME_DATA_SIZE; }
 
        /**
         * Returns the kth byte of the data.
         */
-       unsigned char getDataByte(unsigned int k) const;
-
-       /**
-        * Copies the data to the given pointer (array of 6 unsigned chars).
-        */
-       void getDataBytes(unsigned char *addrbytes) const;
-       void getDataBytes(char *addrbytes) const { getDataBytes((unsigned char *)addrbytes); }
+       unsigned char getIndexValue(unsigned int k) const;
 
        /**
         * Returns the HLMAC Address of the data.
@@ -120,7 +114,7 @@ class eGA3Frame // : public inet::MACAddress
        /**
         * Returns the eGA3FrameType of the data.
         */
-       int geteGA3FrameType() const { return getDataByte(5) & 0x0f; }
+       int geteGA3FrameType() const { return getIndexValue(5) & 0x0f; }
 
        /**
         * Converts data to 48 bits integer.
@@ -131,13 +125,7 @@ class eGA3Frame // : public inet::MACAddress
        /**
         * Sets the kth byte of the data.
         */
-       void setDataByte(unsigned int k, unsigned char addrbyte);
-
-       /**
-        * Sets data bytes. The argument should point to an array of 6 unsigned chars.
-        */
-       void setDataBytes(unsigned char *addrbytes);
-       void setDataBytes(char *addrbytes) { setDataBytes((unsigned char *)addrbytes); }
+       void setIndexValue(unsigned int k, unsigned char addrbyte);
 
        /**
         * Sets the kth byte of the data.
@@ -149,53 +137,12 @@ class eGA3Frame // : public inet::MACAddress
         */
        void seteGA3FrameType(unsigned char type);
 
- //other methods
-       void addNewId(unsigned char newPortId);
-       void setCore(unsigned char newCoreId);
-
-       /**
-        * Sets the data and returns true if the syntax of the string
-        * is correct. (See setData() for the syntax.)
-        */
-       bool tryParse(const char *hexstr);
-
+//other methods
        /**
         * Converts data to a hex string.
         */
        std::string str() const;
 
-       /**
-        * Returns true if the two dataes are equal.
-        */
-       bool equals(const eGA3Frame& other) const { return data == other.data; }
-
-       /**
-        * Returns -1, 0 or 1 as result of comparison of 2 data.
-        */
-       int compareTo(const eGA3Frame& other) const;
-
-//operators
-       /**
-        * Assignment.
-        */
-       eGA3Frame& operator=(const eGA3Frame& other) { data = other.data; return *this; }
-
-       /**
-        * Returns true if the two data are equal.
-        */
-       bool operator==(const eGA3Frame& other) const { return data == other.data; }
-
-       /**
-        * Returns true if the two data are not equal.
-        */
-       bool operator!=(const eGA3Frame& other) const { return data != other.data; }
-
-       /**
-        * Returns -1, 0 or 1 as result of comparison of 2 data.
-        */
-       bool operator<(const eGA3Frame& other) const { return data < other.data; }
-
-       bool operator>(const eGA3Frame& other) const { return data > other.data; }
    };
 
 inline std::ostream& operator<<(std::ostream& os, const eGA3Frame& hlmac)

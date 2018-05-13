@@ -35,168 +35,85 @@
 // 
 
 #include "eGA3Frame.h"
+#include "HLMACAddress.h"
 #include <ctype.h>
 
 namespace iotorii {
 using namespace inet;
 
-
-//constructors
- eGA3Frame::eGA3Frame(unsigned char type, HLMACAddress address )
+eGA3Frame::eGA3Frame(unsigned char type, HLMACAddress address )
 {
-     setHLMACAddress(address);
-     seteGA3FrameType(type);
+    data = 0;
+    setHLMACAddress(address);
+    seteGA3FrameType(type);
 }
 
-
-//getter methods
-unsigned char eGA3Frame::getDataByte(unsigned int k) const
+unsigned char eGA3Frame::getIndexValue(unsigned int k) const
 {
-    if (k >= FRAME_DATA_SIZE)
-        throw cRuntimeError("Array of size 6 indexed with %d", k);
-    int offset = (FRAME_DATA_SIZE - k - 1) * 8;
-    return 0xff & (data >> offset);
-}
+    if ((k < 0) || (k >= 8))  //if ((k < 0) || (k >= (getHLMACLength() + 1))
+        cout << "Error" << endl; //throw cRuntimeError("eGA3Frame::getIndexValue(): index %d is not in range", k);
+    else
+    {
+        int offset = ((FRAME_DATA_SIZE * 8) - (k * 2) - (1 * 2));// offset = ((HLMACAddress::HLMAC_ADDRESS_SIZE * 8) - (k * HLMACAddress::HLMAC_WIDTH) - (1 * HLMACAddress::HLMAC_WIDTH));
+        uint64 mask =1;
+        for (int i = 1; i < 2; i++)  //for (int i = 1; i < HLMACAddress::HLMAC_WIDTH; i++)
+        {
+            mask = mask<<1;
+            mask = mask+1;
+        }
 
-void eGA3Frame::getDataBytes(unsigned char *addrbytes) const
-{
-    for (int i = 0; i < FRAME_DATA_SIZE; i++)
-        addrbytes[i] = getDataByte(i);
-}
 
+        return mask & (data >> offset);
+    }
+
+}
 
 HLMACAddress eGA3Frame::getHLMACAddress()
 {
     return HLMACAddress(data & FRAME_HLMAC_MASK);
 }
 
-//setter methods
-void eGA3Frame::setDataByte(unsigned int k, unsigned char addrbyte)
+void eGA3Frame::setIndexValue(unsigned int k, unsigned char indexValue)
 {
-    if (k >= FRAME_DATA_SIZE)
-        throw cRuntimeError("Array of size 6 indexed with %d", k);
-    int offset = (FRAME_DATA_SIZE - k - 1) * 8;
-    data = (data & (~(((uint64)0xff) << offset))) | (((uint64)addrbyte) << offset);
-}
+    if ((k < 0) || (k >= 8))  //if ((k < 0) || (k >= HLMACAddress::getHLMACLength() + 1))
+        cout << "Error" << endl; //throw cRuntimeError("eGA3Frame::setIndexvalue(): index %d is not in range", k);
+    else
+    {
+        int offset = ((FRAME_DATA_SIZE * 8) - (k * 2) - (1 * 2));  //int offset = ((HLMACAddress::HLMAC_ADDRESS_SIZE * 8) - (k * HLMACAddress::HLMAC_WIDTH) - (1 * HLMACAddress::HLMAC_WIDTH));
+        uint64 mask =1;
+        for (int i = 1; i < 2; i++)  //for (int i = 1; i < HLMACAddress::HLMAC_WIDTH; i++)
+        {
+            mask = mask<<1;
+            mask = mask+1;
+        }
 
-void eGA3Frame::setDataBytes(unsigned char *addrbytes)
-{
-    data = 0;    // clear top 16 bits too that setDataByte() calls skip
-    for (int i = 0; i < FRAME_DATA_SIZE; i++)
-        setDataByte(i, addrbytes[i]);
+        data = (data & (~(mask << offset))) | (((uint64)indexValue) << offset);
+    }
 }
-
 
 void eGA3Frame::seteGA3FrameType(unsigned char type)
 {
-    if (type > 15)
-        throw cRuntimeError("eGA3FrameType is not in range, it must be at most 4 bits.", type);
-    data = data | type; //setDataByte(5, type);
+    if (type > (pow(2, 2) - 1))  //if (type > (pow(2, HLMACAddress::HLMAC_WIDTH) - 1))
+        cout << "error" << endl; //throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type, 2);  //throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type,  HLMACAddress::HLMAC_WIDTH);
+    setIndexValue(7, type);  //setIndexValue(HLMACAddress::getHLMACLength(), type);
 }
 
 void eGA3Frame::setHLMACAddress(HLMACAddress addr)
 {
-    char addrbytes[6];
-    addr.getAddressBytes(addrbytes);
-    setDataBytes(addrbytes);
+    unsigned char type = geteGA3FrameType();
+    data = addr.getInt();
+    seteGA3FrameType(type);
 }
-
-//other methods
-
-/* add new port id to frame. note that this method cannot insert new core.
- * for insertion new core, we can use setDataByte(0, core) directly or setCore()
- */
-void eGA3Frame::addNewId(unsigned char newPortId)
-{
-  HLMACAddress hlmac = getHLMACAddress();
-  unsigned char type = geteGA3FrameType(); // data is reseted by setHLMACAddress()
-  int index = hlmac.getHLMACHier();
-
-  if ((index < FRAME_DATA_SIZE - 1) && (index >= 0))  // HLMACAddress class checks other error checking and handling
-  {
-      hlmac.setAddressByte(index + 1, newPortId);
-      setHLMACAddress(hlmac);
-      seteGA3FrameType(type);
-  }else
-      throw cRuntimeError("in eGA3Frame::addNewId, index is out of range");
-
-
-  //setHLMACAddress(getHLMACAddress().setAddressByte(this->getHLMACAddress().getHier()+1, newPortId));
-  return;
-}
-
-void eGA3Frame::setCore(unsigned char newCoreId)
-{
-    setDataByte(0, newCoreId);
-}
-
-bool eGA3Frame::tryParse(const char *hexstr)
-{
-    if (!hexstr)
-        return false;
-
-    // check syntax
-    int numHexDigits = 0;
-    for (const char *s = hexstr; *s; s++) {
-        if (isxdigit(*s))
-            numHexDigits++;
-        else if (*s != ' ' && *s != ':' && *s != '-' && *s != '.' && *s != ',')
-            return false; // wrong syntax
-    }
-    if (numHexDigits != 2 * FRAME_DATA_SIZE)
-        return false;
-
-    // Converts hex string into the data
-    // if hext string is shorter, data is filled with zeros;
-    // Non-hex characters are discarded before conversion.
-    data = 0;    // clear top 16 bits too that setDataByte() calls skip
-    int k = 0;
-    const char *s = hexstr;
-    for (int pos = 0; pos < FRAME_DATA_SIZE; pos++) {
-        if (!s || !*s) {
-            setDataByte(pos, 0);
-        }
-        else {
-            while (*s && !isxdigit(*s))
-                s++;
-            if (!*s) {
-                setDataByte(pos, 0);
-                continue;
-            }
-            unsigned char d = isdigit(*s) ? (*s - '0') : islower(*s) ? (*s - 'a' + 10) : (*s - 'A' + 10);
-            d = d << 4;
-            s++;
-
-            while (*s && !isxdigit(*s))
-                s++;
-            if (!*s) {
-                setDataByte(pos, 0);
-                continue;
-            }
-            d += isdigit(*s) ? (*s - '0') : islower(*s) ? (*s - 'a' + 10) : (*s - 'A' + 10);
-            s++;
-
-            setDataByte(pos, d);
-            k++;
-        }
-    }
-    return true;
-}
-
 
 std::string eGA3Frame::str() const
 {
-    char buf[20];
+    char *buf = new char[16];  //char *buf = new char[HLMACAddress::getHLMACLength()*2+HLMACAddress::getHLMACWidth()];
     char *s = buf;
-    for (int i = 0; i < FRAME_DATA_SIZE; i++, s += 3)
-        sprintf(s, "%2.2X.", getDataByte(i));
-    *(s - 1) = '\0';
+    int i;
+    for (i = 0; i < 8; i++, s += 2)  //for (i = 0; i < HLMACAddress::getHLMACLength() + 1; i++, s += 2)
+        sprintf(s, "%1.1X.", getIndexValue(i));
+    *(s-1) = '\0';
     return std::string(buf);
-}
-
-int eGA3Frame::compareTo(const eGA3Frame& other) const
-{
-    return (data < other.data) ? -1 : (data == other.data) ? 0 : 1;    // note: "return data-other.data" is not OK because 64-bit result does not fit into the return type
 }
 
 } // namespace iottorii

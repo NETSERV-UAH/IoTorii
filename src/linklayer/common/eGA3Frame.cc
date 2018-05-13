@@ -51,7 +51,7 @@ eGA3Frame::eGA3Frame(unsigned char type, HLMACAddress address )
 unsigned char eGA3Frame::getIndexValue(unsigned int k) const
 {
     if ((k < 0) || (k >= 8))  //if ((k < 0) || (k >= (getHLMACLength() + 1))
-        cout << "Error" << endl; //throw cRuntimeError("eGA3Frame::getIndexValue(): index %d is not in range", k);
+        throw cRuntimeError("eGA3Frame::getIndexValue(): index %d is not in range", k);
     else
     {
         int offset = ((FRAME_DATA_SIZE * 8) - (k * 2) - (1 * 2));// offset = ((HLMACAddress::HLMAC_ADDRESS_SIZE * 8) - (k * HLMACAddress::HLMAC_WIDTH) - (1 * HLMACAddress::HLMAC_WIDTH));
@@ -76,7 +76,7 @@ HLMACAddress eGA3Frame::getHLMACAddress()
 void eGA3Frame::setIndexValue(unsigned int k, unsigned char indexValue)
 {
     if ((k < 0) || (k >= 8))  //if ((k < 0) || (k >= HLMACAddress::getHLMACLength() + 1))
-        cout << "Error" << endl; //throw cRuntimeError("eGA3Frame::setIndexvalue(): index %d is not in range", k);
+        throw cRuntimeError("eGA3Frame::setIndexvalue(): index %d is not in range", k);
     else
     {
         int offset = ((FRAME_DATA_SIZE * 8) - (k * 2) - (1 * 2));  //int offset = ((HLMACAddress::HLMAC_ADDRESS_SIZE * 8) - (k * HLMACAddress::HLMAC_WIDTH) - (1 * HLMACAddress::HLMAC_WIDTH));
@@ -94,7 +94,7 @@ void eGA3Frame::setIndexValue(unsigned int k, unsigned char indexValue)
 void eGA3Frame::seteGA3FrameType(unsigned char type)
 {
     if (type > (pow(2, 2) - 1))  //if (type > (pow(2, HLMACAddress::HLMAC_WIDTH) - 1))
-        cout << "error" << endl; //throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type, 2);  //throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type,  HLMACAddress::HLMAC_WIDTH);
+        throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type, 2);  //throw cRuntimeError("eGA3Frame::seteGA3FrameType(): eGA3FrameType is not in range, it must be at most %d bits.", type,  HLMACAddress::HLMAC_WIDTH);
     setIndexValue(7, type);  //setIndexValue(HLMACAddress::getHLMACLength(), type);
 }
 

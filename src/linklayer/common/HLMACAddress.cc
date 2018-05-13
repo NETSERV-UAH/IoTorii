@@ -44,16 +44,15 @@
 #include <ctype.h>
 namespace iotorii {
 
-
-unsigned char HLMACAddress::getIndex(unsigned int k) const
+unsigned char HLMACAddress::getIndexValue(unsigned int k) const
 {
     if ((k < 0) || (k >= getHLMACLength()))
-        throw cRuntimeError("HLMACAddress::index: index %d is not in range", k);
+        throw cRuntimeError("HLMACAddress::getIndexValue(): index %d is not in range", k);
     else
     {
-        int offset = ((HLMAC_ADDRESS_SIZE * 8) - (k * HLMACWidth) - (1 * HLMACWidth));
+        int offset = ((HLMAC_ADDRESS_SIZE * 8) - (k * HLMAC_WIDTH) - (1 * HLMAC_WIDTH));
         uint64 mask =1;
-        for (int i = 1; i < HLMACWidth; i++)
+        for (int i = 1; i < HLMAC_WIDTH; i++)
         {
             mask = mask<<1;
             mask = mask+1;
@@ -65,15 +64,15 @@ unsigned char HLMACAddress::getIndex(unsigned int k) const
 
 }
 
-void HLMACAddress::setIndex(unsigned int k, unsigned char indexValue)
+void HLMACAddress::setIndexValue(unsigned int k, unsigned char indexValue)
 {
     if ((k < 0) || (k >= getHLMACLength()))
-        throw cRuntimeError("HLMACAddress::setAddressByte: Array of size 6 indexed with %d", k);
+        throw cRuntimeError("HLMACAddress::setIndexValue(): index %d is not in range", k);
     else
     {
-        int offset = ((HLMAC_ADDRESS_SIZE * 8) - (k * HLMACWidth) - (1 * HLMACWidth));
+        int offset = ((HLMAC_ADDRESS_SIZE * 8) - (k * HLMAC_WIDTH) - (1 * HLMAC_WIDTH));
         uint64 mask =1;
-        for (int i = 1; i < HLMACWidth; i++)
+        for (int i = 1; i < HLMAC_WIDTH; i++)
         {
             mask = mask<<1;
             mask = mask+1;
@@ -90,7 +89,7 @@ std::string HLMACAddress::str() const
     char *s = buf;
     int i;
     for (i = 0; i < getHLMACLength(); i++, s += 2)
-        sprintf(s, "%1.1X.", getIndex(i));
+        sprintf(s, "%1.1X.", getIndexValue(i));
     *(s-1) = '\0';
     return std::string(buf);
 }
@@ -119,20 +118,20 @@ bool HLMACAddress::tryParse(const char *hexstr)
     int pos;
     for (pos = 0; pos < getHLMACLength(); pos++) {
         if (!s || !*s) {
-            setIndex(pos, 0);
+            setIndexValue(pos, 0);
         }
         else {
             while (*s && !isxdigit(*s))
                 s++;
             if (!*s) {
-                setIndex(pos, 0);
+                setIndexValue(pos, 0);
                 continue;
             }
             unsigned char d = isdigit(*s) ? (*s - '0') : islower(*s) ? (*s - 'a' + 10) : (*s - 'A' + 10);
-            if (d >= pow(2,HLMACWidth))
+            if (d >= pow(2,HLMAC_WIDTH))
                 return false;
             s++;
-            setIndex(pos, d);
+            setIndexValue(pos, d);
         }
     }
 
@@ -145,19 +144,32 @@ bool HLMACAddress::tryParse(const char *hexstr)
 void HLMACAddress::setAddress(const char *hexstr)
 {
     if (!tryParse(hexstr))
-        throw cRuntimeError("HLMACAddress: wrong address syntax '%s': %d hex digits expected, with optional embedded spaces, hyphens or colons", hexstr, getHLMACLength());
+        throw cRuntimeError("HLMACAddress::setAddress(): wrong address syntax '%s': %d hex digits expected, with optional embedded spaces, hyphens or colons", hexstr, getHLMACLength());
 }
 
 void HLMACAddress::setCore(unsigned char newCoreId)
 {
-    setIndex(0, newCoreId);
+    setIndexValue(0, newCoreId);
 }
 
 unsigned short int HLMACAddress::getHLMACHier()
 {
-    unsigned short int hier = HLMAC_ADDRESS_SIZE;
-    while ((hier > 0) && (getIndex(--hier) == 0));
+    unsigned short int hier = getHLMACLength();
+    while ((hier > 0) && (getIndexValue(--hier) == 0));
     return hier;
+}
+
+void HLMACAddress::addNewId(unsigned char newPortId)
+{
+    if ((getHLMACHier()+1) < getHLMACLength())
+        setIndexValue(getHLMACHier()+1, newPortId);
+    else
+        throw cRuntimeError("HLMACAddress::addNewId(): index %d is not in range", getHLMACHier()+1);
+}
+
+int HLMACAddress::compareTo(const HLMACAddress& other) const
+{
+    return (address < other.address) ? -1 : (address == other.address) ? 0 : 1;    // note: "return address-other.address" is not OK because 64-bit result does not fit into the return type
 }
 
 } // namespace iotorii

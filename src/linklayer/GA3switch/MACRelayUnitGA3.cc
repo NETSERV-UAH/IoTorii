@@ -86,22 +86,24 @@ void MACRelayUnitGA3::initialize(int stage)
 
 void MACRelayUnitGA3::sendAndScheduleHello()
 {
-    EV << "->MACRelayUnitWGA3::sendAndScheduleHello()" << endl;
+    EV << "->MACRelayUniteGA3::sendAndScheduleHello()" << endl;
 
     //scheduling next Hello packet
     scheduleAt(simTime()+helloInterval, HelloTimer); //Next Hello broadcasting
 
     CSMAFrame *macPkt = new CSMAFrame("Hello!");
     macPkt->setDestAddr(MACAddress::BROADCAST_ADDRESS);
+    EV << "Hello message from this node is broadcasted to all node in the range. " << endl;
     send(macPkt, "ifOut", 0);
 
-    EV << "<-MACRelayUnitWGA3::sendAndScheduleHello()" << endl;
+    EV << "<-MACRelayUniteGA3::sendAndScheduleHello()" << endl;
 }
 
 void MACRelayUnitGA3::sendToNeighbors(CSMAFrame *frame)
 {
-    EV << "->MACRelayUnitWGA3::sendToNeighbors()" << endl;
+    EV << "->MACRelayUniteGA3::sendToNeighbors()" << endl;
 
+    EV << "This node has " << numNeighbors << " neighbors, " << "maximum number of allowed neighbors is " << maxNeighbors << endl;
     for (int i = 1; i <= numNeighbors && i <= maxNeighbors; i++) {  //Second condition is related on the width of HLMACAddress, 3 bits allowed 3 neighbor, 00 is reserved for NOTSPECIFIED address
         eGA3Frame eGA3(frame->getSrcAddr()); //eGA3Frame eGA3 = eGA3Frame(frame->getSrcAddr());
         HLMACAddress hlmac = eGA3.getHLMACAddress();
@@ -112,17 +114,18 @@ void MACRelayUnitGA3::sendToNeighbors(CSMAFrame *frame)
         dupFrame->setSrcAddr(MACAddress(eGA3.getInt()));
         dupFrame->setDestAddr(neighborList[i-1]);
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
+        EV << "SetHLMAC frame " << eGA3 << " is sent to the neighbor with suffix # (" << i << ") and MAC address (" << dupFrame->getDestAddr() << ")" << endl;
         send(dupFrame, "ifOut", 0);
 
-        EV << "<-MACRelayUnitWGA3::sendToNeighbors()" << endl;
     }
 
     delete frame;
+    EV << "<-MACRelayUniteGA3::sendToNeighbors()" << endl;
 }
 
 void MACRelayUnitGA3::startCore(int core)
 {
-    EV << "->MACRelayUnitWGA3::startCore()" << endl;
+    EV << "->MACRelayUniteGA3::startCore()" << endl;
 
     //scheduling next Core event
     scheduleAt(simTime() + coreStartTime, startCoreEvent);
@@ -130,6 +133,7 @@ void MACRelayUnitGA3::startCore(int core)
     //preparing SetHLMAC frame
     HLMACAddress coreAddress;             // create HLMAC
     coreAddress.setCore(core);  //insert core prefix in it
+    EV << "Core address " << coreAddress << " is assigned to this node." << endl;
     saveHLMAC(coreAddress);     //assigns coreAddress to itself
     unsigned char type = 1;               // if assume that type of SetHLMAC frame is 1
     eGA3Frame eGA3(type,coreAddress);
@@ -138,52 +142,62 @@ void MACRelayUnitGA3::startCore(int core)
     CSMAFrame *SetHLMACFrame = new CSMAFrame ("SetHLMAC");
     MACAddress source(eGA3.getInt());     // like cast, converting eGA3 to MACAddress, and replacing to source variable
     SetHLMACFrame->setSrcAddr(source);
-
+    EV << "SetHLMAC frame " << eGA3 << " ( converted to MAC structure : " << SetHLMACFrame->getSrcAddr() << ") is disseminated to the neighbors." << endl;
     sendToNeighbors(SetHLMACFrame);
 
-    EV << "<-MACRelayUnitWGA3::startCore()" << endl;
+    EV << "<-MACRelayUniteGA3::startCore()" << endl;
 }
 
 void MACRelayUnitGA3::receiveSetHLMACMessage(CSMAFrame *frame)
 {
-    EV << "->MACRelayUnitWGA3::receiveSetHLMACMessage()" << endl;
+    EV << "->MACRelayUniteGA3::receiveSetHLMACMessage()" << endl;
 
     eGA3Frame eGA3(frame->getSrcAddr()); //eGA3Frame eGA3 = eGA3Frame(frame->getSrcAddr());  // extract eGA3 frame (data) from SetHLMAC CSMAFrame
     HLMACAddress hlmac = eGA3.getHLMACAddress();  // extract HLMAC address from eGA3 frame (data)
 
     if (!hasLoop(hlmac)){
         saveHLMAC(hlmac);
+        EV << "HLMAC address " << hlmac << " is assigned to this node." << endl;
+        EV << "Frame " << frame->getName() << " (dst mac address: " << frame->getDestAddr() << " )" << " is resent to neighbors." << endl;
         sendToNeighbors(frame);
-    }else
+    }else{
+        EV << "Because of loop creation, HLMAC address " << hlmac << " is not assigned to this node." << endl;
         delete frame;
+        EV << "Frame " << frame->getName() << " (dst mac address: " << frame->getDestAddr() << " )" << " is deleted." << endl;
+    }
 
-    EV << "<-MACRelayUnitWGA3::receiveSetHLMACMessage()" << endl;
+    EV << "<-MACRelayUniteGA3::receiveSetHLMACMessage()" << endl;
 }
 
 bool MACRelayUnitGA3::hasLoop(HLMACAddress hlmac)
 {
-    EV << "->MACRelayUnitWGA3::hasLoop()" << endl;
+    EV << "->MACRelayUniteGA3::hasLoop()" << endl;
 
-    if (hlmacTable->getlongestMatchedPrefix(hlmac) == HLMACAddress::UNSPECIFIED_ADDRESS)
+    if (hlmacTable->getlongestMatchedPrefix(hlmac) == HLMACAddress::UNSPECIFIED_ADDRESS){
+        EV << "HLMAC adress " << hlmac << " creats a loop in this node." << endl;
         return false;
-    else
+    }
+    else{
+        EV << "HLMAC adress " << hlmac << " does not creats a loop in this node." << endl;
         return true;
+    }
 
-    EV << "<-MACRelayUnitWGA3::hasLoop()" << endl;
+    EV << "<-MACRelayUniteGA3::hasLoop()" << endl;
 }
 
 void MACRelayUnitGA3::saveHLMAC(HLMACAddress hlmac)
 {
-    EV << "->MACRelayUnitWGA3::saveHLMAC()" << endl;
+    EV << "->MACRelayUniteGA3::saveHLMAC()" << endl;
 
     hlmacTable->updateTableWithAddress(-1, hlmac);
+    EV << "HLMAC adress " << hlmac << " is assigned to this node." << endl;
 
-    EV << "<-MACRelayUnitWGA3::saveHLMAC()" << endl;
+    EV << "<-MACRelayUniteGA3::saveHLMAC()" << endl;
 }
 
 void MACRelayUnitGA3::handleMessage(cMessage *msg)
 {
-    EV << "->MACRelayUnitWGA3::handleMessage()" << endl;
+    EV << "->MACRelayUniteGA3::handleMessage()" << endl;
 
     if (!isOperational) {
         EV << "Message '" << msg << "' arrived when module status is down, dropped it\n";
@@ -209,12 +223,12 @@ void MACRelayUnitGA3::handleMessage(cMessage *msg)
     emit(LayeredProtocolBase::packetReceivedFromLowerSignal, frame);
     handleAndDispatchFrame(frame);
 
-    EV << "<-MACRelayUnitWGA3::handleMessage()" << endl;
+    EV << "<-MACRelayUniteGA3::handleMessage()" << endl;
 }
 
 void MACRelayUnitGA3::handleAndDispatchFrame(CSMAFrame *frame)
 {
-    EV << "->MACRelayUnitWGA3::handleAndDispatchFrame()" << endl;
+    EV << "->MACRelayUniteGA3::handleAndDispatchFrame()" << endl;
 
     numProcessedFrames++;
 
@@ -242,29 +256,29 @@ void MACRelayUnitGA3::handleAndDispatchFrame(CSMAFrame *frame)
         return;
     }
 
-    EV << "<-MACRelayUnitWGA3::handleAndDispatchFrame()" << endl;
+    EV << "<-MACRelayUniteGA3::handleAndDispatchFrame()" << endl;
 }
 
 void MACRelayUnitGA3::start()
 {
-    EV << "->MACRelayUnitWGA3::start()" << endl;
+    EV << "->MACRelayUniteGA3::start()" << endl;
 
     hlmacTable->clearTable();
     neighborList.clear();
     isOperational = true;
 
-    EV << "<-MACRelayUnitWGA3::start()" << endl;
+    EV << "<-MACRelayUniteGA3::start()" << endl;
 }
 
 void MACRelayUnitGA3::stop()
 {
-    EV << "->MACRelayUnitWGA3::stop()" << endl;
+    EV << "->MACRelayUniteGA3::stop()" << endl;
 
     hlmacTable->clearTable();
     neighborList.clear();
     isOperational = false;
 
-    EV << "<-MACRelayUnitWGA3::stop()" << endl;
+    EV << "<-MACRelayUniteGA3::stop()" << endl;
 }
 
 bool MACRelayUnitGA3::handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)
@@ -295,7 +309,7 @@ bool MACRelayUnitGA3::handleOperationStage(LifecycleOperation *operation, int st
 
 void MACRelayUnitGA3::finish()
 {
-    EV << "->MACRelayUnitWGA3::finish()" << endl;
+    EV << "->MACRelayUniteGA3::finish()" << endl;
 
     recordScalar("processed frames", numProcessedFrames);
     recordScalar("discarded frames", numDiscardedFrames);
@@ -314,7 +328,7 @@ void MACRelayUnitGA3::finish()
         HelloTimer = nullptr;
     }
 
-    EV << "<-MACRelayUnitWGA3::finish()" << endl;
+    EV << "<-MACRelayUniteGA3::finish()" << endl;
 }
 
 } // namespace iotorii

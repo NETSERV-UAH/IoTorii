@@ -1,4 +1,7 @@
-// Copyright (C) 2013 OpenSim Ltd.
+/*
+ * The implementation of HLMACAddressTable is inspired by the MACAddressTable implementation.
+ *  Copyright (C) 2013 OpenSim Ltd.
+*/
 
 /*
  * Copyright (C) 2017 Elisa Rojas(1), SeyedHedayat Hosseini(2);
@@ -153,6 +156,11 @@ class HLMACAddressTable : public cSimpleModule, public IHLMACAddressTable
     virtual void resetDefaultAging() override;
 
     virtual bool isPortInTable(int portno, unsigned int vid = 0) override;
+
+    //EXTRA BEGIN
+    virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) override;
+    //EXTRA END
+
 
 
 };

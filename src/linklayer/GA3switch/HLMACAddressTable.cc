@@ -1,4 +1,7 @@
-// Copyright (C) 2013 OpenSim Ltd.
+/*
+ * The implementation of HLMACAddressTable is inspired by the MACAddressTable implementation.
+ *  Copyright (C) 2013 OpenSim Ltd.
+*/
 
 /*
  * Copyright (C) 2017 Elisa Rojas(1), SeyedHedayat Hosseini(2);
@@ -304,6 +307,31 @@ bool HLMACAddressTable::isPortInTable(int portno, unsigned int vid)
         return false;
 }
 
+//EXTRA BEGIN
+HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, unsigned int vid)
+{
+    HLMACTable *table = getTableForVid(vid);
+        if (table == nullptr)
+            return HLMACAddress::UNSPECIFIED_ADDRESS;
+
+        while(address != HLMACAddress::UNSPECIFIED_ADDRESS){
+            auto iter = table->find(address);
+            if (iter != table->end()) {
+                if (iter->second.insertionTime + agingTime <= simTime()) {
+                    // don't use (and throw out) aged entries
+                    EV << "Ignoring and deleting aged entry: " << iter->first << " --> port" << iter->second.portno << "\n";
+                    table->erase(iter);
+                }else
+                    return address;
+            }
+            address.removeLastId();
+        }//while
+
+        return HLMACAddress::UNSPECIFIED_ADDRESS;
+
+
+}
+//EXTRA END
 
 } // namespace iotorii
 

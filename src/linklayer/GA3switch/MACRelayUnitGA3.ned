@@ -39,18 +39,14 @@ simple MACRelayUnitGA3 like IMACRelayUnit
 {
     parameters:
         @class(iotorii::MACRelayUnitGA3);
-        //int broadcastSeed = default(0);
         bool isCoreSwitch = default(false);
         int corePrefix = default(-1);
-        double timeBetweenPorts @unit("s") = default(isCoreSwitch ? 0.000001s : 0s);
-        double timeBetweenCores @unit("s") = default(isCoreSwitch ? 0.000008s : 0s);   
+        double coreStartTime @unit("s") = default(1.003s);
         double helloInterval @unit("s") = default(1s); //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
         // RFC 5148:
         double maxPeriodicJitter @unit("s") = default(helloInterval / 4); // it MUST NOT be negative; it MUST NOT be greater than MESSAGE_INTERVAL/2; it SHOULD NOT be greater than MESSAGE_INTERVAL/4.
         volatile double periodicJitter @unit("s") = default(uniform(0s, maxPeriodicJitter)); // jitter for externally triggered message generation and message forwarding
-        
-             
-        //string macTablePath = default("^.macTable"); // The path to the MACAddressTable module
+              
         string hlmacTablePath = default("^.hlmacTable"); // The path to the HLMACAddressTable module
         @display("i=block/switch");
         @signal[packetSentToLower](type=cPacket);

@@ -107,6 +107,10 @@ class IHLMACAddressTable
      */
     virtual void setAgingTime(simtime_t agingTime) = 0;
     virtual void resetDefaultAging() = 0;
+    //EXTRA BEGIN
+    virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) = 0;
+    //EXTRA END
+
 };
 
 } // namespace iotorii

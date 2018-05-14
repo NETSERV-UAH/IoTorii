@@ -1,4 +1,9 @@
 /*
+ * The implementation of eGA3 frame is inspired by the MAC address implementation.
+ * Copyright (C) 2003 Andras Varga; CTIE, Monash University, Australia
+*/
+
+/*
  * Copyright (C) 2017 Elisa Rojas(1), SeyedHedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
@@ -114,7 +119,7 @@ class eGA3Frame // : public HLMACAddress
        /**
         * Returns the eGA3FrameType of the data.
         */
-       int geteGA3FrameType() const { return getIndexValue(5) & 0x0f; }
+       int geteGA3FrameType() const { return getIndexValue(7); }
 
        /**
         * Converts data to 48 bits integer.

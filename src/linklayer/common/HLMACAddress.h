@@ -1,4 +1,9 @@
 /*
+ * The implementation of HLMAC address is inspired by the MAC address implementation.
+ * Copyright (C) 2003 Andras Varga; CTIE, Monash University, Australia
+*/
+
+/*
  * Copyright (C) 2017 Elisa Rojas(1), SeyedHedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
@@ -53,6 +58,10 @@ private:
   uint64 address;
 
 public:
+
+  /** The unspecified MAC address, 0.0.0.0.0.0.0 */
+  static const HLMACAddress UNSPECIFIED_ADDRESS;
+
   /**
    * Default constructor initializes address bytes to zero.
    */
@@ -120,6 +129,9 @@ public:
    * for insertion new core, we can directly use setIndexValue(0, core) or setCore()
    */
   void addNewId(unsigned char newPortId);
+
+  void removeLastId();
+
 
   void setCore(unsigned char newCoreId);
 

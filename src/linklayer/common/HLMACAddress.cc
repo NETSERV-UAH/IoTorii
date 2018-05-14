@@ -1,7 +1,7 @@
-
 /*
+ * The implementation of HLMAC address is inspired by the MAC address implementation.
  * Copyright (C) 2003 Andras Varga; CTIE, Monash University, Australia
- */
+*/
 
 /*
  * Copyright (C) 2017 Elisa Rojas(1), SeyedHedayat Hosseini(2);
@@ -43,6 +43,8 @@
 
 #include <ctype.h>
 namespace iotorii {
+
+const HLMACAddress HLMACAddress::UNSPECIFIED_ADDRESS;
 
 unsigned char HLMACAddress::getIndexValue(unsigned int k) const
 {
@@ -166,6 +168,12 @@ void HLMACAddress::addNewId(unsigned char newPortId)
     else
         throw cRuntimeError("HLMACAddress::addNewId(): index %d is not in range", getHLMACHier()+1);
 }
+
+void HLMACAddress::removeLastId()
+{
+    setIndexValue(getHLMACHier(), 0);
+}
+
 
 int HLMACAddress::compareTo(const HLMACAddress& other) const
 {

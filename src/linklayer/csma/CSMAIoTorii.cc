@@ -232,7 +232,8 @@ bool CSMAIoTorii::isRelayMessage(cMessage *message)
 //EXTRA
 void CSMAIoTorii::handleRelayframe(CSMAFrame *macPkt)
 {
-    macPkt->setSrcAddr(address);
+    if ((strcmp(macPkt->getName(),"Hello!")==0))
+        macPkt->setSrcAddr(address);
     MACAddress dest = macPkt->getDestAddr();
 
 
@@ -906,7 +907,7 @@ void CSMAIoTorii::handleLowerPacket(cPacket *msg)
               << " dst=" << dest << " myAddr="
               << address << endl;
     //EXTRA BEGIN
-    if ((strcmp(macPkt->getName(),"SetHLMAC")==0)||(strcmp(macPkt->getName(),"Hello!")==0))
+    if (((strcmp(macPkt->getName(),"SetHLMAC")==0) && (dest == address))||(strcmp(macPkt->getName(),"Hello!")==0))
     {
         sendToRlay(msg);  // FIXME: if SetHLMAC needs to send back ack, this place is not a good place
         return;

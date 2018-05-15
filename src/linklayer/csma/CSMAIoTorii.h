@@ -125,10 +125,7 @@ class CSMAIoTorii : public MACProtocolBase, public IMACProtocol
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, long value, cObject *details) override;
 
     //EXTRA BEGIN
-    virtual void handleMessageWhenUp(cMessage *message) override;
-    virtual bool isRelayMessage(cMessage *message);
-    virtual void handleRelayframe(CSMAFrame *macPkt);
-    virtual void sendToRlay(cMessage *message);
+   // virtual void handleMessageWhenUp(cMessage *message) override;
     //EXTRA END
 
 

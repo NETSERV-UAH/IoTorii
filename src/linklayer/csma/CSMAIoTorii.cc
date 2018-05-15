@@ -78,10 +78,6 @@ void CSMAIoTorii::initialize(int stage)
         ackLength = par("ackLength");
         ackMessage = nullptr;
 
-        upperLayerRelayInGateId = findGate("upperLayerRelayIn");  //EXTRA
-        upperLayerRelayOutGateId = findGate("upperLayerRelayOut");  //EXTRA
-
-
         //init parameters for backoff method
         std::string backoffMethodStr = par("backoffMethod").stdstringValue();
         if (backoffMethodStr == "exponential") {
@@ -211,57 +207,13 @@ InterfaceEntry *CSMAIoTorii::createInterfaceEntry()
     return e;
 }
 
-//EXTRA
-void CSMAIoTorii::handleMessageWhenUp(cMessage *message)
-{
-    if (isRelayMessage(message)) {
-        CSMAFrame *macPkt = check_and_cast<CSMAFrame *>(message);
-        handleRelayframe(macPkt);
-
-    }else
-        MACProtocolBase::handleMessageWhenUp(message);
-
-}
-
-//EXTRA
-bool CSMAIoTorii::isRelayMessage(cMessage *message)
-{
-    return message->getArrivalGateId() == upperLayerRelayInGateId;
-}
-
-//EXTRA
-void CSMAIoTorii::handleRelayframe(CSMAFrame *macPkt)
-{
-    if ((strcmp(macPkt->getName(),"Hello!")==0))
-        macPkt->setSrcAddr(address);
-    MACAddress dest = macPkt->getDestAddr();
-
-
-    if (useMACAcks) {
-        if (SeqNrParent.find(dest) == SeqNrParent.end()) {
-            //no record of current parent -> add next sequence number to map
-            SeqNrParent[dest] = 1;
-            macPkt->setSequenceId(0);
-            EV_DETAIL << "Adding a new parent to the map of Sequence numbers:" << dest << endl;
-        }
-        else {
-            macPkt->setSequenceId(SeqNrParent[dest]);
-            EV_DETAIL << "Packet send with sequence number = " << SeqNrParent[dest] << endl;
-            SeqNrParent[dest]++;
-        }
-    }
-    //RadioAccNoise3PhyControlInfo *pco = new RadioAccNoise3PhyControlInfo(bitrate);
-    //macPkt->setControlInfo(pco);
-    EV_DETAIL << "pkt encapsulated, length: " << macPkt->getBitLength() << "\n";
-    executeMac(EV_SEND_REQUEST, macPkt);
-
-}
-
 /**
  * Encapsulates the message to be transmitted and pass it on
  * to the FSM main method for further processing.
  */
-void CSMAIoTorii::handleUpperPacket(cPacket *msg)
+
+//EXTRA BEGIN
+/*void CSMAIoTorii::handleUpperPacket(cPacket *msg)
 {
     //MacPkt*macPkt = encapsMsg(msg);
     CSMAFrame *macPkt = new CSMAFrame(msg->getName());
@@ -294,7 +246,20 @@ void CSMAIoTorii::handleUpperPacket(cPacket *msg)
     EV_DETAIL << "pkt encapsulated, length: " << macPkt->getBitLength() << "\n";
     executeMac(EV_SEND_REQUEST, macPkt);
 }
+*/
 
+void CSMAIoTorii::handleUpperPacket(cPacket *msg)
+{
+    CSMAFrame *macPkt = check_and_cast<CSMAFrame *>(msg);
+    if (strcmp(macPkt->getName(), "Hello!") == 0){
+        macPkt->setSrcAddr(address);
+        EV << "Hello packet is received from IoTorii sublayer, source MAC address is "<< macPkt->getSrcAddr() <<endl;
+    }
+
+    executeMac(EV_SEND_REQUEST, macPkt);
+}
+
+//EXTRA END
 void CSMAIoTorii::updateStatusIdle(t_mac_event event, cMessage *msg)
 {
     switch (event) {
@@ -330,9 +295,9 @@ void CSMAIoTorii::updateStatusIdle(t_mac_event event, cMessage *msg)
 
         case EV_FRAME_RECEIVED:
             EV_DETAIL << "(15) FSM State IDLE_1, EV_FRAME_RECEIVED: setting up radio tx -> WAITSIFS." << endl;
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
             nbRxFrames++;
-            delete msg;
+            //delete msg; //EXTRA
 
             if (useMACAcks) {
                 radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
@@ -344,8 +309,8 @@ void CSMAIoTorii::updateStatusIdle(t_mac_event event, cMessage *msg)
         case EV_BROADCAST_RECEIVED:
             EV_DETAIL << "(23) FSM State IDLE_1, EV_BROADCAST_RECEIVED: Nothing to do." << endl;
             nbRxFrames++;
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         default:
@@ -403,15 +368,15 @@ void CSMAIoTorii::updateStatusBackoff(t_mac_event event, cMessage *msg)
             else {
                 EV_DETAIL << "sending frame up and resuming normal operation.";
             }
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         case EV_BROADCAST_RECEIVED:
             EV_DETAIL << "(29) FSM State BACKOFF, EV_BROADCAST_RECEIVED:"
                       << "sending frame up and resuming normal operation." << endl;
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         default:
@@ -520,15 +485,15 @@ void CSMAIoTorii::updateStatusCCA(t_mac_event event, cMessage *msg)
             else {
                 EV_DETAIL << " Nothing to do." << endl;
             }
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         case EV_BROADCAST_RECEIVED:
             EV_DETAIL << "(24) FSM State BACKOFF, EV_BROADCAST_RECEIVED:"
                       << " Nothing to do." << endl;
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         default:
@@ -601,7 +566,7 @@ void CSMAIoTorii::updateStatusWaitAck(t_mac_event event, cMessage *msg)
 
         case EV_BROADCAST_RECEIVED:
         case EV_FRAME_RECEIVED:
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
             break;
 
         case EV_DUPLICATE_RECEIVED:
@@ -665,8 +630,8 @@ void CSMAIoTorii::updateStatusSIFS(t_mac_event event, cMessage *msg)
         case EV_BROADCAST_RECEIVED:
         case EV_FRAME_RECEIVED:
             EV << "Error ! Received a frame during SIFS !" << endl;
-            sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-            delete msg;
+            sendUp(msg); // EXTRA //sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
+            //delete msg; //EXTRA
             break;
 
         default:
@@ -890,7 +855,8 @@ void CSMAIoTorii::handleSelfMessage(cMessage *msg)
  * Compares the address of this Host with the destination address in
  * frame. Generates the corresponding event.
  */
-void CSMAIoTorii::handleLowerPacket(cPacket *msg)
+//EXTRA BEGIN
+/*void CSMAIoTorii::handleLowerPacket(cPacket *msg)
 {
     if (msg->hasBitError()) {
         EV << "Received " << msg << " contains bit errors or collision, dropping it\n";
@@ -906,14 +872,6 @@ void CSMAIoTorii::handleLowerPacket(cPacket *msg)
               << ", myState=" << macState << " src=" << src
               << " dst=" << dest << " myAddr="
               << address << endl;
-    //EXTRA BEGIN
-    if (((strcmp(macPkt->getName(),"SetHLMAC")==0) && (dest == address))||(strcmp(macPkt->getName(),"Hello!")==0))
-    {
-        sendToRlay(msg);  // FIXME: if SetHLMAC needs to send back ack, this place is not a good place
-        return;
-    }
-
-    //EXTRA END
 
     if (dest == address) {
         if (!useMACAcks) {
@@ -989,6 +947,43 @@ void CSMAIoTorii::handleLowerPacket(cPacket *msg)
         delete macPkt;
     }
 }
+*/
+
+void CSMAIoTorii::handleLowerPacket(cPacket *msg)
+{
+    if (msg->hasBitError()) {
+        EV << "Received " << msg << " contains bit errors or collision, dropping it\n";
+        delete msg;
+        return;
+    }
+    CSMAFrame *macPkt = check_and_cast<CSMAFrame *>(msg);
+    const MACAddress& src = macPkt->getSrcAddr();
+    const MACAddress& dest = macPkt->getDestAddr();
+    long ExpectedNr = 0;
+
+    EV << "Received frame name= " << macPkt->getName()
+              << ", myState=" << macState << " src=" << src
+              << " dst=" << dest << " myAddr="
+              << address << endl;
+
+    if ((strcmp(macPkt->getName(), "SetHLMAC") == 0) && (dest == address)) {
+        if (!useMACAcks) {
+            EV_DETAIL << "Received a SetHLMAC packet addressed from MAC adress " << macPkt->getDestAddr() <<" to me." << endl;
+            executeMac(EV_FRAME_RECEIVED, macPkt);
+        }
+        else{
+            throw cRuntimeError("CSMAIoTorii::handleLowerPacket(): useMACAcks is unsupported operation.");
+        }
+    }
+    else if (dest.isBroadcast()) {
+        executeMac(EV_BROADCAST_RECEIVED, macPkt);
+    }
+    else if (strcmp(macPkt->getName(), "SetHLMAC") != 0){
+        EV << "packet not for me, I send up it to IoTorii sublayer to investigate it.\n";
+        executeMac(EV_FRAME_RECEIVED, macPkt);
+    }
+}
+//EXTRA END
 
 void CSMAIoTorii::receiveSignal(cComponent *source, simsignal_t signalID, long value, cObject *details)
 {
@@ -1021,15 +1016,6 @@ cObject *CSMAIoTorii::setUpControlInfo(cMessage *const pMsg, const MACAddress& p
     pMsg->setControlInfo(cCtrlInfo);
     return cCtrlInfo;
 }
-
-//EXTRA
-void CSMAIoTorii::sendToRlay(cMessage *message)
-{
-    //if (message->isPacket())
-    //    emit(packetSentToUpperSignal, message);
-    send(message, upperLayerRelayOutGateId);
-}
-
 
 } // namespace iotorii
 

@@ -40,13 +40,8 @@ import inet.power.contract.IEnergyStorage;
 //EXTRA
 import inet.node.inet.INetworkNode;
 import iotorii.src.linklayer.ieee802154.Ieee802154NarrowbandNicNew;
-import iotorii.src.linklayer.GA3switch.HLMACAddressTable;
+import iotorii.src.linklayer.IoTorii.HLMACAddressTable;
 import iotorii.src.linklayer.contract.IHLMACAddressTable;
-import iotorii.src.linklayer.GA3switch.MACRelayUnitGA3;
-
-
-
-
 
 //
 // Contains the common lower layers (linklayer and networklayer)
@@ -157,19 +152,11 @@ module NodeBaseNew like INetworkNode  //EXTRA
                 @display("p=345,406,row,10;q=txQueue;i=block/ifcard");
         }
 
-        //EXTRA
+        //EXTRA BEGIN
         hlmacTable: <hlmacTableType> like IHLMACAddressTable {
             @display("p=149,250;is=s");
         }
-        relayUnit: MACRelayUnitGA3 { //<relayUnitType> like IMACRelayUnit {
-            parameters:
-                @display("p=149,300");
-            gates:
-                ifIn[sizeof(radioIn)];
-                ifOut[sizeof(radioIn)];
-        }
         //EXTRA END
-
 
     connections allowunconnected:
         // connections to network outside
@@ -203,12 +190,5 @@ module NodeBaseNew like INetworkNode  //EXTRA
             tun[i].upperLayerOut --> networkLayer.ifIn++;
             tun[i].upperLayerIn <-- networkLayer.ifOut++;
         }
-        //EXTRA
-        for i=0..sizeof(radioIn)-1 {
-            wlan[i].upperLayerRelayOut --> relayUnit.ifIn++;//if wlan[i] ==  "Ieee80211NicAPB"; //if numRadios>1;
-            wlan[i].upperLayerRelayIn <-- relayUnit.ifOut++; //if numRadios>1;
-        }
-        //End EXTRA      
-
 }
 

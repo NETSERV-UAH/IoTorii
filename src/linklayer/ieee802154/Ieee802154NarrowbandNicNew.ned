@@ -25,6 +25,8 @@ package iotorii.src.linklayer.ieee802154;  //EXTRA
 
 import inet.linklayer.contract.IWirelessNic;
 import inet.physicallayer.contract.packetlevel.IRadio;
+import iotorii.src.linklayer.IoTorii.IoToriiMAC;
+
 
 module Ieee802154NarrowbandNicNew like IWirelessNic  //EXTRA
 {
@@ -32,22 +34,20 @@ module Ieee802154NarrowbandNicNew like IWirelessNic  //EXTRA
         //@class(iotorii::Ieee802154NarrowbandNicNew);  //EXTRA        
         string interfaceTableModule;
         string radioType = default("Ieee802154NarrowbandScalarRadio");
-        *.interfaceTableModule = default(absPath(interfaceTableModule));
+        //EXTRA BEGIN
+        //*.interfaceTableModule = default(absPath(interfaceTableModule)); // this-> mac802.15.4
+        **.interfaceTableModule = default(absPath(interfaceTableModule)); // this-> mac-> mac802.15.4
+        //EXTRA END
         @display("i=block/ifcard");
         @nic;  //EXTRA
-        
+
     gates:
         input upperLayerIn;
         output upperLayerOut;
         input radioIn @labels(IRadioFrame);
-        
-        //EXTRA New
-        input upperLayerRelayIn @labels(CSMAFrame);
-        output upperLayerRelayOut @labels(CSMAFrame);
-        //EXTRA New End
-         
+
     submodules:
-        mac: Ieee802154NarrowbandMacNew {  //EXTRA
+        mac: IoToriiMAC {  //EXTRA
             parameters:
                 @display("p=100,150");
         }
@@ -55,16 +55,13 @@ module Ieee802154NarrowbandNicNew like IWirelessNic  //EXTRA
             parameters:
                 @display("p=100,250");
         }
+
     connections:
         upperLayerIn --> mac.upperLayerIn;
         mac.lowerLayerOut --> radio.upperLayerIn;
         mac.upperLayerOut --> { @display("m=n"); } --> upperLayerOut;
         radioIn --> { @display("m=s"); } --> radio.radioIn;
         radio.upperLayerOut --> mac.lowerLayerIn;
-        
-        //EXTRA New
-        mac.upperLayerRelayIn <-- { @display("m=n"); } <-- upperLayerRelayIn ; //if mgmtType == "Ieee80211MgmAdhocAPB";
-        mac.upperLayerRelayOut --> { @display("m=n"); } --> upperLayerRelayOut; //if mgmtType == "Ieee80211MgmAdhocAPB";
-        //EXTRA New End
-        
+
+
 }

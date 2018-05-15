@@ -31,17 +31,22 @@
 
 package iotorii.src.linklayer.csma;  //Extra
 
-import inet.linklayer.base.MACProtocolBase;
-import inet.linklayer.contract.IMACProtocol;
+//EXTRA BEGIN
+//import inet.linklayer.base.MACProtocolBase;
+//import inet.linklayer.contract.IMACProtocol;
+//EXTRA END
 
 //
 // Generic CSMA protocol supporting Mac-ACKs as well as
 // constant, linear or exponential backoff times.
 //
-simple CSMAIoTorii extends MACProtocolBase like IMACProtocol
+simple CSMAIoTorii //extends MACProtocolBase like IMACProtocol  //EXTRA
 {
     parameters:
         @class(iotorii::CSMAIoTorii);  //EXTRA
+        string interfaceTableModule; //EXTRA this line is added becaus "extends MACProtocolBase like IMACProtocol" is disabled
+        @display("i=block/layer");  //EXTRA   "    "
+        
         string address = default("auto"); // MAC address as hex string (12 hex digits), or
                                           // "auto". "auto" values will be replaced by
                                           // a generated MAC address in init stage 0.
@@ -62,7 +67,7 @@ simple CSMAIoTorii extends MACProtocolBase like IMACProtocol
         double aTurnaroundTime @unit(s) = default(0.000192 s);    // 12 symbols
 
         // Send/Expect MAC acks for unicast traffic?
-        bool useMACAcks;
+        bool useMACAcks = default(false);  //EXTRA = default(false)
         // Maximum number of frame retransmission,
         // only used when usage of MAC acks is enabled.
         int macMaxFrameRetries = default(3);
@@ -98,13 +103,17 @@ simple CSMAIoTorii extends MACProtocolBase like IMACProtocol
         // maximum backoff exponent (for exponential backoff method only)
         double macMaxBE = default(8);
 
-        string radioModule = default("^.radio");   // The path to the Radio module  //FIXME remove default value
+        //EXTRA BEGIN
+        //string radioModule = default("^.radio");   // The path to the Radio module  //FIXME remove default value
+        string radioModule = default("^.^.radio");  // radio has defined on the this-> parent-> parent
+        //EXTRA END
 
         @signal[NF_LINK_BREAK](type=CSMAFrame);
+ //EXTRA BEGIN       
     gates:
-        //EXTRA New
-        input upperLayerRelayIn @labels(CSMAFrame);
-        output upperLayerRelayOut @labels(CSMAFrame);
-        //EXTRA New End
-            
+        input upperLayerIn @labels(ILinkLayerFrame/down);
+        output upperLayerOut @labels(ILinkLayerFrame/up);
+        input lowerLayerIn @labels(ILinkLayerFrame/up);
+        output lowerLayerOut @labels(ILinkLayerFrame/down);        
+//EXTRA END          
 }

@@ -28,8 +28,7 @@ import iotorii.src.linklayer.csma.CSMAIoTorii;  //EXTRA
 simple Ieee802154NarrowbandMacNew extends CSMAIoTorii  //EXTRA
 {
     parameters:
-        //@class(iotorii::Ieee802154NarrowbandMacNew);  //EXTRA
-        useMACAcks = true;
+        //useMACAcks = true;  //EXTRA
 
         // Time needed to switch from sleep to rx.
         // TODO This is probabily wrong, since it is used to compute

@@ -34,18 +34,18 @@ network Net802154
     submodules:
         visualizer: <default("IntegratedCanvasVisualizer")> like IIntegratedVisualizer if hasVisualizer() {
             parameters:
-                @display("p=100,50");
+                @display("p=19,19");
         }
         configurator: IPv4NetworkConfigurator {
             parameters:
-                @display("p=100,150");
+                @display("p=19,66");
         }
         radioMedium: Ieee802154NarrowbandScalarRadioMedium {
             parameters:
-                @display("p=100,250");
+                @display("p=57,19");
         }
         host[numHosts]: WSNHostIoTorii {
             parameters:
-                @display("r=,,#707070;p=250,58");
+                @display("r=,,#707070;p=146,58");
         }
 }

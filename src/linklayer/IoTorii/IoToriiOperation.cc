@@ -113,7 +113,7 @@ void IoToriiOperation::sendToNeighbors(CSMAFrame *frame)
         dupFrame->setSrcAddr(MACAddress(eGA3.getInt()));
         dupFrame->setDestAddr(neighborList[i-1]);
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
-        EV << "SetHLMAC frame " << eGA3 << " is sent to the neighbor with suffix # (" << i << ") and MAC address (" << dupFrame->getDestAddr() << ")" << endl;
+        EV << "SetHLMAC frame " << eGA3 << " is sent to the neighbor with suffix # (" << i << ") and dst MAC address (" << dupFrame->getDestAddr() << ")" << endl;
         send(dupFrame, "lowerLayerOut");
 
     }
@@ -156,8 +156,8 @@ void IoToriiOperation::receiveSetHLMACMessage(CSMAFrame *frame)
 
     if (!hasLoop(hlmac)){
         saveHLMAC(hlmac);
-        EV << "HLMAC address " << hlmac << " is assigned to this node." << endl;
-        EV << "Frame " << frame->getName() << " (dst mac address: " << frame->getDestAddr() << " )" << " is resent to neighbors." << endl;
+        EV << "HLMAC address " << hlmac << " has assigned to this node." << endl;
+        EV << "Frame " << frame->getName() << " (received from dst mac address: " << frame->getDestAddr() << " )" << " is resent to neighbors by this node after updating dst mac address field." << endl;
         sendToNeighbors(frame);
     }else{
         EV << "Because of loop creation, HLMAC address " << hlmac << " is not assigned to this node." << endl;
@@ -174,7 +174,7 @@ bool IoToriiOperation::hasLoop(HLMACAddress hlmac)
 
     HLMACAddress longestPrefix = hlmacTable->getlongestMatchedPrefix(hlmac);
     if (longestPrefix == HLMACAddress::UNSPECIFIED_ADDRESS){
-        EV << "HLMAC adress " << hlmac << " does not create a loop in this node. Longest Matched Prefix is " << longestPrefix << endl;
+        EV << "HLMAC adress " << hlmac << " does not create a loop in this node. Longest Matched Prefix is UNSPECIFIED : " << longestPrefix << endl;
         return false;
     }
     else{
@@ -190,7 +190,7 @@ void IoToriiOperation::saveHLMAC(HLMACAddress hlmac)
     EV << "->IoToriiOperation::saveHLMAC()" << endl;
 
     hlmacTable->updateTableWithAddress(-1, hlmac);
-    EV << "HLMAC adress " << hlmac << " is assigned to this node." << endl;
+    EV << "HLMAC adress " << hlmac << " was saved to this node." << endl;
 
     EV << "<-IoToriiOperation::saveHLMAC()" << endl;
 }

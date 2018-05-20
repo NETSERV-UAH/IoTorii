@@ -18,7 +18,7 @@ class noncobject MACAddress;
 packet CSMAFrame;
 
 //
-// A CSMA mac packet format definition
+// Adding PAN IDs to the CSMA mac frame
 //
 packet CSMAFramePANID extends CSMAFrame
 {

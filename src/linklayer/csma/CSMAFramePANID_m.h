@@ -29,7 +29,7 @@ namespace inet {
  * Class generated from <tt>src/linklayer/csma/CSMAFramePANID.msg:24</tt> by nedtool.
  * <pre>
  * //
- * // A CSMA mac packet format definition
+ * // Adding PAN IDs to the CSMA mac frame
  * //
  * packet CSMAFramePANID extends CSMAFrame
  * {

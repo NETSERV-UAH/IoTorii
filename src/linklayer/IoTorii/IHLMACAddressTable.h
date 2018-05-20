@@ -48,6 +48,11 @@
 namespace iotorii {
 using namespace inet;
 
+enum MetricType
+{
+    HopCount = 1,
+};
+
 class IHLMACAddressTable
 {
   public:
@@ -109,6 +114,12 @@ class IHLMACAddressTable
     virtual void resetDefaultAging() = 0;
     //EXTRA BEGIN
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) = 0;
+
+    virtual bool isMyAddress(HLMACAddress address, unsigned int vid = 0) = 0;
+
+    virtual HLMACAddress getSrcAddress(HLMACAddress address, MetricType metric, unsigned int vid = 0) = 0;
+
+
     //EXTRA END
 
 };

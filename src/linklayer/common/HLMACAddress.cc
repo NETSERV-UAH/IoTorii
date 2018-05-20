@@ -45,6 +45,8 @@
 namespace iotorii {
 
 const HLMACAddress HLMACAddress::UNSPECIFIED_ADDRESS;
+const HLMACAddress HLMACAddress::BROADCAST_ADDRESS("3.3.3.3.3.3.3");
+
 
 unsigned char HLMACAddress::getIndexValue(unsigned int k) const
 {

@@ -26,6 +26,7 @@
 #include "IHLMACAddressTable.h"
 #include "inet/common/INETDefs.h"
 
+#include "inet/linklayer/base/MACProtocolBase.h"
 #include "inet/common/lifecycle/ILifecycle.h"
 #include "inet/linklayer/csma/CSMAFrame_m.h"
 
@@ -36,36 +37,58 @@ using namespace inet;
 
 class IoToriiOperation : public cSimpleModule, public ILifecycle
 {
+public:
+  /** @brief Gate ids */
+  //@{
+  int upperLayerInGateId;
+  int upperLayerOutGateId;
+  int lowerLayerInGateId;
+  int lowerLayerOutGateId;
+  //@}
+
   protected:
     // GA3 parameters
+    /** @brief Length of the header*/
+    int headerLength;
+
     // Switch parameters
-    bool isCoreSwitch = false;
-    int corePrefix = -1;            // main core prefix, set by ned parameter
+    bool isCoreSwitch;
+    int corePrefix;            // main core prefix, set by ned parameter
     simtime_t coreStartTime;
 
     //Hello parameters
     simtime_t helloInterval; //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
-    cMessage *HelloTimer = nullptr;
-    long HelloRcvd;                 //Number of Hello messages received
+    cMessage *HelloTimer;
+    long numHelloRcvd;                 //Number of Hello messages received
     /** HeT(Hello Table) **/
     std::vector<MACAddress> neighborList;
     int numNeighbors; //number of neighbors discovered by Hello message
     int maxNeighbors; //maximum number of neighbors. changing this value needs to change HLMACAddress and eGA3Frame structure.
 
-    IHLMACAddressTable *hlmacTable = nullptr;
+    IHLMACAddressTable *hlmacTable;
 
-    cMessage *startCoreEvent = nullptr;
+    cMessage *startCoreEvent;
 
     // Parameters for statistics collection
-    long numProcessedFrames;
+    long numReceivedLowerPacket;
+    long numReceivedUpperPacket;
     long numDiscardedFrames;
 
-    bool isOperational = false;    // for lifecycle
+    bool isOperational;    // for lifecycle
+
+  public:
+
+    IoToriiOperation();
+
+    ~IoToriiOperation();
+
+    virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback) override;
 
   protected:
+
     virtual void initialize(int stage) override;
+
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }
-    virtual void handleAndDispatchFrame(CSMAFrame *frame);
 
     /**
      * Calls handleIncomingFrame() for frames arrived from outside,
@@ -80,10 +103,13 @@ class IoToriiOperation : public cSimpleModule, public ILifecycle
 
     // for lifecycle:
 
-  public:
-    virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback) override;
-
   protected:
+
+    virtual void handleSelfMessage(cMessage *message);
+
+    virtual void handleUpperPacket(cPacket *msg);
+
+    virtual void handleLowerPacket(cPacket *msg);
 
     //Method to create and send hello frames to other switches (currently only at the beginning).
     //Sends broadcast hello messages, src is MAC address and dst is broadcast MAC address
@@ -104,9 +130,24 @@ class IoToriiOperation : public cSimpleModule, public ILifecycle
     //saves received HLMAC address in the HLMAC table
     virtual void saveHLMAC(HLMACAddress hlmac);
 
+    virtual void routingProccess(CSMAFrame *macPkt);
 
-  protected:
+    virtual void broadcastProccess(CSMAFrame *macPkt);
+
+    virtual cPacket *decapsMsg(CSMAFrame *macPkt);
+
+    virtual cObject *setUpControlInfo(cMessage *const pMsg, const MACAddress& pSrcAddr);
+
+    virtual void sendUp(cMessage *message);
+
+    virtual void sendDown(cMessage *message);
+
+    virtual bool isUpperMessage(cMessage *message);
+
+    virtual bool isLowerMessage(cMessage *message);
+
     virtual void start();
+
     virtual void stop();
 };
 

@@ -332,6 +332,60 @@ HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, un
 
 
 }
+
+bool HLMACAddressTable::isMyAddress(HLMACAddress address, unsigned int vid)
+{
+    HLMACTable *table = getTableForVid(vid);
+        if (table == nullptr)
+            return false;
+
+        auto iter = table->find(address);
+        if (iter != table->end()) {
+            if (iter->second.insertionTime + agingTime <= simTime()) {
+                // don't use (and throw out) aged entries
+                EV << "Ignoring and deleting aged entry: " << iter->first << " --> port" << iter->second.portno << "\n";
+                table->erase(iter);
+                return false;
+            }else
+                return true;
+        }
+        return false;
+}
+
+HLMACAddress HLMACAddressTable::getSrcAddress(HLMACAddress address, MetricType metric, unsigned int vid)
+{
+    HLMACAddress selected = HLMACAddress::UNSPECIFIED_ADDRESS;
+
+    HLMACTable *table = getTableForVid(vid);
+        if (table == nullptr)
+            return selected;
+
+    //if (address == HLMACAddress::BROADCAST_ADDRESS){
+        if (metric == HopCount){
+            for (auto iter = table->begin(); iter != table->end(); iter++){
+                if (iter->second.insertionTime + agingTime <= simTime()) {
+                    // don't use (and throw out) aged entries
+                    EV << "Ignoring and deleting aged entry: " << iter->first << " --> port" << iter->second.portno << "\n";
+                    table->erase(iter);
+                }else
+                    if (selected == HLMACAddress::UNSPECIFIED_ADDRESS)
+                        selected = iter->first;
+                    else{
+                        HLMACAddress temp = iter->first;
+                        if (selected.getHLMACHier() > temp.getHLMACHier())
+                            selected = iter->first;
+                    }
+
+            }//end for
+            return selected;
+        }//end metric
+        else
+            throw cRuntimeError("HLMACAddressTable::getSrcAddress(): metric %d is not defined", metric);
+//    }  //end broadcast
+}
+
+
+
 //EXTRA END
 
 } // namespace iotorii

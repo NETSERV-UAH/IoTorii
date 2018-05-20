@@ -59,8 +59,11 @@ private:
 
 public:
 
-  /** The unspecified MAC address, 0.0.0.0.0.0.0 */
+  /** The unspecified HLMAC address, 0.0.0.0.0.0.0 */
   static const HLMACAddress UNSPECIFIED_ADDRESS;
+
+  /** The broadcast HLMAC address, 3.3.3.3.3.3.3 */
+  static const HLMACAddress BROADCAST_ADDRESS;
 
   /**
    * Default constructor initializes address bytes to zero.

@@ -38,6 +38,7 @@ simple IoToriiOperation
     parameters:
         @class(iotorii::IoToriiOperation);
         string interfaceTableModule;
+        int headerLength @unit(bit) = default(72 bit);
         bool isCoreSwitch = default(false);
         int corePrefix = default(-1);
         double coreStartTime @unit("s") = default(1.003s);

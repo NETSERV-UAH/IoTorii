@@ -16,28 +16,19 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-package iotorii.src.node.inet; //EXTRA
+package iotorii.src.node.inet; 
 
 
-//
-// A wireless host containing routing, mobility and battery components.
-// Supports only IPv4 protocol, TCP and UDP as transport protocol.
-// This is a typical mobile node which can participate in adhoc routing
-// and may have TCP/UDP applications installed. Supports ICMP (ping) too.
-//
-// - By default contains a single wireless cards, however it can be configured
-//   by the numRadios parameter. Wireless card type is configured by the
-//   **.wlan.typename parameter. see:  inet.linklayer.ieee80211 or other
-//   modules implementing ~IWirelessNic
-// - Node mobility can be set using **.mobility.typename
-//   see: inet.mobility and ~IMobility
-//
-import inet.linklayer.ieee802154.Ieee802154NarrowbandNic; //EXTRA
+import inet.linklayer.ieee802154.Ieee802154NarrowbandNic; 
 
-module WSNHostIoTorii extends WirelessHostNew //EXTRA
+module WSNHostIoTorii extends WirelessHostNew 
 {
     parameters:
         @display("i=device/cellphone");
-        //wlan[*].mgmtType = default("Ieee80211MgmtAdhoc");  // use adhoc management
-        forwarding = default(true);
+        forwarding = default(false);
+        xml routes = default(xml("<routingTable/>"));
+        networkLayerType = "IPv6NetworkLayerIoTorii";
+        routingTableType = "IPv6RoutingTable";
+        routingTable.routes = routes;
+        
 }

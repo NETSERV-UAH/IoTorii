@@ -100,8 +100,6 @@ class CSMAIoTorii : public MACProtocolBase, public IMACProtocol
         , ackMessage(nullptr)
         , SeqNrParent()
         , SeqNrChild()
-        , upperLayerRelayInGateId(-1)  // EXTRA
-        , upperLayerRelayOutGateId(-1)  //EXTRA
         {}
 
     virtual ~CSMAIoTorii();
@@ -131,7 +129,6 @@ class CSMAIoTorii : public MACProtocolBase, public IMACProtocol
 
 
   protected:
-    int upperLayerRelayInGateId, upperLayerRelayOutGateId;  //EXTRA
     typedef std::list<CSMAFrame *> MacQueue;
 
     /** @name Different tracked statistics.*/

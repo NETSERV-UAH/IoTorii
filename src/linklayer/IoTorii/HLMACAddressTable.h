@@ -49,7 +49,6 @@
 namespace iotorii {
 using namespace inet;
 
-
 /**
  * This module handles the mapping between ports and MAC addresses. See the NED definition for details.
  */
@@ -159,6 +158,11 @@ class HLMACAddressTable : public cSimpleModule, public IHLMACAddressTable
 
     //EXTRA BEGIN
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) override;
+
+    virtual bool isMyAddress(HLMACAddress address, unsigned int vid = 0) override;
+
+    virtual HLMACAddress getSrcAddress(HLMACAddress address, MetricType metric, unsigned int vid = 0) override;
+
     //EXTRA END
 
 

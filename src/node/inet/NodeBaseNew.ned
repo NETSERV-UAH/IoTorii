@@ -66,7 +66,7 @@ module NodeBaseNew like INetworkNode  //EXTRA
         string osgModel = default(""); // 3D model for OSG visualization, no 3D model by default
         string osgModelColor = default(""); // tint color, no colorization by default
         string mobilityType = default(numRadios > 0 ? "StationaryMobility" : "");
-        string networkLayerType = default("IPv4NetworkLayer");
+        string networkLayerType = default("IPv6NetworkLayerIoTorii"); //EXTRA
         string routingTableType = default("IPv4RoutingTable");
         bool forwarding = default(true);
         bool multicastForwarding = default(false);

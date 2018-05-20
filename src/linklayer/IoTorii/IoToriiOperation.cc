@@ -33,6 +33,8 @@
 
 #include "HLMACAddressTable.h"
 #include "inet/linklayer/csma/CSMAFrame_m.h"
+#include "inet/linklayer/common/SimpleLinkLayerControlInfo.h"
+
 
 
 
@@ -42,18 +44,43 @@ using namespace inet;
 
 Define_Module(IoToriiOperation);
 
+IoToriiOperation::IoToriiOperation() :
+    headerLength(0),
+    upperLayerInGateId(-1),
+    upperLayerOutGateId(-1),
+    lowerLayerInGateId(-1),
+    lowerLayerOutGateId(-1),
+    corePrefix(-1),
+    numReceivedLowerPacket(0),
+    numReceivedUpperPacket(0),
+    numDiscardedFrames(0),
+    numHelloRcvd(0),
+    numNeighbors(0),
+    maxNeighbors(3),
+    isCoreSwitch(false),
+    hlmacTable(nullptr),
+    HelloTimer(nullptr),
+    startCoreEvent(nullptr),
+    isOperational(false)
+
+{
+}
+
 void IoToriiOperation::initialize(int stage)
 {
     if (stage == INITSTAGE_LOCAL) {
+        upperLayerInGateId = findGate("upperLayerIn");
+        upperLayerOutGateId = findGate("upperLayerOut");
+        lowerLayerInGateId = findGate("lowerLayerIn");
+        lowerLayerOutGateId = findGate("lowerLayerOut");
 
-        numProcessedFrames = numDiscardedFrames = 0;
+        headerLength = par("headerLength");
         helloInterval = par("helloInterval");
-        numNeighbors = 0;
-        maxNeighbors = 3;
-        HelloRcvd = 0;
-        WATCH(numProcessedFrames);
+
+        WATCH(headerLength);
+        WATCH(numReceivedUpperPacket);
         WATCH(numDiscardedFrames);
-        WATCH(HelloRcvd);
+        WATCH(numHelloRcvd);
         WATCH(helloInterval);
         WATCH(maxNeighbors);
         WATCH_VECTOR(neighborList);
@@ -93,7 +120,7 @@ void IoToriiOperation::sendAndScheduleHello()
     CSMAFrame *macPkt = new CSMAFrame("Hello!");
     macPkt->setDestAddr(MACAddress::BROADCAST_ADDRESS);
     EV << "Hello message from this node is broadcasted to all node in the range. " << endl;
-    send(macPkt, "lowerLayerOut");
+    sendDown(macPkt); //send(macPkt, lowerLayerOutGateId); //send(macPkt, "lowerLayerOut");
 
     EV << "<-IoToriiOperation::sendAndScheduleHello()" << endl;
 }
@@ -114,7 +141,7 @@ void IoToriiOperation::sendToNeighbors(CSMAFrame *frame)
         dupFrame->setDestAddr(neighborList[i-1]);
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
         EV << "SetHLMAC frame " << eGA3 << " is sent to the neighbor with suffix # (" << i << ") and dst MAC address (" << dupFrame->getDestAddr() << ")" << endl;
-        send(dupFrame, "lowerLayerOut");
+        sendDown(dupFrame); //send(dupFrame, lowerLayerOutGateId); // send(dupFrame, "lowerLayerOut");
 
     }
 
@@ -134,7 +161,7 @@ void IoToriiOperation::startCore(int core)
     coreAddress.setCore((unsigned char)core);  //insert core prefix in it
     EV << "Core address " << coreAddress << " is assigned to this node." << endl;
     saveHLMAC(coreAddress);     //assigns coreAddress to itself
-    unsigned char type = 1;               // if assume that type of SetHLMAC frame is 1
+    eGA3FrameType type = SetHLMAC;  //unsigned char type = 1;               // if assume that type of SetHLMAC frame is 1
     eGA3Frame eGA3(type,coreAddress);
 
     //preparing CSMA frame
@@ -205,40 +232,94 @@ void IoToriiOperation::handleMessage(cMessage *msg)
         return;
     }
 
-    if (msg->isSelfMessage()) {
-        if (msg == HelloTimer) {
-            sendAndScheduleHello();
-            return;
+    if (msg->isSelfMessage())
+        handleSelfMessage(msg);
+    else if (isUpperMessage(msg)) {
+        if (msg->isPacket()){
+            //emit(packetReceivedFromUpperSignal, msg);
+            handleUpperPacket(PK(msg));
         }
-
-      if (msg == startCoreEvent) {
-          startCore(corePrefix);
-          return;
-      }
-
+/*        else
+            handleUpperCommand(msg); */
     }
-
- /*  data frames: sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
-    nbRxFrames++;
-    delete msg;    */
-
-    CSMAFrame *frame = check_and_cast<CSMAFrame *>(msg);
-    // Frame received from MAC unit
-    emit(LayeredProtocolBase::packetReceivedFromLowerSignal, frame);
-    handleAndDispatchFrame(frame);
+    else if (isLowerMessage(msg)) {
+        if (msg->isPacket()){
+            //emit(packetReceivedFromLowerSignal, msg);
+            handleLowerPacket(PK(msg));
+        }
+/*        else
+            handleLowerCommand(msg);*/
+    }
+    else
+        throw cRuntimeError("Message '%s' received on unexpected gate '%s'", msg->getName(), msg->getArrivalGate()->getFullName());
 
     EV << "<-IoToriiOperation::handleMessage()" << endl;
 }
 
-void IoToriiOperation::handleAndDispatchFrame(CSMAFrame *frame)
+void IoToriiOperation::handleSelfMessage(cMessage *msg)
 {
-    EV << "->IoToriiOperation::handleAndDispatchFrame()" << endl;
+    EV << "<-IoToriiOperation::handleSelfMessage()" << endl;
+    if (msg == HelloTimer) {
+        sendAndScheduleHello();
+        return;
+    }
+    else if (msg == startCoreEvent) {
+        startCore(corePrefix);
+        return;
+    }
+    else
+        EV << "CSMAIoTorii Error: unknown SelfMessage:" << msg << endl;
+    EV << "<-IoToriiOperation::handleSelfMessage()" << endl;
+}
 
-    numProcessedFrames++;
+void IoToriiOperation::handleUpperPacket(cPacket *msg)
+{
+    EV << "->IoToriiOperation::handleUpperPacket()" << endl;
+
+    //MacPkt *macPkt = encapsMsg(msg);
+
+    CSMAFrame *macPkt = new CSMAFrame(msg->getName());
+    macPkt->setBitLength(headerLength);
+    IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
+    MACAddress macdest = cInfo->getDestinationAddress();
+    eGA3Frame eGA3dst(macdest);
+    HLMACAddress dest = eGA3dst.getHLMACAddress();
+    unsigned char type = eGA3dst.geteGA3FrameType();
+    EV_DETAIL << "A message is received from upper layer, name is " << msg->getName() << ", CInfo removed, HLMAC addr=" << dest << ", HLMAC type=" << (unsigned short int) type << endl;
+    macPkt->setDestAddr(macdest);
+    delete cInfo;
+    MetricType metric = HopCount;
+    HLMACAddress bestSrcAddr = hlmacTable -> getSrcAddress(dest, metric);
+    eGA3Frame eGA3src;
+    eGA3src.setHLMACAddress(bestSrcAddr);
+    eGA3src.seteGA3FrameType(type);
+    MACAddress macsrc(eGA3src.getInt());
+    macPkt->setSrcAddr(macsrc);
+    //setTransmitter  for broadcast
+    //setCounter  for unicast
+
+    //RadioAccNoise3PhyControlInfo *pco = new RadioAccNoise3PhyControlInfo(bitrate);
+    //macPkt->setControlInfo(pco);
+    assert(static_cast<cPacket *>(msg));
+    macPkt->encapsulate(static_cast<cPacket *>(msg));
+    EV_DETAIL << "pkt encapsulated, length: " << macPkt->getBitLength() << "\n";
+
+    sendDown(macPkt);
+
+
+    EV << "<-IoToriiOperation::handleUpperPacket()" << endl;
+}
+
+void IoToriiOperation::handleLowerPacket(cPacket *msg)
+{
+    EV << "->IoToriiOperation::handleLowerPacket()" << endl;
+    CSMAFrame *frame = check_and_cast<CSMAFrame *>(msg);
+
+    numReceivedLowerPacket++;
 
     if ((strcmp(frame->getName(),"Hello!")==0))
     {
-        HelloRcvd++;
+        numHelloRcvd++;
         //to check duplicate hello
         bool isDuplicate = false;
         for(int i=0; i<numNeighbors; i++)
@@ -251,16 +332,101 @@ void IoToriiOperation::handleAndDispatchFrame(CSMAFrame *frame)
             numNeighbors++;
             return;
         }
-    }
-
-    //SetHLMAC
-    if ((strcmp(frame->getName(),"SetHLMAC")==0))
-    {
+        else {
+            EV << "Hello message is received from : " << frame->getSrcAddr() << "is duplicate." <<endl;
+            return;
+        }
+    } // END Hello
+    else if ((strcmp(frame->getName(),"SetHLMAC")==0)) {
         receiveSetHLMACMessage(frame);
         return;
-    }
+    } //END SetHLMAC
+    else  // Data frame
+    {
+        const HLMACAddress& src = HLMACAddress(frame->getSrcAddr().getInt());
+        const HLMACAddress& dst = HLMACAddress(frame->getDestAddr().getInt());
+        //const int counter = frame->
 
-    EV << "<-IoToriiOperation::handleAndDispatchFrame()" << endl;
+        EV << "Received frame name= " << frame->getName() << " srcHLMAC=" << src << " dstHLMAC=" << dst << endl;
+        if (hlmacTable->isMyAddress(dst)){ //if (myAddress != HLMACAddress::UNSPECIFIED_ADDRESS){     //Data frame is mine. Send its payload to upper layer
+            EV << "Data frame is mine. its payload is sent to upper layer. " << endl;
+            sendUp(decapsMsg(frame));
+            //nbRxFrames++;
+            delete msg;
+        }
+        else if (dst == HLMACAddress::BROADCAST_ADDRESS){     //Data frame is broadcast, a copye of it is mine. Send the copy to upper layer
+            EV << "Data frame is a broadcast frame. its payload is sent to upper layer and  a copy of it is sent to broadcast proccess." << endl;
+            sendUp(decapsMsg(frame));
+            //nbRxFrames++;
+            broadcastProccess(frame);
+        }
+        else {     //Data frame is not mine. Send it to routing proccess
+            EV << "Data frame is not mine. it need to routing, so it is sent to routing proccess." << endl;
+            //nbRxFrames++;
+            routingProccess(frame);
+        }
+    }
+    EV << "<-IoToriiOperation::handleLowerPacket()" << endl;
+}
+
+void IoToriiOperation::routingProccess(CSMAFrame *macPkt)
+{
+    EV << "->IoToriiOperation::routingProccess()" << endl;
+
+    EV << "<-IoToriiOperation::routingProccess()" << endl;
+}
+
+void IoToriiOperation::broadcastProccess(CSMAFrame *macPkt)
+{
+    EV << "->IoToriiOperation::broadcastProccess()" << endl;
+
+    EV << "<-IoToriiOperation::broadcastProccess()" << endl;
+}
+
+cPacket *IoToriiOperation::decapsMsg(CSMAFrame *macPkt)
+{
+    cPacket *msg = macPkt->decapsulate();
+    //convert HLMAC broadcast address to the MAC broadcast address because network layer doesn't recognize HLMAC broadcast address
+    if (HLMACAddress(macPkt->getSrcAddr().getInt()) == HLMACAddress::BROADCAST_ADDRESS)
+        setUpControlInfo(msg, MACAddress::BROADCAST_ADDRESS);
+    else
+        setUpControlInfo(msg, macPkt->getSrcAddr());
+    return msg;
+}
+
+/**
+ * Attaches a "control info" (MacToNetw) structure (object) to the message pMsg.
+ */
+cObject *IoToriiOperation::setUpControlInfo(cMessage *const pMsg, const MACAddress& pSrcAddr)
+{
+    SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();
+    cCtrlInfo->setSrc(pSrcAddr);
+    pMsg->setControlInfo(cCtrlInfo);
+    return cCtrlInfo;
+}
+
+void IoToriiOperation::sendUp(cMessage *message)
+{
+//    if (message->isPacket())
+//        emit(packetSentToUpperSignal, message);
+    send(message, upperLayerOutGateId);
+}
+
+void IoToriiOperation::sendDown(cMessage *message)
+{
+//    if (message->isPacket())
+//        emit(packetSentToLowerSignal, message);
+    send(message, lowerLayerOutGateId);
+}
+
+bool IoToriiOperation::isUpperMessage(cMessage *message)
+{
+    return message->getArrivalGateId() == upperLayerInGateId;
+}
+
+bool IoToriiOperation::isLowerMessage(cMessage *message)
+{
+    return message->getArrivalGateId() == lowerLayerInGateId;
 }
 
 void IoToriiOperation::start()
@@ -315,8 +481,11 @@ void IoToriiOperation::finish()
 {
     EV << "->IoToriiOperation::finish()" << endl;
 
-    recordScalar("processed frames", numProcessedFrames);
+    recordScalar("Received Upper Packets", numReceivedUpperPacket);
+    recordScalar("Received Lower frames", numReceivedLowerPacket);
     recordScalar("discarded frames", numDiscardedFrames);
+    recordScalar("Received Hello", numHelloRcvd);
+
     if (hlmacTable != nullptr)
         hlmacTable->printState();
 
@@ -333,6 +502,21 @@ void IoToriiOperation::finish()
     }
 
     EV << "<-IoToriiOperation::finish()" << endl;
+}
+
+IoToriiOperation::~IoToriiOperation()
+{
+    if (startCoreEvent != nullptr){
+        cancelEvent(startCoreEvent);
+        delete startCoreEvent;
+        startCoreEvent = nullptr;
+    }
+
+    if (HelloTimer != nullptr){
+        cancelEvent(HelloTimer);
+        delete HelloTimer;
+        HelloTimer = nullptr;
+    }
 }
 
 } // namespace iotorii

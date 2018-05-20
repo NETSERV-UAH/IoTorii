@@ -1,6 +1,11 @@
 //
 // Copyright (C) 2005 Andras Varga
 //
+// Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+//                    (1) GIST, University of Alcala, Spain.
+//                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+//                    OMNeT++ 5.2.1 & INET 3.6.3
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either

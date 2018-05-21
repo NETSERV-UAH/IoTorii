@@ -132,7 +132,9 @@ public:
 
     virtual void routingProccess(CSMAFrame *macPkt);
 
-    virtual void broadcastProccess(CSMAFrame *macPkt);
+    virtual void broadcastProccessUpwardTraffic(CSMAFrame *macPkt);
+
+    virtual void broadcastProccessAllwardTraffic(CSMAFrame *macPkt);
 
     virtual cPacket *decapsMsg(CSMAFrame *macPkt);
 

@@ -182,6 +182,19 @@ int HLMACAddress::compareTo(const HLMACAddress& other) const
     return (address < other.address) ? -1 : (address == other.address) ? 0 : 1;    // note: "return address-other.address" is not OK because 64-bit result does not fit into the return type
 }
 
+HLMACAddress HLMACAddress::getLongestCommonPrefix(const HLMACAddress& other)
+{
+    HLMACAddress commonPrexif;
+    unsigned int i = 0;
+    while(i<getHLMACLength() && (getIndexValue(i) == other.getIndexValue(i)))
+    {
+        commonPrexif.setIndexValue(i, getIndexValue(i));
+        i++;
+    }
+        // or: commonPrexif.setIndexValue(i++, getIndexValue(i));
+    return commonPrexif;
+}
+
 } // namespace iotorii
 
 

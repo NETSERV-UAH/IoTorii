@@ -58,7 +58,8 @@ Define_Module(IPv6NeighbourDiscoveryIoTorii);
 simsignal_t IPv6NeighbourDiscoveryIoTorii::startDADSignal = registerSignal("startDAD");
 
 IPv6NeighbourDiscoveryIoTorii::IPv6NeighbourDiscoveryIoTorii()
-    : neighbourCache(*this)
+    : neighbourCache(*this),
+      staticLLAddressAssignment(true)
 {
 }
 
@@ -95,6 +96,7 @@ IPv6NeighbourDiscoveryIoTorii::~IPv6NeighbourDiscoveryIoTorii()
 
 void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
 {
+    EV << "->IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;
     cSimpleModule::initialize(stage);
 
     if (stage == INITSTAGE_NETWORK_LAYER) {
@@ -108,6 +110,7 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
         ift = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
         rt6 = getModuleFromPar<IPv6RoutingTable>(par("routingTableModule"), this);
         icmpv6 = getModuleFromPar<ICMPv6>(par("icmpv6Module"), this);
+        staticLLAddressAssignment = par("staticLLAddressAssignment").boolValue();  //EXTRA
 
 #ifdef WITH_xMIPv6
         if (rt6->isMobileNode())
@@ -138,7 +141,8 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
 
         //This simulates random node bootup time. Link local address assignment
         //takes place during this time.
-        cMessage *msg = new cMessage("assignLinkLocalAddr", MK_ASSIGN_LINKLOCAL_ADDRESS);
+        //EXTRA BEGIN
+/*        cMessage *msg = new cMessage("assignLinkLocalAddr", MK_ASSIGN_LINKLOCAL_ADDRESS);
 
         //We want routers to boot up faster!
         if (rt6->isRouter())
@@ -146,6 +150,46 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
         else
             scheduleAt(simTime() + uniform(0.4, 1), msg); //Random Host bootup time
     }
+*/
+        if (staticLLAddressAssignment){
+            for (int i = 0; i < ift->getNumInterfaces(); i++) {
+                InterfaceEntry *ie = ift->getInterface(i);
+
+                //Skip the loopback interface.
+                if (ie->isLoopback())
+                    continue;
+
+                IPv6Address linkLocalAddr = ie->ipv6Data()->getLinkLocalAddress();
+                EV << "Assigned link local address is: " << linkLocalAddr << endl;
+                if (linkLocalAddr.isUnspecified()) {
+                    //if no link local address exists for this interface, we assign one to it.
+                    EV_INFO << "No link local address exists. Forming one" << endl;
+                    linkLocalAddr = IPv6Address().formLinkLocalAddress(ie->getInterfaceToken());
+                    ie->ipv6Data()->assignAddress(linkLocalAddr, true, SIMTIME_ZERO, SIMTIME_ZERO);
+                    EV << "Assigned link local address is: " << linkLocalAddr << endl;
+                }
+
+                //Before we can use this address, an error is generated.
+                if (ie->ipv6Data()->isTentativeAddress(linkLocalAddr)) {
+                    EV << "The tentative link local address is changed to the permanent link local address." << endl;
+                    ie->ipv6Data()->permanentlyAssign(linkLocalAddr);
+                }
+            }
+
+        }
+        else{
+            cMessage *msg = new cMessage("assignLinkLocalAddr", MK_ASSIGN_LINKLOCAL_ADDRESS);
+
+            //We want routers to boot up faster!
+            if (rt6->isRouter())
+                scheduleAt(simTime() + uniform(0, 0.3), msg); //Random Router bootup time
+            else
+                scheduleAt(simTime() + uniform(0.4, 1), msg); //Random Host bootup time
+        }
+        //EXTRA END
+
+    }
+    EV << "<-IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;
 }
 
 void IPv6NeighbourDiscoveryIoTorii::handleMessage(cMessage *msg)

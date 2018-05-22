@@ -58,8 +58,9 @@ using namespace inet;
 
 enum eGA3FrameType
 {
+    Unspecified = 0,   //Zero value is reserved for unspecified address
+    DataHLMAC = 0,      //Data frame
     SetHLMAC = 1,      //SetHLMAC frame
-    DataHLMAC = 2,      //Data frame
     Broadcast = 3      //the bigest value is reserved for broadcast address
 };
 

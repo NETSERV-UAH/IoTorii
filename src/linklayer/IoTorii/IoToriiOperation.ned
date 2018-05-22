@@ -39,6 +39,7 @@ simple IoToriiOperation
         @class(iotorii::IoToriiOperation);
         string interfaceTableModule;
         int headerLength @unit(bit) = default(72 bit);
+        int broadcastType = default(3); //select broadcast type. 1: only Upward by using counter, 2: only Upward by using transmitter address, 3: UP/Downward and P2P traffic
         bool isCoreSwitch = default(false);
         int corePrefix = default(-1);
         double coreStartTime @unit("s") = default(1.003s);

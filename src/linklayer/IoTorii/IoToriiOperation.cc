@@ -33,7 +33,6 @@
 
 #include "HLMACAddressTable.h"
 #include "inet/linklayer/csma/CSMAFrame_m.h"
-#include "src/linklayer/csma/CSMAFramePANID_m.h"
 #include "inet/linklayer/common/SimpleLinkLayerControlInfo.h"
 
 
@@ -45,6 +44,7 @@ Define_Module(IoToriiOperation);
 
 IoToriiOperation::IoToriiOperation() :
     headerLength(0),
+    broadcastType(0),
     upperLayerInGateId(-1),
     upperLayerOutGateId(-1),
     lowerLayerInGateId(-1),
@@ -74,9 +74,11 @@ void IoToriiOperation::initialize(int stage)
         lowerLayerOutGateId = findGate("lowerLayerOut");
 
         headerLength = par("headerLength");
+        broadcastType = par("broadcastType");
         helloInterval = par("helloInterval");
 
         WATCH(headerLength);
+        WATCH(broadcastType);
         WATCH(numReceivedUpperPacket);
         WATCH(numDiscardedFrames);
         WATCH(numHelloRcvd);
@@ -279,15 +281,16 @@ void IoToriiOperation::handleUpperPacket(cPacket *msg)
 
     IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
     MACAddress macdest = cInfo->getDestinationAddress();
+    delete cInfo;
+
     eGA3Frame eGA3dst(macdest);
     HLMACAddress dest = eGA3dst.getHLMACAddress();
     unsigned char type = eGA3dst.geteGA3FrameType();
-    EV_DETAIL << "A message has received from upper layer, name is " << msg->getName() << ", CInfo removed, dst HLMAC addr=" << dest << ", dst HLMAC type=" << (unsigned short int) type << endl;
+    EV_DETAIL << "A message has been received from upper layer, name is " << msg->getName() << ", CInfo removed, dst HLMAC addr=" << dest << ", dst HLMAC type=" << (unsigned short int) type << endl;
     CSMAFramePANID *frame = new CSMAFramePANID(msg->getName());
     frame->setBitLength(headerLength);
-    EV << "frame header length is set to " <<  frame->getBitLength() << " (bits)." << endl;
+    EV << "frame has been created. frame header length is set to " <<  frame->getBitLength() << " (bits)." << endl;
     frame->setDestAddr(macdest);
-    delete cInfo;
     MetricType metric = HopCount;
     HLMACAddress bestSrcAddr = hlmacTable -> getSrcAddress(dest, metric);
     eGA3Frame eGA3src;
@@ -303,7 +306,7 @@ void IoToriiOperation::handleUpperPacket(cPacket *msg)
         if ((commonAncestor = bestSrcAddr.getLongestCommonPrefix(dest)) != HLMACAddress::UNSPECIFIED_ADDRESS){
             lenCommonAncestor = (unsigned int)(commonAncestor.getHLMACHier()) + 1;
             counter = ((unsigned int)bestSrcAddr.getHLMACHier() + 1) + ((unsigned int)dest.getHLMACHier() + 1) - 2 * lenCommonAncestor;
-            EV << "Best selected src HLMAC address is " << bestSrcAddr << "src length is" << bestSrcAddr.getHLMACHier() + 1 << "dst HLMAC address is " << dest << "dst length is " << dest.getHLMACHier() + 1 << "longest common ancestor HLMAC address is " << commonAncestor << "longest common ancestor length is " << lenCommonAncestor << "counter is " << counter << endl;
+            EV << "Best selected src HLMAC address is " << bestSrcAddr << "src length is " << bestSrcAddr.getHLMACHier() + 1 << ", dst HLMAC address is " << dest << ", dst length is " << dest.getHLMACHier() + 1 << ", longest common ancestor HLMAC address is " << commonAncestor << ", longest common ancestor length is " << lenCommonAncestor << ", counter is " << counter << endl;
             frame->setSrcPANID(MACAddress(counter)); //src PAN ID is reused for saving counter in unicast transmission
             EV << "Unicast frame is prepared to phy layer, src is  " << eGA3src << ", dst is " << eGA3dst << ", src PAN ID (counter) is " << counter << endl;
         }
@@ -311,8 +314,32 @@ void IoToriiOperation::handleUpperPacket(cPacket *msg)
             throw cRuntimeError("src and dst has no common ancestor!");
     }
     else{   //broadcast transmission
-        frame->setSrcPANID(macsrc); //src PAN ID is reused for saving transmitter in broadcast transmission
-        EV << "Broadcast frame is prepared to phy layer, src is  " << eGA3src << ", dst is " << eGA3dst << ", src PAN ID (Transmitter address) is " << eGA3src << endl;
+        if (broadcastType == 1){  //Only upward broadcast by using counter
+            unsigned int lenCommonAncestor = 0;
+            unsigned int counter = 0;
+            HLMACAddress commonAncestor;
+            HLMACAddress dest;
+            dest.setCore(bestSrcAddr.getIndexValue(0));  //HLMACAddress dest(bestSrcAddr.getHLMACHier(0));
+            EV << "Broadcast type = " << broadcastType << ", selected (best) Src Addr is " << bestSrcAddr << ", Sink address is " << dest <<  endl;
+            if ((commonAncestor = bestSrcAddr.getLongestCommonPrefix(dest)) != HLMACAddress::UNSPECIFIED_ADDRESS){
+                lenCommonAncestor = (unsigned int)(commonAncestor.getHLMACHier()) + 1;
+                counter = ((unsigned int)bestSrcAddr.getHLMACHier() + 1) + ((unsigned int)dest.getHLMACHier() + 1) - 2 * lenCommonAncestor;
+                EV << "Best selected src HLMAC address is " << bestSrcAddr << "src length is " << bestSrcAddr.getHLMACHier() + 1 << ", dst HLMAC address is " << dest << ", dst length is " << dest.getHLMACHier() + 1 << ", longest common ancestor HLMAC address is " << commonAncestor << ", longest common ancestor length is " << lenCommonAncestor << ", counter is " << counter << endl;
+                frame->setSrcPANID(MACAddress(counter)); //src PAN ID is reused for saving counter in unicast transmission
+                EV << "Unicast frame is prepared to phy layer, src is  " << eGA3src << ", dst is " << eGA3dst << ", src PAN ID (counter) is " << counter << endl;
+            }
+        }
+        else if (broadcastType == 2){  //Only upward broadcast by using transmitter address
+            frame->setSrcPANID(macsrc); //src PAN ID is reused for saving transmitter in broadcast transmission
+            EV << "Broadcast frame is prepared to phy layer, src is  " << eGA3src << ", dst is " << eGA3dst << ", src PAN ID (Transmitter address) is " << eGA3src << endl;
+        }
+        else if (broadcastType == 3){  //Broadcast for Up/Downward and P2P traffic
+            frame->setSrcPANID(macsrc); //src PAN ID is reused for saving transmitter in broadcast transmission
+            EV << "Broadcast frame is prepared to phy layer, src is  " << eGA3src << ", dst is " << eGA3dst << ", src PAN ID (Transmitter address) is " << eGA3src << endl;
+        }
+        else
+            throw cRuntimeError("Broadcast type %d in not defined.", broadcastType);
+
     }
 
     //RadioAccNoise3PhyControlInfo *pco = new RadioAccNoise3PhyControlInfo(bitrate);
@@ -330,12 +357,12 @@ void IoToriiOperation::handleUpperPacket(cPacket *msg)
 void IoToriiOperation::handleLowerPacket(cPacket *msg)
 {
     EV << "->IoToriiOperation::handleLowerPacket()" << endl;
-    CSMAFrame *frame = check_and_cast<CSMAFrame *>(msg);
 
     numReceivedLowerPacket++;
 
-    if ((strcmp(frame->getName(),"Hello!")==0))
+    if ((strcmp(msg->getName(),"Hello!")==0))
     {
+        CSMAFrame *frame = check_and_cast<CSMAFrame *>(msg);
         numHelloRcvd++;
         //to check duplicate hello
         bool isDuplicate = false;
@@ -354,12 +381,15 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
             return;
         }
     } // END Hello
-    else if ((strcmp(frame->getName(),"SetHLMAC")==0)) {
+    else if ((strcmp(msg->getName(),"SetHLMAC")==0)) {
+        CSMAFrame *frame = check_and_cast<CSMAFrame *>(msg);
         receiveSetHLMACMessage(frame);
         return;
     } //END SetHLMAC
     else  // Data frame
     {
+        CSMAFramePANID *frame = check_and_cast<CSMAFramePANID *>(msg);
+
         const HLMACAddress& src = HLMACAddress(frame->getSrcAddr().getInt());
         const HLMACAddress& dst = HLMACAddress(frame->getDestAddr().getInt());
         //const int counter = frame->
@@ -373,10 +403,19 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
         }
         else if (dst == HLMACAddress::BROADCAST_ADDRESS){     //Data frame is broadcast, a copye of it is mine. Send the copy to upper layer
             EV << "Data frame is a broadcast frame. its payload is sent to upper layer and  a copy of it is sent to broadcast proccess." << endl;
-            sendUp(decapsMsg(frame));
+            sendUp(decapsMsg(frame->dup()));
             //nbRxFrames++;
-            broadcastProccessUpwardTraffic(frame);
-            //broadcastProccessAllwardTraffic(frame);
+            if (broadcastType == 1){  //Only upward broadcast by using counter
+                broadcastProccessUpwardTraffic1(frame);
+            }
+            else if (broadcastType == 2){  //Only upward broadcast by using transmitter address
+                broadcastProccessUpwardTraffic2(frame);
+            }
+            else if (broadcastType == 3){  //Broadcast for Up/Downward and P2P traffic
+                broadcastProccessAllwardTraffic(frame);
+            }
+            else
+                throw cRuntimeError("Broadcast type %d in not defined.", broadcastType);
         }
         else {     //Data frame is not mine. Send it to routing proccess
             EV << "Data frame is not mine. it need to routing, so it is sent to routing proccess." << endl;
@@ -387,30 +426,81 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
     EV << "<-IoToriiOperation::handleLowerPacket()" << endl;
 }
 
-void IoToriiOperation::routingProccess(CSMAFrame *frame)
+void IoToriiOperation::routingProccess(CSMAFramePANID *frame)
 {
     EV << "->IoToriiOperation::routingProccess()" << endl;
-    CSMAFramePANID *framePANID = check_and_cast<CSMAFramePANID *>(frame);
-    HLMACAddress commonAncestor;
-    const HLMACAddress& src = HLMACAddress(framePANID->getSrcAddr().getInt());
-    const HLMACAddress& dst = HLMACAddress(frame->getDestAddr().getInt());
+    //CSMAFramePANID *framePANID = check_and_cast<CSMAFramePANID *>(frame);
+    HLMACAddress src(frame->getSrcAddr().getInt());
+    HLMACAddress dst(frame->getDestAddr().getInt());
+    HLMACAddress myHLMACAddress, commonAncestor = src.getLongestCommonPrefix(dst);
 
+    unsigned int lenCommonAncestor = 0;
+    unsigned int counter = (unsigned int)frame->getSrcPANID().getInt();
+    unsigned int lenSrc = (unsigned int)src.getHLMACHier() + 1;
+    unsigned int lenDst = (unsigned int)dst.getHLMACHier() + 1;
+    if (commonAncestor != HLMACAddress::UNSPECIFIED_ADDRESS)
+        lenCommonAncestor = (unsigned int)(commonAncestor.getHLMACHier()) + 1;
 
+    //Routing algorithm
+    if (((myHLMACAddress = hlmacTable->getlongestMatchedPrefix(src)) != HLMACAddress::UNSPECIFIED_ADDRESS) &&
+        (myHLMACAddress >= commonAncestor) &&
+        (((unsigned int)myHLMACAddress.getHLMACHier() + 1) == counter)){
+        counter--;
+        frame->setSrcPANID(MACAddress(counter));
+        sendDown(frame);
 
-
-
-
+    }
+    else if (((myHLMACAddress = hlmacTable->getlongestMatchedPrefix(dst)) != HLMACAddress::UNSPECIFIED_ADDRESS) &&
+            ((lenDst - ((unsigned int)myHLMACAddress.getHLMACHier() + 1) + 1) == counter)){
+        counter--;
+        frame->setSrcPANID(MACAddress(counter));
+        sendDown(frame);
+    }
+    else
+        delete frame;
     EV << "<-IoToriiOperation::routingProccess()" << endl;
 }
 
-void IoToriiOperation::broadcastProccessUpwardTraffic(CSMAFrame *macPkt)
+void IoToriiOperation::broadcastProccessUpwardTraffic1(CSMAFramePANID *frame)
 {
-    EV << "->IoToriiOperation::broadcastProccessUpwardTraffic()" << endl;
+    EV << "->IoToriiOperation::broadcastProccessUpwardTraffic1()" << endl;
+    HLMACAddress src(frame->getSrcAddr().getInt());
+    HLMACAddress dst;
+    dst.setCore(src.getIndexValue(0));  //  dst.setCore(src.getCore());
 
-    EV << "<-IoToriiOperation::broadcastProccessUpwardTraffic()" << endl;
+    HLMACAddress myHLMACAddress, commonAncestor = src.getLongestCommonPrefix(dst);
+
+    unsigned int lenCommonAncestor = 0;
+    unsigned int counter = (unsigned int)frame->getSrcPANID().getInt();
+    unsigned int lenSrc = (unsigned int)src.getHLMACHier() + 1;
+    unsigned int lenDst = (unsigned int)dst.getHLMACHier() + 1;
+    if (commonAncestor != HLMACAddress::UNSPECIFIED_ADDRESS)
+        lenCommonAncestor = (unsigned int)(commonAncestor.getHLMACHier()) + 1;
+
+    //Routing algorithm
+    if (((myHLMACAddress = hlmacTable->getlongestMatchedPrefix(src)) != HLMACAddress::UNSPECIFIED_ADDRESS) &&
+        (myHLMACAddress >= commonAncestor) &&
+        (((unsigned int)myHLMACAddress.getHLMACHier() + 1) == counter)){
+        counter--;
+        frame->setSrcPANID(MACAddress(counter));
+        sendDown(frame);
+
+    }
+    else
+        delete frame;
+
+    EV << "<-IoToriiOperation::broadcastProccessUpwardTraffic1()" << endl;
 }
 
-void IoToriiOperation::broadcastProccessAllwardTraffic(CSMAFrame *macPkt)
+
+void IoToriiOperation::broadcastProccessUpwardTraffic2(CSMAFramePANID *frame)
+{
+    EV << "->IoToriiOperation::broadcastProccessUpwardTraffic2()" << endl;
+
+    EV << "<-IoToriiOperation::broadcastProccessUpwardTraffic2()" << endl;
+}
+
+void IoToriiOperation::broadcastProccessAllwardTraffic(CSMAFramePANID *frame)
 {
     EV << "->IoToriiOperation::broadcastProccessAllwardTraffic()" << endl;
 

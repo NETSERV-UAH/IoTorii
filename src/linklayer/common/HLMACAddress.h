@@ -166,7 +166,11 @@ public:
 
   bool operator<(const HLMACAddress& other) const { return address < other.address; }
 
+  bool operator<=(const HLMACAddress& other) const { return address <= other.address; }
+
   bool operator>(const HLMACAddress& other) const { return address > other.address; }
+
+  bool operator>=(const HLMACAddress& other) const { return address >= other.address; }
 
   HLMACAddress getLongestCommonPrefix(const HLMACAddress& other);
 

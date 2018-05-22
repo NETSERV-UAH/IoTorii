@@ -59,7 +59,8 @@ simsignal_t IPv6NeighbourDiscoveryIoTorii::startDADSignal = registerSignal("star
 
 IPv6NeighbourDiscoveryIoTorii::IPv6NeighbourDiscoveryIoTorii()
     : neighbourCache(*this),
-      staticLLAddressAssignment(true)
+      staticLLAddressAssignment(true), //EXTRA
+      hlmacTable(nullptr)  //EXTRA
 {
 }
 
@@ -111,6 +112,8 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
         rt6 = getModuleFromPar<IPv6RoutingTable>(par("routingTableModule"), this);
         icmpv6 = getModuleFromPar<ICMPv6>(par("icmpv6Module"), this);
         staticLLAddressAssignment = par("staticLLAddressAssignment").boolValue();  //EXTRA
+        hlmacTable = check_and_cast<IHLMACAddressTable *>(getModuleByPath(par("hlmacTablePath"))); //EXTRA
+
 
 #ifdef WITH_xMIPv6
         if (rt6->isMobileNode())
@@ -1874,19 +1877,32 @@ bool IPv6NeighbourDiscoveryIoTorii::validateRAPacket(IPv6RouterAdvertisement *ra
 IPv6NeighbourSolicitation *IPv6NeighbourDiscoveryIoTorii::createAndSendNSPacket(const IPv6Address& nsTargetAddr, const IPv6Address& dgDestAddr,
         const IPv6Address& dgSrcAddr, InterfaceEntry *ie)
 {
+    EV << "->IPv6NeighbourDiscoveryIoTorii::createAndSendNSPacket()" << endl;  //EXTRA
 #ifdef WITH_xMIPv6
     Enter_Method_Silent();
 #endif /* WITH_xMIPv6 */
 
-    MACAddress myMacAddr = ie->getMacAddress();
+    //EXTRA BEGIN
+    //MACAddress myMacAddr = ie->getMacAddress();
+    MetricType metric = HopCount;
+    HLMACAddress bestSrcAddr = hlmacTable -> getSrcAddress(HLMACAddress::BROADCAST_ADDRESS, metric);
+    eGA3Frame eGA3src;
+    eGA3src.setHLMACAddress(bestSrcAddr);
+    unsigned char type = DataHLMAC;
+    eGA3src.seteGA3FrameType(type);
+    MACAddress myMacAddr(eGA3src.getInt());
+    //EXTRA END
 
     //Construct a Neighbour Solicitation message
     IPv6NeighbourSolicitation *ns = new IPv6NeighbourSolicitation("NSpacket");
     ns->setType(ICMPv6_NEIGHBOUR_SOL);
+    EV << "NSpacket: Type is " << ICMPv6_NEIGHBOUR_SOL ;  //EXTRA
 
     //Neighbour Solicitation Specific Information
     ns->setTargetAddress(nsTargetAddr);
     ns->setByteLength(ICMPv6_HEADER_BYTES + IPv6_ADDRESS_SIZE);      // RFC 2461, Section 4.3.
+    EV << " , TargetAddress is " << nsTargetAddr << ", ByteLength is " << ICMPv6_HEADER_BYTES + IPv6_ADDRESS_SIZE << endl;  //EXTRA
+
 
     /*If the solicitation is being sent to a solicited-node multicast
        address, the sender MUST include its link-layer address (if it has
@@ -1895,9 +1911,12 @@ IPv6NeighbourSolicitation *IPv6NeighbourDiscoveryIoTorii::createAndSendNSPacket(
             !dgSrcAddr.isUnspecified()) {
         ns->setSourceLinkLayerAddress(myMacAddr);
         ns->addByteLength(IPv6ND_LINK_LAYER_ADDRESS_OPTION_LENGTH);
+        EV << "NSpacket: dgSrcAddr(" << dgSrcAddr <<") is not unspecified and FF02::1:FF00:0 / 104 is the prefix of dgDestAddr(" << dgDestAddr << "), then SourceLinkLayerAddress is( in form of MAC address : " << myMacAddr << " , in form of HLMAC address: " << eGA3Frame(myMacAddr) << ", ByteLength += " << IPv6ND_LINK_LAYER_ADDRESS_OPTION_LENGTH << endl;  //EXTRA
+
     }
 
     sendPacketToIPv6Module(ns, dgDestAddr, dgSrcAddr, ie->getInterfaceId());
+    EV << "<-IPv6NeighbourDiscoveryIoTorii::createAndSendNSPacket()" << endl;  //EXTRA
 
     return ns;
 }
@@ -2069,6 +2088,8 @@ void IPv6NeighbourDiscoveryIoTorii::processNSWithSpecifiedSrcAddr(IPv6NeighbourS
 void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *ns,
         IPv6ControlInfo *nsCtrlInfo, InterfaceEntry *ie)
 {
+    EV << "->IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA()" << endl; //EXTRA
+
     IPv6NeighbourAdvertisement *na = new IPv6NeighbourAdvertisement("NApacket");
     na->setByteLength(ICMPv6_HEADER_BYTES + IPv6_ADDRESS_SIZE);      // FIXME set correct length
 
@@ -2078,30 +2099,53 @@ void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *n
        Target Address of the advertisement is copied from the Target Address
        of the solicitation.*/
     na->setTargetAddress(ns->getTargetAddress());
+    EV << "NApacket:  TargetAddress is " << ns->getTargetAddress();  //EXTRA
 
     /*If the solicitation's IP Destination Address is not a multicast address,
        the Target Link-Layer Address option MAY be omitted; the neighboring node's
        cached value must already be current in order for the solicitation to have
        been received. If the solicitation's IP Destination Address is a multicast
        address, the Target Link-Layer option MUST be included in the advertisement.*/
-    na->setTargetLinkLayerAddress(ie->getMacAddress());    //here, we always include the MAC addr.
+
+    //EXTRA BEGIN
+    //na->setTargetLinkLayerAddress(ie->getMacAddress());    //here, we always include the MAC addr.
+    //EV << " , TargetLinkLayerAddress is " << ie->getMacAddress();  //EXTRA
+    MetricType metric = HopCount;
+    HLMACAddress bestSrcAddr = hlmacTable -> getSrcAddress(HLMACAddress(ns->getSourceLinkLayerAddress().getInt()), metric);
+    eGA3Frame eGA3src;
+    eGA3src.setHLMACAddress(bestSrcAddr);
+    unsigned char type = DataHLMAC;
+    eGA3src.seteGA3FrameType(type);
+    MACAddress myMacAddr(eGA3src.getInt());
+    na->setTargetLinkLayerAddress(myMacAddr);
+    //EXTRA END
+
+    EV << " , TargetLinkLayerAddress in form of HLMAC address is: " << eGA3src << ", TargetLinkLayerAddress in form of MAC address is: " << myMacAddr;  //EXTRA
+
     na->addByteLength(IPv6ND_LINK_LAYER_ADDRESS_OPTION_LENGTH);
+    EV << " , ByteLength is " << IPv6ND_LINK_LAYER_ADDRESS_OPTION_LENGTH;  //EXTRA
 
     /*Furthermore, if the node is a router, it MUST set the Router flag to one;
        otherwise it MUST set the flag to zero.*/
     na->setRouterFlag(rt6->isRouter());
+    EV << " , RouterFlag is " << rt6->isRouter() << endl;  //EXTRA
+
 
     /*If the (NS)Target Address is either an anycast address or a unicast
        address for which the node is providing proxy service, or the Target
        Link-Layer Address option is not included,*/
     //TODO:ANYCAST will not be implemented here!
 
-    if (ns->getSourceLinkLayerAddress().isUnspecified())
+    if (ns->getSourceLinkLayerAddress().isUnspecified()){
         //the Override flag SHOULD be set to zero.
         na->setOverrideFlag(false);
-    else
+        EV << "NS -> SourceLinkLayerAddress( in form of MAC address: " << ns->getSourceLinkLayerAddress() << ", in form of HLMAC address: " << eGA3Frame(ns->getSourceLinkLayerAddress().getInt()) << ") is unspecified, then OverrideFlag is false. " << endl;  //EXTRA
+    }
+    else{
         //Otherwise, the Override flag SHOULD be set to one.
         na->setOverrideFlag(true);
+        EV << "NS -> SourceLinkLayerAddress( in form of MAC address: " << ns->getSourceLinkLayerAddress() << ", in form of HLMAC address: " << eGA3Frame(ns->getSourceLinkLayerAddress().getInt()) << ") is not unspecified, then OverrideFlag is true. " << endl;  //EXTRA
+    }
 
     /*Proper setting of the Override flag ensures that nodes give preference to
        non-proxy advertisements, even when received after proxy advertisements, and
@@ -2114,12 +2158,15 @@ void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *n
            to the all-nodes address.*/
         na->setSolicitedFlag(false);
         naDestAddr = IPv6Address::ALL_NODES_2;
+        EV << "nsCtrlInfo->getSrcAddr(" << nsCtrlInfo->getSrcAddr() << ")is unspecified, then SolicitedFlag is false and naDestAddr is " << IPv6Address::ALL_NODES_2 << endl;  //EXTRA
+
     }
     else {
         /*Otherwise, the node MUST set the Solicited flag to one and unicast
            the advertisement to the Source Address of the solicitation.*/
         na->setSolicitedFlag(true);
         naDestAddr = nsCtrlInfo->getSrcAddr();
+        EV << "nsCtrlInfo->getSrcAddr(" << nsCtrlInfo->getSrcAddr() << ")is not unspecified, then SolicitedFlag is true and naDestAddr is " << nsCtrlInfo->getSrcAddr() << endl;  //EXTRA
     }
 
     /*If the Target Address is an anycast address the sender SHOULD delay sending
@@ -2142,7 +2189,9 @@ void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *n
     //done we should check the destinations of the list of queued packets and send
     //off the respective ones.
     IPv6Address myIPv6Addr = ie->ipv6Data()->getPreferredAddress();
+    EV << "NApacket has been prepared to send to IPv6" << endl;  //EXTRA
     sendPacketToIPv6Module(na, naDestAddr, myIPv6Addr, ie->getInterfaceId());
+    EV << "<-IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA()" << endl; //EXTRA
 }
 
 void IPv6NeighbourDiscoveryIoTorii::sendUnsolicitedNA(InterfaceEntry *ie)

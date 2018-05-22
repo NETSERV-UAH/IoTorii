@@ -34,8 +34,11 @@ package iotorii.src.networklayer.icmpv6;   //EXTRA
 simple IPv6NeighbourDiscoveryIoTorii
 {
     parameters:
-        @class(iotorii::IPv6NeighbourDiscoveryIoTorii);  //EXTRA
-        bool staticLLAddressAssignment = default(true);  //EXTRA : assume that Link Local address is assigned statically
+        //EXTRA BEGIN
+        @class(iotorii::IPv6NeighbourDiscoveryIoTorii); 
+        string hlmacTablePath = default("^.^.hlmacTable"); // The path to the HLMACAddressTable module
+        bool staticLLAddressAssignment = default(true);  // assume that Link Local address is assigned statically
+        //EXTRA END
         string interfaceTableModule;   // The path to the InterfaceTable module
         string icmpv6Module;
         string xmipv6Module;

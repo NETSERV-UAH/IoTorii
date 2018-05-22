@@ -23,13 +23,13 @@
 #ifndef IOTORII_SRC_LINKLAYER_GA3SWITCH_IOTORIIOPERATION_H
 #define IOTORII_SRC_LINKLAYER_GA3SWITCH_IOTORIIOPERATION_H
 
-#include "IHLMACAddressTable.h"
+#include "src/linklayer/IoTorii/IHLMACAddressTable.h"
 #include "inet/common/INETDefs.h"
 
 #include "inet/linklayer/base/MACProtocolBase.h"
 #include "inet/common/lifecycle/ILifecycle.h"
 #include "inet/linklayer/csma/CSMAFrame_m.h"
-
+#include "src/linklayer/csma/CSMAFramePANID_m.h"
 
 namespace iotorii {
 using namespace inet;
@@ -47,9 +47,10 @@ public:
   //@}
 
   protected:
-    // GA3 parameters
     /** @brief Length of the header*/
     int headerLength;
+
+    int broadcastType;
 
     // Switch parameters
     bool isCoreSwitch;
@@ -130,11 +131,13 @@ public:
     //saves received HLMAC address in the HLMAC table
     virtual void saveHLMAC(HLMACAddress hlmac);
 
-    virtual void routingProccess(CSMAFrame *macPkt);
+    virtual void routingProccess(CSMAFramePANID *macPkt);
 
-    virtual void broadcastProccessUpwardTraffic(CSMAFrame *macPkt);
+    virtual void broadcastProccessUpwardTraffic1(CSMAFramePANID *frame);
 
-    virtual void broadcastProccessAllwardTraffic(CSMAFrame *macPkt);
+    virtual void broadcastProccessUpwardTraffic2(CSMAFramePANID *frame);
+
+    virtual void broadcastProccessAllwardTraffic(CSMAFramePANID *frame);
 
     virtual cPacket *decapsMsg(CSMAFrame *macPkt);
 

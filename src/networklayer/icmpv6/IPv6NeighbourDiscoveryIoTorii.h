@@ -39,6 +39,8 @@
 
 //EXTRA BEGIN
 #include "src/networklayer/icmpv6/IPv6NeighbourCacheIoTorii.h"
+#include "src/linklayer/IoTorii/IHLMACAddressTable.h"
+#include "src/linklayer/common/eGA3Frame.h"
 //EXTRA END
 
 namespace inet{
@@ -114,6 +116,8 @@ class IPv6NeighbourDiscoveryIoTorii : public cSimpleModule, public ILifecycle
     IInterfaceTable *ift = nullptr;
     IPv6RoutingTable *rt6 = nullptr;
     ICMPv6 *icmpv6 = nullptr;
+    IHLMACAddressTable *hlmacTable;  //EXTRA
+
 
     bool staticLLAddressAssignment; //EXTRA : assume that Link Local address is assigned statically
 

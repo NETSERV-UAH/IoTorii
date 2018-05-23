@@ -2049,6 +2049,7 @@ void IPv6NeighbourDiscoveryIoTorii::processNSForNonTentativeAddress(IPv6Neighbou
 void IPv6NeighbourDiscoveryIoTorii::processNSWithSpecifiedSrcAddr(IPv6NeighbourSolicitation *ns,
         IPv6ControlInfo *nsCtrlInfo, InterfaceEntry *ie)
 {
+    EV << "->IPv6NeighbourDiscoveryIoTorii::processNSWithSpecifiedSrcAddr()" << endl; //EXTRA
     //RFC 2461, Section 7.2.3
     /*If the Source Address is not the unspecified address and, on link layers
        that have addresses, the solicitation includes a Source Link-Layer Address
@@ -2083,6 +2084,7 @@ void IPv6NeighbourDiscoveryIoTorii::processNSWithSpecifiedSrcAddr(IPv6NeighbourS
     /*After any updates to the Neighbor Cache, the node sends a Neighbor
        Advertisement response as described in the next section.*/
     sendSolicitedNA(ns, nsCtrlInfo, ie);
+    EV << "<-IPv6NeighbourDiscoveryIoTorii::processNSWithSpecifiedSrcAddr()" << endl; //EXTRA
 }
 
 void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *ns,

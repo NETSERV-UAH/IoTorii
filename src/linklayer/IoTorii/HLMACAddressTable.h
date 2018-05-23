@@ -163,6 +163,13 @@ class HLMACAddressTable : public cSimpleModule, public IHLMACAddressTable
 
     virtual HLMACAddress getSrcAddress(HLMACAddress address, MetricType metric, unsigned int vid = 0) override;
 
+    virtual HLMACAddress getNearestTo(const HLMACAddress& other, unsigned int vid = 0) override;
+
+    //check if addr is nearest to other or not.
+    virtual bool isNearest(const HLMACAddress& addr, const HLMACAddress& other, unsigned int vid = 0) override;
+
+    virtual HLMACAddress getShortestAddressForPrefix(HLMACAddress prefix, unsigned int vid = 0) override;
+
     //EXTRA END
 
 

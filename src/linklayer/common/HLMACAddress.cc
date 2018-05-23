@@ -176,6 +176,12 @@ void HLMACAddress::removeLastId()
     setIndexValue(getHLMACHier(), 0);
 }
 
+HLMACAddress HLMACAddress::getWithoutLastId()
+{
+    HLMACAddress temp(address);
+    temp.removeLastId();
+    return temp;
+}
 
 int HLMACAddress::compareTo(const HLMACAddress& other) const
 {
@@ -193,6 +199,22 @@ HLMACAddress HLMACAddress::getLongestCommonPrefix(const HLMACAddress& other)
     }
         // or: commonPrexif.setIndexValue(i++, getIndexValue(i));
     return commonPrexif;
+}
+
+bool HLMACAddress::isPrefixOf(HLMACAddress other)
+{
+    if (other.address == 0 || address == 0)
+        return false;
+
+    if (getHLMACHier() > other.getHLMACHier())
+        return false;
+
+    for (int i=0; i<= this->getHLMACHier(); i++)
+        if (getIndexValue(i) != other.getIndexValue(i))
+            return false;
+
+    return true;
+
 }
 
 } // namespace iotorii

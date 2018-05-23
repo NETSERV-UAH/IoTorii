@@ -43,6 +43,7 @@
 
 #include <map>
 #include <vector>
+#include <math.h>
 
 namespace iotorii {
 using namespace inet;
@@ -314,6 +315,7 @@ HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, un
     HLMACTable *table = getTableForVid(vid);
         if (table == nullptr)
             return HLMACAddress::UNSPECIFIED_ADDRESS;
+        address.removeLastId(); //an address is not prefix of itself
 
         while(address != HLMACAddress::UNSPECIFIED_ADDRESS){
             auto iter = table->find(address);
@@ -384,7 +386,72 @@ HLMACAddress HLMACAddressTable::getSrcAddress(HLMACAddress address, MetricType m
 //    }  //end broadcast
 }
 
+HLMACAddress HLMACAddressTable::getNearestTo(const HLMACAddress& other, unsigned int vid)
+{
+    HLMACAddress nearest = HLMACAddress::UNSPECIFIED_ADDRESS;
 
+    HLMACTable *table = getTableForVid(vid);
+        if (table == nullptr)
+            return nearest;
+
+        for (auto iter = table->begin(); iter != table->end(); iter++){
+            if (iter->second.insertionTime + agingTime <= simTime()) {
+                // don't use (and throw out) aged entries
+                EV << "Ignoring and deleting aged entry: " << iter->first << " --> port" << iter->second.portno << "\n";
+                table->erase(iter);
+            }else
+                if (nearest == HLMACAddress::UNSPECIFIED_ADDRESS)
+                    nearest = iter->first;
+                else if (abs((long long int)((unsigned long long int)other.getInt() - (unsigned long long int)nearest.getInt())) > abs((long long int)((unsigned long long int)other.getInt() - (unsigned long long int)iter->first.getInt())))
+                        nearest = iter->first;
+                    else if (abs((long long int)((unsigned long long int)other.getInt() - (unsigned long long int)nearest.getInt())) == abs((long long int)((unsigned long long int)other.getInt() - (unsigned long long int)iter->first.getInt())))
+                        if (nearest > iter->first)
+                            nearest = iter->first;
+        }//end for
+
+        return nearest;
+
+}
+
+bool HLMACAddressTable::isNearest(const HLMACAddress& addr, const HLMACAddress& other, unsigned int vid)
+{
+    if (addr == getNearestTo(other))
+        return true;
+    else
+        return false;
+}
+
+HLMACAddress HLMACAddressTable::getShortestAddressForPrefix(HLMACAddress prefix, unsigned int vid)
+{
+    HLMACAddress shortestAddress = HLMACAddress::UNSPECIFIED_ADDRESS;
+    unsigned short int lenShortestAddress = 0;
+
+    HLMACTable *table = getTableForVid(vid);
+        if (table == nullptr)
+            return shortestAddress;
+
+        for (auto iter = table->begin(); iter != table->end(); iter++){
+            if (iter->second.insertionTime + agingTime <= simTime()) {
+                // don't use (and throw out) aged entries
+                EV << "Ignoring and deleting aged entry: " << iter->first << " --> port" << iter->second.portno << "\n";
+                table->erase(iter);
+            }else
+                if (shortestAddress == HLMACAddress::UNSPECIFIED_ADDRESS){
+                    shortestAddress = iter->first;
+                    lenShortestAddress = shortestAddress.getHLMACHier() + 1;
+                }
+                else{
+                    HLMACAddress temp = iter->first;
+                    if ((temp.isPrefixOf(prefix)) && (temp.getHLMACHier() + 1 < lenShortestAddress)){
+                        shortestAddress = temp;
+                        lenShortestAddress = temp.getHLMACHier() + 1;
+                    }
+                }
+        }//end for
+
+        return shortestAddress;
+
+}
 
 //EXTRA END
 

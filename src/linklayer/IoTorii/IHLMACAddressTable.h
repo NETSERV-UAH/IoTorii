@@ -119,6 +119,11 @@ class IHLMACAddressTable
 
     virtual HLMACAddress getSrcAddress(HLMACAddress address, MetricType metric, unsigned int vid = 0) = 0;
 
+    virtual HLMACAddress getNearestTo(const HLMACAddress& other, unsigned int vid = 0) = 0;
+
+    virtual bool isNearest(const HLMACAddress& addr, const HLMACAddress& other, unsigned int vid = 0) = 0;
+
+    virtual HLMACAddress getShortestAddressForPrefix(HLMACAddress prefix, unsigned int vid = 0) = 0;
 
     //EXTRA END
 

@@ -247,6 +247,7 @@ void IPv6IoTorii::preroutingFinish(IPv6Datagram *datagram, const InterfaceEntry 
 
 void IPv6IoTorii::handleMessageFromHL(cPacket *msg)
 {
+    EV << "->IPv6IoTorii::handleMessageFromHL()" << endl;  //EXTRA
     // if no interface exists, do not send datagram
     if (ift->getNumInterfaces() == 0) {
         EV_WARN << "No interfaces exist, dropping packet\n";
@@ -288,6 +289,7 @@ void IPv6IoTorii::handleMessageFromHL(cPacket *msg)
     L3Address nextHopAddr(IPv6Address::UNSPECIFIED_ADDRESS);
     if (datagramLocalOutHook(datagram, destIE, nextHopAddr) == INetfilter::IHook::ACCEPT)
         datagramLocalOut(datagram, destIE, nextHopAddr.toIPv6());
+    EV << "<-IPv6IoTorii::handleMessageFromHL()" << endl;  //EXTRA
 }
 
 void IPv6IoTorii::datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress)

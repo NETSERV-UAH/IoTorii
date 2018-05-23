@@ -135,6 +135,7 @@ public:
 
   void removeLastId();
 
+  HLMACAddress getWithoutLastId();
 
   void setCore(unsigned char newCoreId);
 
@@ -173,6 +174,8 @@ public:
   bool operator>=(const HLMACAddress& other) const { return address >= other.address; }
 
   HLMACAddress getLongestCommonPrefix(const HLMACAddress& other);
+
+  bool isPrefixOf(HLMACAddress other);
 
 };
 inline std::ostream& operator<<(std::ostream& os, const HLMACAddress& hlmac)

@@ -129,6 +129,11 @@ IPv6NeighbourCacheIoTorii::Neighbour *IPv6NeighbourCacheIoTorii::addNeighbour(co
     nbor.isRouter = false;
     nbor.isHomeAgent = false;
     nbor.reachabilityState = STALE;
+    //EXTRA BEGIN
+   // nbor.reachabilityState = REACHABLE;
+    //nbor.reachabilityExpires = simTime() + interfaceID.ipv6Data()->_getReachableTime();
+    //EXTRA END
+
     return &nbor;
 }
 

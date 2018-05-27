@@ -58,11 +58,12 @@ module StandardHostNew extends NodeBaseNew //EXTRA
         int numSctpApps = default(0); // no of SCTP apps. Specify the app types in INI file with sctpApp[0..1].typename="SCTPServer" syntax
         int numPingApps = default(0);  // no of PING apps. Specify the app types in INI file with pingApp[0..1].typename="PingApp" syntax
         bool hasTcp = default(numTcpApps > 0);
-        bool hasUdp = default(numUdpApps > 0);
+        bool hasUdp = default(true); //EXTRA  //bool hasUdp = default(numUdpApps > 0);
         bool hasSctp = default(numSctpApps > 0);
         bool hasTun = default(numTunInterfaces > 0);
         string tcpType = default(firstAvailableOrEmpty("TCP", "TCP_lwIP", "TCP_NSC"));  // tcp implementation (e.g. ~TCP, ~TCP_lwIP, ~TCP_NSC) or ~TCPSpoof
         string udpType = default(firstAvailableOrEmpty("UDP"));
+        string udpGenType = default("UDPFlowHost"); //EXTRA: There is always one, so we cannot omit it, other option would be adding a parameter that should be one or zero (host gen or not, but I prefer it this way)
         string sctpType = default(firstAvailableOrEmpty("SCTP"));
         forwarding = default(false);  // disable routing by default
         networkLayer.proxyARP = default(false);
@@ -83,6 +84,14 @@ module StandardHostNew extends NodeBaseNew //EXTRA
             parameters:
                 @display("p=329,54,row,60");
         }
+
+        // EXTRA BEGIN        
+        udpGen: <udpGenType> like IUDPApp {
+            parameters:
+                @display("p=407,129");
+        }    
+        // EXTRA END        
+
         udp: <udpType> like IUDP if hasUdp {
             parameters:
                 @display("p=329,141");
@@ -111,6 +120,11 @@ module StandardHostNew extends NodeBaseNew //EXTRA
             udpApp[i].udpOut --> udp.appIn++;
             udpApp[i].udpIn <-- udp.appOut++;
         }
+
+//EXTRA BEGIN
+		udpGen.udpOut --> udp.appIn++; //EXTRA
+        udpGen.udpIn <-- udp.appOut++; //EXTRA
+//EXTRA END
 
         udp.ipOut --> networkLayer.transportIn++ if hasUdp;
         udp.ipIn <-- networkLayer.transportOut++ if hasUdp;

@@ -26,6 +26,7 @@
 //EXTRA
 //#include "inet/networklayer/ipv6/IPv6.h"
 #include "src/networklayer/ipv6/IPv6IoTorii.h"
+#include "src/networklayer/contract/ipv6/IPv6ControlInfoICMP_m.h"
 //EXTRA
 #include "inet/networklayer/common/IPSocket.h"
 
@@ -254,11 +255,28 @@ void IPv6IoTorii::handleMessageFromHL(cPacket *msg)
         delete msg;
         return;
     }
-
+    EV << "11111111"<<endl;
+//EXTRA BEGIN
+/*    IPv6ControlInfo *controlInfo = check_and_cast<IPv6ControlInfo *>(msg->removeControlInfo());
+    // encapsulate upper-layer packet into IPv6Datagram
+    // IPV6_MULTICAST_IF option, but allow interface selection for unicast packets as well
+    const InterfaceEntry *destIE = ift->getInterfaceById(controlInfo->getInterfaceId());
+    EV << "controlInfo->getInterfaceId() is " << controlInfo->getInterfaceId()  << "destIE is " << destIE << endl;
+*/
     IPv6ControlInfo *controlInfo = check_and_cast<IPv6ControlInfo *>(msg->removeControlInfo());
     // encapsulate upper-layer packet into IPv6Datagram
     // IPV6_MULTICAST_IF option, but allow interface selection for unicast packets as well
     const InterfaceEntry *destIE = ift->getInterfaceById(controlInfo->getInterfaceId());
+    EV << "controlInfo->getInterfaceId() is " << controlInfo->getInterfaceId()  << "destIE is " << destIE << endl;
+
+    MACAddress dstMACAddress = MACAddress::UNSPECIFIED_ADDRESS; // for na unicast address resolution
+    if (strcmp(msg->getName(), "NApacket") == 0){
+        if (check_and_cast<IPv6ControlInfoICMP *>(controlInfo))
+            dstMACAddress = check_and_cast<IPv6ControlInfoICMP *>(controlInfo)->getSrcMacAddress();
+        EV << "Next hop mac address for na problem is " << dstMACAddress << "destIE" << destIE<< endl;
+    }
+
+//EXTRA END
     IPv6Datagram *datagram = encapsulate(msg, controlInfo);
     delete controlInfo;
 
@@ -286,21 +304,53 @@ void IPv6IoTorii::handleMessageFromHL(cPacket *msg)
             destIE = ift->getFirstLoopbackInterface();
         ASSERT(destIE);
     }
+
     L3Address nextHopAddr(IPv6Address::UNSPECIFIED_ADDRESS);
-    if (datagramLocalOutHook(datagram, destIE, nextHopAddr) == INetfilter::IHook::ACCEPT)
+
+    //EXTRA BEGIN
+/*    if (datagramLocalOutHook(datagram, destIE, nextHopAddr) == INetfilter::IHook::ACCEPT)
         datagramLocalOut(datagram, destIE, nextHopAddr.toIPv6());
-    EV << "<-IPv6IoTorii::handleMessageFromHL()" << endl;  //EXTRA
+*/
+    if (strcmp(datagram->getName(), "NApacket") == 0){
+        if (datagramLocalOutHook(datagram, destIE, nextHopAddr) == INetfilter::IHook::ACCEPT)
+            datagramLocalOut(datagram, destIE, nextHopAddr.toIPv6(), dstMACAddress);
+    }
+    else{
+        if (datagramLocalOutHook(datagram, destIE, nextHopAddr) == INetfilter::IHook::ACCEPT)
+            datagramLocalOut(datagram, destIE, nextHopAddr.toIPv6());
+    }
+        EV << "<-IPv6IoTorii::handleMessageFromHL()" << endl;  //EXTRA
 }
 
-void IPv6IoTorii::datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress)
+void IPv6IoTorii::datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress, MACAddress dstMACAddress)
 {
+    EV << "->IPv6IoTorii::datagramLocalOut()" << endl;
     // route packet
-    if (destIE != nullptr)
+    //EXTRA BEGIN
+ /*   if (destIE != nullptr)
         fragmentAndSend(datagram, destIE, MACAddress::BROADCAST_ADDRESS, true); // FIXME what MAC address to use?
     else if (!datagram->getDestAddress().isMulticast())
         routePacket(datagram, destIE, requestedNextHopAddress, true);
     else
         routeMulticastPacket(datagram, destIE, nullptr, true);
+*/
+    EV << "22222222222"<<endl;
+
+    if (destIE != nullptr)
+        if (!dstMACAddress.isUnspecified()){
+            EV << "test1" << endl;
+            fragmentAndSend(datagram, destIE, dstMACAddress, true); // FIXME what MAC address to use?
+        }
+        else
+            fragmentAndSend(datagram, destIE, MACAddress::BROADCAST_ADDRESS, true); // FIXME what MAC address to use?
+
+    else if (!datagram->getDestAddress().isMulticast())
+        routePacket(datagram, destIE, requestedNextHopAddress, true);
+    else
+        routeMulticastPacket(datagram, destIE, nullptr, true);
+
+    //EXTRA END*/
+    EV << "<-IPv6IoTorii::datagramLocalOut()" << endl;
 }
 
 void IPv6IoTorii::routePacket(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress, bool fromHL)

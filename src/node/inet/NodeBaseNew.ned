@@ -42,6 +42,7 @@ import inet.node.inet.INetworkNode;
 import iotorii.src.linklayer.ieee802154.Ieee802154NarrowbandNicNew;
 import iotorii.src.linklayer.IoTorii.HLMACAddressTable;
 import iotorii.src.linklayer.contract.IHLMACAddressTable;
+import iotorii.src.adaption._6LoWPAN;
 
 //
 // Contains the common lower layers (linklayer and networklayer)
@@ -119,6 +120,13 @@ module NodeBaseNew like INetworkNode  //EXTRA
             parameters:
                 @display("p=53,250;is=s");
         }
+        //EXTRA BEGIN
+        //adaption layer
+        adaptionlayer[numRadios]: _6LoWPAN {
+            parameters:
+                @display("p=290,350;is=s");
+        }
+        //EXTRA END      
         // linklayer
         interfaceTable: InterfaceTable {
             parameters:
@@ -160,13 +168,20 @@ module NodeBaseNew like INetworkNode  //EXTRA
 
     connections allowunconnected:
         // connections to network outside
-        networkLayer.ifOut++ --> lo0.upperLayerIn;
-        lo0.upperLayerOut --> networkLayer.ifIn++;
+       // networkLayer.ifOut++ --> lo0.upperLayerIn;
+       // lo0.upperLayerOut --> networkLayer.ifIn++;
 
         for i=0..sizeof(radioIn)-1 {
             radioIn[i] --> { @display("m=s"); } --> wlan[i].radioIn;
-            wlan[i].upperLayerOut --> networkLayer.ifIn++;
-            wlan[i].upperLayerIn <-- networkLayer.ifOut++;
+            //EXTRA BEGIN
+            //wlan[i].upperLayerOut --> networkLayer.ifIn++;
+            wlan[i].upperLayerOut --> adaptionlayer[i].ifIn;  
+            adaptionlayer[i].netOut --> networkLayer.ifIn++;
+            
+            //wlan[i].upperLayerIn <-- networkLayer.ifOut++;
+            wlan[i].upperLayerIn <-- adaptionlayer[i].ifOut;  
+            adaptionlayer[i].netIn <-- networkLayer.ifOut++;
+            //EXTRA END
         }
 
         for i=0..sizeof(ethg)-1 {

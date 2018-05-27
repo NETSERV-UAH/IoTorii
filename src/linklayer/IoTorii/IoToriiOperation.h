@@ -56,14 +56,14 @@ public:
     bool isCoreSwitch;
     int corePrefix;            // main core prefix, set by ned parameter
     simtime_t coreStartTime;
+    simtime_t coreInterval;
 
     //Hello parameters
+    simtime_t helloStartTime;
     simtime_t helloInterval; //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
     cMessage *HelloTimer;
-    long numHelloRcvd;                 //Number of Hello messages received
     /** HeT(Hello Table) **/
     std::vector<MACAddress> neighborList;
-    int numNeighbors; //number of neighbors discovered by Hello message
     int maxNeighbors; //maximum number of neighbors. changing this value needs to change HLMACAddress and eGA3Frame structure.
 
     IHLMACAddressTable *hlmacTable;
@@ -71,9 +71,27 @@ public:
     cMessage *startCoreEvent;
 
     // Parameters for statistics collection
+
+    long hlmacLenIsLow;
+    long hlmacWidthIsLow; //if numNeighbors > maxNeighbors, hlmacWidthIsLow++.
+    //long hlmacAffectedByWidthIsLow;
+    long numHelloRcvd;                 //Number of Hello messages received
+    long numHelloSent;
+    long numNeighbors; //number of neighbors discovered by Hello message
+    long numHLMACRcvd;
+    long numHLMACAssigned;
+    long numHLMACLoopable;  //or num discarded HLMAC
+    long numHLMACSent;
+    long numDiscardedNoHLMAC; //if node has not HLMAC address, by dropping each packet, this variable is incremented.
+
     long numReceivedLowerPacket;
     long numReceivedUpperPacket;
     long numDiscardedFrames;
+    long numRoutedUnicastFrames;
+    long numRoutedBroadcastFrames;
+    long numDiscardedUnicastFrames;
+    long numDiscardedBroadcastFrames;
+
 
     bool isOperational;    // for lifecycle
 

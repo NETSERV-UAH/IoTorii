@@ -136,8 +136,11 @@ class IPv6IoTorii : public QueueBase, public ILifecycle, public INetfilter, publ
      * Invokes encapsulate(), then routePacket().
      */
     virtual void handleMessageFromHL(cPacket *msg);
-    virtual void datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress);
+   //EXTRA BEGIN
+    //virtual void datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress, MACAddress requestedNextHopMACAddress);
+    virtual void datagramLocalOut(IPv6Datagram *datagram, const InterfaceEntry *destIE, IPv6Address requestedNextHopAddress, MACAddress dstMACAddress = MACAddress::UNSPECIFIED_ADDRESS);
 
+    //EXTRA END
     /**
      * Handle incoming ICMP messages.
      */

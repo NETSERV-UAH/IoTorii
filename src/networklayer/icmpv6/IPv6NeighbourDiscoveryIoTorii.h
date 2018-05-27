@@ -66,6 +66,7 @@ using namespace inet;  //EXTRA
 class IPv6NeighbourDiscoveryIoTorii : public cSimpleModule, public ILifecycle
 {
   public:
+
     typedef std::vector<cMessage *> MsgPtrVector;
     typedef IPv6NeighbourCacheIoTorii::Key Key;    //for convenience
     typedef IPv6NeighbourCacheIoTorii::Neighbour Neighbour;    // for convenience

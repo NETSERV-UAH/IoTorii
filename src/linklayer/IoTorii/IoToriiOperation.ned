@@ -42,8 +42,11 @@ simple IoToriiOperation
         int broadcastType = default(3); //select broadcast type. 1: only Upward by using counter, 2: only Upward by using transmitter address, 3: UP/Downward and P2P traffic
         bool isCoreSwitch = default(false);
         int corePrefix = default(-1);
-        double coreStartTime @unit("s") = default(1.003s);
-        double helloInterval @unit("s") = default(1s); //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
+        double helloStartTime @unit("s") = default(1s);
+        double helloInterval @unit("s") = default(10s); //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
+        double coreStartTime @unit("s") = default(2s);  // Core is the Sink node
+        double coreInterval @unit("s") = default(10s); 
+        
         // RFC 5148:
         double maxPeriodicJitter @unit("s") = default(helloInterval / 4); // it MUST NOT be negative; it MUST NOT be greater than MESSAGE_INTERVAL/2; it SHOULD NOT be greater than MESSAGE_INTERVAL/4.
         volatile double periodicJitter @unit("s") = default(uniform(0s, maxPeriodicJitter)); // jitter for externally triggered message generation and message forwarding

@@ -50,16 +50,32 @@ IoToriiOperation::IoToriiOperation() :
     lowerLayerInGateId(-1),
     lowerLayerOutGateId(-1),
     corePrefix(-1),
+    isCoreSwitch(false),
+    startCoreEvent(nullptr),
+    coreInterval(0),
+    coreStartTime(0),
     numReceivedLowerPacket(0),
     numReceivedUpperPacket(0),
     numDiscardedFrames(0),
+    numRoutedUnicastFrames(0),
+    numRoutedBroadcastFrames(0),
+    numDiscardedUnicastFrames(0),
+    numDiscardedBroadcastFrames(0),
     numHelloRcvd(0),
+    numHelloSent(0),
     numNeighbors(0),
+    numDiscardedNoHLMAC(0),
+    hlmacLenIsLow(0),
+    hlmacWidthIsLow(0),
+    numHLMACRcvd(0),
+    numHLMACAssigned(0),
+    numHLMACLoopable(0),
+    numHLMACSent(0),
     maxNeighbors(3),
-    isCoreSwitch(false),
     hlmacTable(nullptr),
     HelloTimer(nullptr),
-    startCoreEvent(nullptr),
+    helloStartTime(0),
+    helloInterval(0),
     isOperational(false)
 
 {
@@ -75,16 +91,36 @@ void IoToriiOperation::initialize(int stage)
 
         headerLength = par("headerLength");
         broadcastType = par("broadcastType");
+
+        helloStartTime = par("helloStartTime");
         helloInterval = par("helloInterval");
 
         WATCH(headerLength);
         WATCH(broadcastType);
-        WATCH(numReceivedUpperPacket);
-        WATCH(numDiscardedFrames);
-        WATCH(numHelloRcvd);
+        WATCH(helloStartTime);
         WATCH(helloInterval);
         WATCH(maxNeighbors);
         WATCH_VECTOR(neighborList);
+
+        WATCH(hlmacLenIsLow);
+        WATCH(hlmacWidthIsLow);
+        WATCH(numHelloRcvd);
+        WATCH(numHelloSent);
+        WATCH(numNeighbors); //number of neighbors discovered by Hello message
+        WATCH(numHLMACRcvd);
+        WATCH(numHLMACAssigned);
+        WATCH(numHLMACLoopable);
+        WATCH(numHLMACSent);
+        WATCH(numDiscardedNoHLMAC);
+
+        WATCH(numReceivedUpperPacket);
+        WATCH(numReceivedLowerPacket);
+        WATCH(numDiscardedFrames);
+        WATCH(numRoutedUnicastFrames);
+        WATCH(numRoutedBroadcastFrames);
+        WATCH(numDiscardedUnicastFrames);
+        WATCH(numDiscardedBroadcastFrames);
+
 
     }
     else if (stage == INITSTAGE_LINK_LAYER) {
@@ -92,7 +128,7 @@ void IoToriiOperation::initialize(int stage)
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
 
         HelloTimer = new cMessage("HelloTimer");
-        scheduleAt(simTime()+helloInterval, HelloTimer); //Next Hello broadcasting
+        scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
 
         hlmacTable = check_and_cast<IHLMACAddressTable *>(getModuleByPath(par("hlmacTablePath")));
 
@@ -102,6 +138,7 @@ void IoToriiOperation::initialize(int stage)
             EV<< "This switch is a core switch and its prefix is  "<< corePrefix << "\n";
             startCoreEvent = new cMessage("startCoreEvent");
             coreStartTime = par("coreStartTime");
+            coreInterval = par("coreInterval");
             scheduleAt(simTime() + coreStartTime, startCoreEvent);
 
             WATCH(coreStartTime);
@@ -116,12 +153,14 @@ void IoToriiOperation::sendAndScheduleHello()
     EV << "->IoToriiOperation::sendAndScheduleHello()" << endl;
 
     //scheduling next Hello packet
-    scheduleAt(simTime()+helloInterval, HelloTimer); //Next Hello broadcasting
+    helloStartTime+= helloInterval;
+    scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
 
     CSMAFrame *macPkt = new CSMAFrame("Hello!");
     macPkt->setDestAddr(MACAddress::BROADCAST_ADDRESS);
     EV << "Hello message from this node is broadcasted to all node in the range. " << endl;
     sendDown(macPkt); //send(macPkt, lowerLayerOutGateId); //send(macPkt, "lowerLayerOut");
+    numHelloSent++;
 
     EV << "<-IoToriiOperation::sendAndScheduleHello()" << endl;
 }
@@ -131,6 +170,20 @@ void IoToriiOperation::sendToNeighbors(CSMAFrame *frame)
     EV << "->IoToriiOperation::sendToNeighbors()" << endl;
 
     EV << "This node has " << numNeighbors << " neighbors, " << "maximum number of allowed neighbors is " << maxNeighbors << endl;
+    if (numNeighbors > maxNeighbors){
+        hlmacWidthIsLow++;
+        EV << "hlmacWidthIsLow is " << hlmacWidthIsLow << endl;
+    }
+
+    eGA3Frame eGA3(frame->getSrcAddr());
+    HLMACAddress hlmac = eGA3.getHLMACAddress();
+    if (hlmac.getHLMACHier() >= hlmac.getHLMACLength() - 1){
+        delete frame;
+        hlmacLenIsLow++;
+        EV << "HLMAC address is " << hlmac << ", Max allowed len is " << hlmac.getHLMACLength() << ", there is no enough space to continue. frame is deleted." << endl;
+        return;
+    }
+
     for (int i = 1; i <= numNeighbors && i <= maxNeighbors; i++) {  //Second condition is related on the width of HLMACAddress, 3 bits allowed 3 neighbor, 00 is reserved for NOTSPECIFIED address
         eGA3Frame eGA3(frame->getSrcAddr()); //eGA3Frame eGA3 = eGA3Frame(frame->getSrcAddr());
         HLMACAddress hlmac = eGA3.getHLMACAddress();
@@ -143,6 +196,7 @@ void IoToriiOperation::sendToNeighbors(CSMAFrame *frame)
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
         EV << "SetHLMAC frame " << eGA3 << " is sent to the neighbor with suffix # (" << i << ") and dst MAC address (" << dupFrame->getDestAddr() << ")" << endl;
         sendDown(dupFrame); //send(dupFrame, lowerLayerOutGateId); // send(dupFrame, "lowerLayerOut");
+        numHLMACSent++;
 
     }
 
@@ -155,7 +209,8 @@ void IoToriiOperation::startCore(int core)
     EV << "->IoToriiOperation::startCore()" << endl;
 
     //scheduling next Core event
-    scheduleAt(simTime() + coreStartTime, startCoreEvent);
+    coreStartTime = coreStartTime + coreInterval;
+    scheduleAt(coreStartTime, startCoreEvent);
 
     //preparing SetHLMAC frame
     HLMACAddress coreAddress;             // create HLMAC
@@ -179,6 +234,7 @@ void IoToriiOperation::receiveSetHLMACMessage(CSMAFrame *frame)
 {
     EV << "->IoToriiOperation::receiveSetHLMACMessage()" << endl;
 
+    numHLMACRcvd++;
     eGA3Frame eGA3(frame->getSrcAddr()); //eGA3Frame eGA3 = eGA3Frame(frame->getSrcAddr());  // extract eGA3 frame (data) from SetHLMAC CSMAFrame
     HLMACAddress hlmac = eGA3.getHLMACAddress();  // extract HLMAC address from eGA3 frame (data)
 
@@ -206,6 +262,7 @@ bool IoToriiOperation::hasLoop(HLMACAddress hlmac)
         return false;
     }
     else{
+        numHLMACLoopable++;
         EV << "HLMAC adress " << hlmac << " creates a loop in this node. Longest Matched Prefix is " << longestPrefix << endl;
         return true;
     }
@@ -218,6 +275,7 @@ void IoToriiOperation::saveHLMAC(HLMACAddress hlmac)
     EV << "->IoToriiOperation::saveHLMAC()" << endl;
 
     hlmacTable->updateTableWithAddress(-1, hlmac);
+    numHLMACAssigned++;
     EV << "HLMAC adress " << hlmac << " was saved to this node." << endl;
 
     EV << "<-IoToriiOperation::saveHLMAC()" << endl;
@@ -286,16 +344,23 @@ void IoToriiOperation::handleUpperPacket(cPacket *msg)
     eGA3Frame eGA3dst(macdest);
     HLMACAddress dest = eGA3dst.getHLMACAddress();
     unsigned char type = eGA3dst.geteGA3FrameType();
-    EV_DETAIL << "A message has been received from upper layer, name is " << msg->getName() << ", CInfo removed, dst HLMAC addr=" << dest << ", dst HLMAC type=" << (unsigned short int) type << endl;
+    EV_DETAIL << "A message has been received from upper layer, name is " << msg->getName() << ", CInfo removed, dst MAC addr=" << macdest <<", dst HLMAC addr=" << dest << ", dst HLMAC type=" << (unsigned short int) type << endl;
     CSMAFramePANID *frame = new CSMAFramePANID(msg->getName());
     frame->setBitLength(headerLength);
     EV << "frame has been created. frame header length is set to " <<  frame->getBitLength() << " (bits)." << endl;
     frame->setDestAddr(macdest);
     MetricType metric = HopCount;
     HLMACAddress bestSrcAddr = hlmacTable -> getSrcAddress(dest, metric);
+    if (bestSrcAddr == HLMACAddress::UNSPECIFIED_ADDRESS){ //if this node has not any HLMAC address
+        EV << "This node has not any HLMAC Address for this destination (or at all), frame is deleted." << endl;
+        numDiscardedNoHLMAC++;
+        delete frame;
+        delete msg;
+        return;
+    }
+
     eGA3Frame eGA3src;
     eGA3src.setHLMACAddress(bestSrcAddr);
-    eGA3src.seteGA3FrameType(type);
     MACAddress macsrc(eGA3src.getInt());
     frame->setSrcAddr(macsrc);
 
@@ -402,7 +467,7 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
             delete msg;
         }
         else if (dst == HLMACAddress::BROADCAST_ADDRESS){     //Data frame is broadcast, a copye of it is mine. Send the copy to upper layer
-            EV << "Data frame is a broadcast frame. its payload is sent to upper layer and  a copy of it is sent to broadcast proccess." << endl;
+            EV << "Data frame is a broadcast frame. it is sent to broadcast proccess." << endl;
             //sendUp(decapsMsg(frame->dup()));
             //nbRxFrames++;
             if (broadcastType == 1){  //Only upward broadcast by using counter
@@ -421,7 +486,7 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
                 throw cRuntimeError("Broadcast type %d in not defined.", broadcastType);
         }
         else {     //Data frame is not mine. Send it to routing proccess
-            EV << "Data frame is not mine. it need to routing, so it is sent to routing proccess." << endl;
+            EV << "Data frame is not mine and is not broadcast. it need to routing, so it is sent to routing proccess." << endl;
             //nbRxFrames++;
             routingProccess(frame);
         }
@@ -668,10 +733,24 @@ void IoToriiOperation::finish()
 {
     EV << "->IoToriiOperation::finish()" << endl;
 
+    recordScalar("hlmacLenIsLow", hlmacLenIsLow);
+    recordScalar("hlmacWidthIsLow", hlmacWidthIsLow);
+    recordScalar("Received Hello", numHelloRcvd);
+    recordScalar("numHelloSent", numHelloSent);
+    recordScalar("numNeighbors", numNeighbors); //number of neighbors discovered by Hello message
+    recordScalar("numHLMACRcvd", numHLMACRcvd);
+    recordScalar("numHLMACAssigned", numHLMACAssigned);
+    recordScalar("numHLMACLoopable", numHLMACLoopable);
+    recordScalar("numHLMACSent", numHLMACSent);
+    recordScalar("numDiscardedNoHLMAC", numDiscardedNoHLMAC);
+
     recordScalar("Received Upper Packets", numReceivedUpperPacket);
     recordScalar("Received Lower frames", numReceivedLowerPacket);
     recordScalar("discarded frames", numDiscardedFrames);
-    recordScalar("Received Hello", numHelloRcvd);
+    recordScalar("numRoutedUnicastFrames", numRoutedUnicastFrames);
+    recordScalar("numRoutedBroadcastFrames", numRoutedBroadcastFrames);
+    recordScalar("numDiscardedUnicastFrames", numDiscardedUnicastFrames);
+    recordScalar("numDiscardedBroadcastFrames", numDiscardedBroadcastFrames);
 
     if (hlmacTable != nullptr)
         hlmacTable->printState();

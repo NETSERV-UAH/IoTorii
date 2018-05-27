@@ -26,6 +26,7 @@
 //EXTRA BEGIN
 //#include "inet/networklayer/icmpv6/IPv6NeighbourDiscovery.h"
 #include "src/networklayer/icmpv6/IPv6NeighbourDiscoveryIoTorii.h"
+#include "src/networklayer/contract/ipv6/IPv6ControlInfoICMP_m.h"
 //EXTRA END
 
 #include "inet/networklayer/contract/ipv6/IPv6ControlInfo.h"
@@ -811,6 +812,7 @@ void IPv6NeighbourDiscoveryIoTorii::sendPacketToIPv6Module(cMessage *msg, const 
         const IPv6Address& srcAddr, int interfaceId)
 {
     IPv6ControlInfo *controlInfo = new IPv6ControlInfo();
+
     controlInfo->setProtocol(IP_PROT_IPv6_ICMP);
     controlInfo->setDestAddr(destAddr);
     controlInfo->setSrcAddr(srcAddr);
@@ -2192,7 +2194,25 @@ void IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA(IPv6NeighbourSolicitation *n
     //off the respective ones.
     IPv6Address myIPv6Addr = ie->ipv6Data()->getPreferredAddress();
     EV << "NApacket has been prepared to send to IPv6" << endl;  //EXTRA
-    sendPacketToIPv6Module(na, naDestAddr, myIPv6Addr, ie->getInterfaceId());
+    //EXTRA BEGIN
+    //sendPacketToIPv6Module(na, naDestAddr, myIPv6Addr, ie->getInterfaceId());
+
+    if (!ns->getSourceLinkLayerAddress().isUnspecified()){
+            IPv6ControlInfoICMP *controlInfo = new IPv6ControlInfoICMP();
+            controlInfo->setSrcMacAddress(ns->getSourceLinkLayerAddress());
+            controlInfo->setProtocol(IP_PROT_IPv6_ICMP);
+            controlInfo->setDestAddr(naDestAddr);
+            controlInfo->setSrcAddr(myIPv6Addr);
+            controlInfo->setHopLimit(255);
+            controlInfo->setInterfaceId(ie->getInterfaceId());
+            na->setControlInfo(controlInfo);
+
+            send(na, "ipv6Out");
+
+        }
+    else
+        sendPacketToIPv6Module(na, naDestAddr, myIPv6Addr, ie->getInterfaceId());
+    //EXTRA END
     EV << "<-IPv6NeighbourDiscoveryIoTorii::sendSolicitedNA()" << endl; //EXTRA
 }
 

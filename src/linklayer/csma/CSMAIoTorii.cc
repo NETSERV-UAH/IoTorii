@@ -49,7 +49,15 @@ namespace iotorii {
 using namespace inet;
 
 Define_Module(CSMAIoTorii);
+// EXTRA BEGIN from LayeredProtocolBase
+simsignal_t CSMAIoTorii::packetSentToUpperSignal = registerSignal("packetSentToUpper");
+simsignal_t CSMAIoTorii::packetReceivedFromUpperSignal = registerSignal("packetReceivedFromUpper");
+simsignal_t CSMAIoTorii::packetFromUpperDroppedSignal = registerSignal("packetFromUpperDropped");
 
+simsignal_t CSMAIoTorii::packetSentToLowerSignal = registerSignal("packetSentToLower");
+simsignal_t CSMAIoTorii::packetReceivedFromLowerSignal = registerSignal("packetReceivedFromLower");
+simsignal_t CSMAIoTorii::packetFromLowerDroppedSignal = registerSignal("packetFromLowerDropped");
+//EXTRA END
 void CSMAIoTorii::initialize(int stage)
 {
     MACProtocolBase::initialize(stage);

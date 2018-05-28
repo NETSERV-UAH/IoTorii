@@ -58,7 +58,18 @@ using namespace physicallayer;
  */
 class CSMAIoTorii : public MACProtocolBase, public IMACProtocol
 {
-  public:
+//EXTRA BEGIN from LayeredProtocolBase
+public:
+  static simsignal_t packetSentToUpperSignal;
+  static simsignal_t packetReceivedFromUpperSignal;
+  static simsignal_t packetFromUpperDroppedSignal;
+
+  static simsignal_t packetSentToLowerSignal;
+  static simsignal_t packetReceivedFromLowerSignal;
+  static simsignal_t packetFromLowerDroppedSignal;
+//EXTRA END
+
+public:
     CSMAIoTorii()
         : MACProtocolBase()
         , nbTxFrames(0)

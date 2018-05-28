@@ -44,6 +44,10 @@ simple UDPFlowHost like IUDPApp
  		bool receiveBroadcast = default(false); // if true, makes the socket receive broadcast packets
         bool joinLocalMulticastGroups = default(false); // if true, makes the socket receive packets from all multicast groups set on local interfaces
         @display("i=block/app");
+        //EXTRA BEGIN
+        @signal[sentPk](type=cPacket);
+        @signal[rcvdPk](type=cPacket);
+        //EXTRA END
     gates:
         input udpIn;
         output udpOut;

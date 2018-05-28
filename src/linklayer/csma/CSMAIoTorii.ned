@@ -46,6 +46,15 @@ simple CSMAIoTorii //extends MACProtocolBase like IMACProtocol  //EXTRA
         @class(iotorii::CSMAIoTorii);  //EXTRA
         string interfaceTableModule; //EXTRA this line is added becaus "extends MACProtocolBase like IMACProtocol" is disabled
         @display("i=block/layer");  //EXTRA   "    "
+ 
+ //EXTRA BEGIN   from LayeredProtocolBase
+        @signal[packetSentToUpper](type=cPacket);
+        @signal[packetReceivedFromUpper](type=cPacket);
+        @signal[packetFromUpperDropped](type=cPacket);
+        @signal[packetSentToLower](type=cPacket);
+        @signal[packetReceivedFromLower](type=cPacket);
+        @signal[packetFromLowerDropped](type=cPacket);
+//EXTRA END
         
         string address = default("auto"); // MAC address as hex string (12 hex digits), or
                                           // "auto". "auto" values will be replaced by

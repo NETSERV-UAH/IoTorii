@@ -44,8 +44,13 @@ using namespace inet;
 Define_Module(UDPFlowHost);
 
 int UDPFlowHost::counter;
-simsignal_t UDPFlowHost::sentPkSignal = SIMSIGNAL_NULL;
-simsignal_t UDPFlowHost::rcvdPkSignal = SIMSIGNAL_NULL;
+//EXTRA BEGIN
+//simsignal_t UDPFlowHost::sentPkSignal = SIMSIGNAL_NULL;
+//simsignal_t UDPFlowHost::rcvdPkSignal = SIMSIGNAL_NULL;
+
+simsignal_t UDPFlowHost::sentPkSignal = registerSignal("sentPk");
+simsignal_t UDPFlowHost::rcvdPkSignal = registerSignal("rcvdPk");
+//EXTRA END
 
 //class constructor
 UDPFlowHost::UDPFlowHost()

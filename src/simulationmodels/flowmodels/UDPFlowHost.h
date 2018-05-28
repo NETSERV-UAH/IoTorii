@@ -5,8 +5,15 @@
  * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
- *                    INET 3.6.3 adaptation
+ *                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
 */
+/*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+ *                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
+*/
+
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2
@@ -50,7 +57,10 @@ class UDPFlowHost : public cSimpleModule, public StatisticCollector
     	int localPort; //From 1000 to 1999
     	int destPort;  //From 2000 to 2999
     	L3Address destAddress;
-        unsigned int transferRate;
+       //EXTRA BEGIN
+    	//unsigned int transferRate;
+        double transferRate;
+    	//EXTRA END
         unsigned long long flowSize; //(B), el unsigned int/long sólo llega a 4*10^9 no al 8*10^9 necesario
         unsigned int frameSize;
     };
@@ -90,7 +100,7 @@ class UDPFlowHost : public cSimpleModule, public StatisticCollector
     virtual void finish();
 
     //virtual void startFlow(unsigned int transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr); //Kbps, B(KB*1000), B, address
-    virtual void startFlow(unsigned int transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr, const L3Address& localAddr); //Kbps, B(KB*1000), B, dst address, local address
+    virtual void startFlow(double transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr, const L3Address& localAddr); //Kbps, B(KB*1024), B, dst address, local address
     virtual cPacket *createPacket(unsigned int frameSize);
     virtual void sendPacket(unsigned int frameSize, unsigned int nFlow);
     virtual void processPacket(cPacket *pk);

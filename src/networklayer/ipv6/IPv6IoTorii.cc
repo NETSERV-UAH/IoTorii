@@ -831,8 +831,11 @@ void IPv6IoTorii::fragmentAndSend(IPv6Datagram *datagram, const InterfaceEntry *
         }
     #endif /* WITH_xMIPv6 */
     }
+//EXTRA BEGIN
+    //int mtu = ie->getMTU();
+    int mtu = 1280; //we assume that fragmentation is performed in 6LoWPAN module. if we want to perform fragmentation here, we must change header legth(transport, network, icmp headers) before here
 
-    int mtu = ie->getMTU();
+//EXTRA END
 
     // check if datagram does not require fragmentation
     if (datagram->getByteLength() <= mtu) {

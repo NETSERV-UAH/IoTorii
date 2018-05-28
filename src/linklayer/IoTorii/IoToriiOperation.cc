@@ -154,7 +154,7 @@ void IoToriiOperation::sendAndScheduleHello()
 
     //scheduling next Hello packet
     helloStartTime+= helloInterval;
-    scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
+    //scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
 
     CSMAFrame *macPkt = new CSMAFrame("Hello!");
     macPkt->setDestAddr(MACAddress::BROADCAST_ADDRESS);
@@ -210,7 +210,7 @@ void IoToriiOperation::startCore(int core)
 
     //scheduling next Core event
     coreStartTime = coreStartTime + coreInterval;
-    scheduleAt(coreStartTime, startCoreEvent);
+    //scheduleAt(coreStartTime, startCoreEvent);
 
     //preparing SetHLMAC frame
     HLMACAddress coreAddress;             // create HLMAC

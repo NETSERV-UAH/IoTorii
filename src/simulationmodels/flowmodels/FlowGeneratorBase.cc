@@ -4,8 +4,15 @@
  * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
- *                    INET 3.6.3 adaptation
+ *                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
 */
+/*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+ *                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
+*/
+
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -406,17 +413,23 @@ void FlowGeneratorBase::finish()
     }
     EV << "    Generated flows..." << endl;
 
-    std::string generatedFlowstr;
+    std::string generatedFlowstr, generatedFlowsLATEXstr;
+    generatedFlowsLATEXstr = "% OMNeT++::IoToriiSimulation generated the table \n\\begin{table*}[!h]\n\\centering\n\\caption{Generated flows}\n\\label{table:generatedFlows}\n\\begin{tabular}{|l|l|l|l|l|l|l|}\n\\hline\n\\textbf{Flow\\#}& \\textbf{Source}& \\textbf{Destination}& \\textbf{Transfer rate}& \\textbf{Flow size}& \\textbf{Start time}& \\textbf{End time}\\\\\n\\hline\n";
     for(unsigned int i=0; i<generatedFlows.size(); i++)
     {
         EV << "      " << generatedFlows[i] << endl;
-        generatedFlowstr += "{" + generatedFlows[i] + "} ";
+        generatedFlowstr += "{" + generatedFlows[i] + "}\n";
+        generatedFlowsLATEXstr += generatedFlowsLATEX[i] + "\\\\\n";
     }
+    generatedFlowsLATEXstr += "\\hline\n\\end{tabular}\n\\end{table*}\n";
 
     FILE *destfp;
-    if((destfp=fopen("GeneratedFlows.txt","w"))!=nullptr)
+    if((destfp=fopen("FlowInfoTable.txt","w"))!=nullptr)
     {
         fputs(generatedFlowstr.c_str(),destfp);
+        fputs("\n\nLATEX format:\n\n",destfp);
+        fputs(generatedFlowsLATEXstr.c_str(), destfp);
+
     }
 
 

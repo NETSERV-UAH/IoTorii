@@ -7,6 +7,12 @@
 //                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
 //                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol  
 //
+// Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+//                    (1) GIST, University of Alcala, Spain.
+//                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+//                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
+//
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2
@@ -38,7 +44,7 @@ simple UDPFlowGenerator
         int frameSize @unit(Byte)= default(112 B); // the mtu of ieee802.15.4 is 127 B, header length is 9 B, udp and ipv6 header length according to 6LoWPAN are 4 and 2 B respectively. Therfore, data payload without need to fragmentation is 112 Bytes.
         int numSessions = default(10); //number of sessions in simulation
         double interval @unit("s") = default(0.02s); //volatile double interval= uniform(0s, 0.02s); //interval between two sequential packets of each session
-        volatile double sessionStartTime @unit("s") = uniform(startTime, 3.02s); //absolute time, not relative time
+        volatile double sessionStartTime @unit("s") = uniform(startTime, 4s); //absolute time, not relative time
         string excludedAddresses = default(""); // list of \IP addresses, separated by spaces, to be excluded from the traffic generation (both as source and destination)
         string hostsWeights = default(""); // list of \IP addresses and their weights (!=1 which is the default value), all separated by spaces
         string routeHosts = default(""); // list of couples of \IP addresses (src/dst), separated by spaces, to have their routes registered by the ARP

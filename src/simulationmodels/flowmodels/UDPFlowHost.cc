@@ -5,7 +5,13 @@
  * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
- *                    INET 3.6.3 adaptation
+ *                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
+*/
+/*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+ *                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
 */
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -67,7 +73,7 @@ void UDPFlowHost::initialize(int stage)
 	}
 }
 
-void UDPFlowHost::startFlow(unsigned int transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr, const L3Address& localAddr) //Kbps, B(KB*1000), B, address
+void UDPFlowHost::startFlow(double transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr, const L3Address& localAddr) //Kbps, B(KB*1024), B, address
 //void UDPFlowHost::startFlow(unsigned int transferRate, unsigned long long flowSize, unsigned int frameSize, const L3Address& destAddr) //Kbps, B(KB*1000), B, address
 {
 	/*Since this module function is called from another - UDPFlowGenerator - we need to indicate it via Enter_Method
@@ -109,7 +115,10 @@ void UDPFlowHost::startFlow(unsigned int transferRate, unsigned long long flowSi
 
 	    	//Start the handler to generate the flow traffic
 	    	if(frameSize > flowSize) frameSize = flowSize; //Should never happen (with JAC's model), but just in case it happens //###
-	    	double startTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+	    	//EXTRA BEGIN
+	    	//double startTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+            double startTime = double(frameSize*8)/(transferRate*1024); //(B*8)/(Kbps*1024)
+	    	//EXTRA END
 	    	char indexName[6]; indexName[0] = 'G'; indexName[1] = 'e'; indexName[2] = 'n'; indexName[3] = '-';
 	    	indexName[4] = i; indexName[5] = 0; //#i \x0i\x00 (cMessage copia la cadena y la hace 'const')
 	    	cMessage *timer = new cMessage(indexName); //To distinguish events, we pass the index as the name of the timer
@@ -162,7 +171,10 @@ void UDPFlowHost::startFlow(unsigned int transferRate, unsigned long long flowSi
 
     	//Start the handler to generate the flow traffic
     	if(frameSize > flowSize) frameSize = flowSize; //Should never happen, but just in case it happens //###
-    	double startTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+    	//EXTRA BEGIN
+    	//double startTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+        double startTime = (frameSize*8)/(transferRate*1024); //(B*8)/(Kbps*1024)
+    	//EXTRA END
     	char indexName[6]; indexName[0] = 'G'; indexName[1] = 'e'; indexName[2] = 'n'; indexName[3] = '-';
     	indexName[4] = i; indexName[5] = 0; //#i \x0i\x00 (cMessage copia la cadena y la hace 'const')
     	cMessage *timer = new cMessage(indexName); //To distinguish events, we pass the index as the name of the timer
@@ -218,7 +230,10 @@ void UDPFlowHost::handleMessage(cMessage *msg)
 	    	unsigned int i = c; //First from char to unsigned char and then to unsigned int (otherwise, the 'i' could get a wrong value)
 	    	EV << "  Generating a new UDP packet for flow #" << i+1 << endl;
 
-	    	int transferRate = flowInfo[i].transferRate;
+	    	//EXTRA BEGIN
+	    	//int transferRate = flowInfo[i].transferRate;
+	    	double transferRate = flowInfo[i].transferRate;
+	    	//EXTRA END
 	    	long long flowSize = flowInfo[i].flowSize;
 	    	int frameSize = flowInfo[i].frameSize;
 
@@ -231,7 +246,10 @@ void UDPFlowHost::handleMessage(cMessage *msg)
 	    	//If flow has not finished, reschedule
 	    	if(flowInfo[i].flowSize > 0)
 	    	{
-	    		double nextTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+	    	    //EXTRA BEGIN
+	    		//double nextTime = double(frameSize*8)/(transferRate*1000); //(B*8)/(Kbps*1000)
+	    	    double nextTime = (frameSize*8)/(transferRate*1024); //(B*8)/(Kbps*1024)
+	    	    //EXTRA END
 	    		EV <<"BBB next time:" << nextTime << "frame size:"<< frameSize <<"flow size:"<<flowInfo[i].flowSize<<"rate"<<transferRate<<endl;
 	        	if(simTime()+nextTime <= stopTime)
 	        	{

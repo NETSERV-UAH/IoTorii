@@ -5,8 +5,15 @@
  * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
- *                    INET 3.6.3 adaptation adaptation, also adapted for using in the wARP-PATH protocol
+ *                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
 */
+/*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+ *                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
+*/
+
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2
@@ -67,7 +74,7 @@ void UDPFlowGenerator::startRandomFlow()
          then 44.800 kbps
          */
         transferRate = frameSize * 8 / interval; //bps
-        transferRate = transferRate / 1000; //Kbps
+        transferRate = transferRate / 1024; //Kbps
         ss1 << transferRate;
         flowInfo = flowInfo + "; " + ss1.str() + " Kbps";
 
@@ -80,7 +87,7 @@ void UDPFlowGenerator::startRandomFlow()
         sessionLength = (long int) (sessionLength / interval.dbl()) * interval.dbl(); //for last packet, if last interval is not a complete interval.
 
         flowSize = sessionLength * transferRate / 8 ; //Kilo Bytes
-        flowSize *= 1000; //Bytes
+        flowSize *= 1024; //Bytes
         //Finally, we decide the frames size
         numPackets = flowSize / frameSize;
     }
@@ -106,6 +113,7 @@ void UDPFlowGenerator::startRandomFlow()
     ss4 << sessionLength + genTime;
     flowInfo = ss3.str() + " - " + flowInfo + "; start at t = " + genTime.str() + " s; end at t = " + ss4.str();
     generatedFlows.push_back(flowInfo);
+    generatedFlowsLATEX.push_back(ss3.str() + "& " + wSNInfo[iSource].fullName + "& " + wSNInfo[iDestination].fullName + "& " + ss1.str() + " Kbps" + "& " + ss2.str() + " B" + "& " + genTime.str() + " s"+ "& " + ss4.str() + " s");
 
     EV << "<-UDPFlowGenerator::startRandomFlow()" << endl;
 }

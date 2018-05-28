@@ -5,8 +5,15 @@
  * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
- *                    INET 3.6.3 adaptation
+ *                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
 */
+/*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+ *                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
+*/
+
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -116,6 +123,7 @@ class FlowGeneratorBase : public cSimpleModule
       WSNInfoVector wSNInfo; //Vector that contains only the adhoc hosts in the topology and their IP and MAC addresses
 
       std::vector<std::string> generatedFlows; //Vector that contains the strings of the generated flows
+      std::vector<std::string> generatedFlowsLATEX; //Vector that contains the strings of the generated flows for using in LATEX
 
       // statistic vectors
       cOutVector averageEndToEndDelayVector;

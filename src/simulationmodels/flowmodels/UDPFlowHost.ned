@@ -5,7 +5,12 @@
 // Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
 //                    (1) GIST, University of Alcala, Spain.
 //                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
-//                    INET 3.6.3 adaptation
+//                    INET 3.6.3 adaptation, also adapted for using in the wARP-PATH protocol
+//
+// Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+//                    (1) GIST, University of Alcala, Spain.
+//                    (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
+//                    INET 3.6.3 adaptation, also adapted for using in the IoTorii(WSN) protocol
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License

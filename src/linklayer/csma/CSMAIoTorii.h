@@ -115,6 +115,12 @@ public:
 
     virtual ~CSMAIoTorii();
 
+    //EXTRA BEGIN
+    //to use in IoTorii operation for collecting statiastics
+    virtual MACAddress getMACAddress() { return address; }
+    //EXTRA END
+
+
     /** @brief Initialization of the module and some variables*/
     virtual void initialize(int) override;
 

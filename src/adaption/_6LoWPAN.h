@@ -42,6 +42,7 @@ public:
   //@}
 
   int udpHeaderLength;
+  int dispatchHeaderLength;
   int ipv6HeaderLength;  //HC1 header
   int icmpHeaderLength;  //only for ping traffic
   int nsHeaderLength;

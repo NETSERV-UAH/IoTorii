@@ -42,6 +42,7 @@ simple IoToriiOperation
         int broadcastType = default(3); //select broadcast type. 1: only Upward by using counter, 2: only Upward by using transmitter address, 3: UP/Downward and P2P traffic
         bool isCoreSwitch = default(false);
         int corePrefix = default(-1);
+        int maxHLMACs = default(10);  //maximum number of HLMAC table size.
         double helloStartTime @unit("s") = default(1s);
         double helloInterval @unit("s") = default(10s); //"Hello" interval time, every helloInterval seconds a node broadcasts Hello messages
         double coreStartTime @unit("s") = default(2s);  // Core is the Sink node

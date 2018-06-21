@@ -38,12 +38,17 @@ simple Ieee802154NarrowbandMacNew extends CSMAIoTorii  //EXTRA
         // aMaxPHYPacketSize = 127 Octets (802.15.4-2006, page 45)
         // aMinMPDUOverhead = 9 Octets (802.15.4-2006, page 159)
         // aMaxMACPayloadSize = aMaxPHYPacketSize - aMinMPDUOverhead (802.15.4-2006, page 159)
-        mtu = 127 Byte - 9 Byte;
+        //EXTRA BEGIN
+        //mtu = 127 Byte - 9 Byte;
+        mtu = 127 Byte - 11 Byte;  //header len = 9 + 2 (PAN ID Len)
+        
 
         // length of MAC header
         // aMinMPDUOverhead = 9 Octets (802.15.4-2006, page 159)
-        headerLength = default(72 bit);
-
+        //headerLength = default(72 bit);
+        headerLength = default(88 bit);
+        //EXTRA END
+        
         // Exponential Backoff
         backoffMethod = default("exponential");
 

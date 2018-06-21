@@ -47,6 +47,7 @@ void FlowGeneratorBase::initialize(int stage)
     if(stage == INITSTAGE_NETWORK_LAYER_3) // for preparing IP addresses of interface table
     {
         //Get parameters and initialize variables
+        turnOn = par("turnOn").boolValue();
         stopTime = par("stopTime").doubleValue();
         numSessions = par("numSessions");
         trafficType = par("trafficType");
@@ -115,22 +116,24 @@ void FlowGeneratorBase::initialize(int stage)
         //Extract topology into the cTopology object, then fill in the vectors: NodeInfoVector and HostInfoVector
         extractTopology();
 
-        double randNumber;
-        sessionStartTimeList.resize(numSessions);
-        sessionStartTimeList.at(0) = startTime;
-        for (unsigned int i=1; i<numSessions ; i++)
-        {
-            randNumber = par ("sessionStartTime");
-            //sessionStartTimeList.insert(std::lower_bound(sessionStartTimeList.begin(), sessionStartTimeList.end(), randNumber));
-            sessionStartTimeList.at(i) = randNumber;
+        if (turnOn){
+            double randNumber;
+            sessionStartTimeList.resize(numSessions);
+            sessionStartTimeList.at(0) = startTime;
+            for (unsigned int i=1; i<numSessions ; i++)
+            {
+                randNumber = par ("sessionStartTime");
+                //sessionStartTimeList.insert(std::lower_bound(sessionStartTimeList.begin(), sessionStartTimeList.end(), randNumber));
+                sessionStartTimeList.at(i) = randNumber;
+            }
+            std::sort(sessionStartTimeList.begin(), sessionStartTimeList.end());
+
+
+            //The generator will start generating traffic at 'startTime' (parameter)
+            cMessage *timer = new cMessage("Gen-NewFlow!");
+            scheduleAt(sessionStartTimeList.at(0), timer);  //scheduleAt((double)par("startTime"), timer);
+            EV << "Flow #1 is generated at t = " << sessionStartTimeList.at(0) << endl;
         }
-        std::sort(sessionStartTimeList.begin(), sessionStartTimeList.end());
-
-
-        //The generator will start generating traffic at 'startTime' (parameter)
-        cMessage *timer = new cMessage("Gen-NewFlow!");
-        scheduleAt(sessionStartTimeList.at(0), timer);  //scheduleAt((double)par("startTime"), timer);
-        EV << "Flow #1 is generated at t = " << sessionStartTimeList.at(0) << endl;
     }
     EV << "<-FlowGeneratorBase::initialize()" << endl;
 }
@@ -273,47 +276,50 @@ void FlowGeneratorBase::handleMessage(cMessage *msg)
 {
     EV << "->FlowGeneratorBase::handleMessage()" << endl;
 
-    if (msg->isSelfMessage())
-    {
-        // send, then reschedule next sending
-        if (simTime()<=stopTime)
+    //if (turnOn){
+        if (msg->isSelfMessage())
         {
-            EV << "  Generating a new flow..." << endl;
-            startRandomFlow(); //Generate flow (source, destination, rate, size) + send that info to the source host
+            // send, then reschedule next sending
+            if (simTime()<=stopTime)
+            {
+                EV << "  Generating a new flow..." << endl;
+                startRandomFlow(); //Generate flow (source, destination, rate, size) + send that info to the source host
 
-            if(numSent < numSessions){
-                simtime_t nextSendTime = sessionStartTimeList.at(numSent); //numSent was  incremented in FlowGenerator::startRandomFlow()
-                if( nextSendTime <= stopTime)
-                {
-                    EV << "Next flow is fllow  #" << numSent + 1 << " which is scheduled for t = " << nextSendTime << endl;
-                    scheduleAt(nextSendTime, msg); //Next generation
+                if(numSent < numSessions){
+                    simtime_t nextSendTime = sessionStartTimeList.at(numSent); //numSent was  incremented in FlowGenerator::startRandomFlow()
+                    if( nextSendTime <= stopTime)
+                    {
+                        EV << "Next flow is fllow  #" << numSent + 1 << " which is scheduled for t = " << nextSendTime << endl;
+                        scheduleAt(nextSendTime, msg); //Next generation
+                    }
+
+                    else
+                        delete msg; //Simulation ended (stop time reached) -> delete message associated to flow generation
                 }
-
                 else
-                    delete msg; //Simulation ended (stop time reached) -> delete message associated to flow generation
+                    delete msg; //Simulation ended (number of sessions reached)-> delete message associated to flow generation
             }
             else
-                delete msg; //Simulation ended (number of sessions reached)-> delete message associated to flow generation
+            {
+                EV << "  Traffic generator ended! At " << simTime() << " with stop time T=" << stopTime << endl;
+                delete msg; //Simulation ended -> delete message associated to flow generation
+            }
         }
         else
         {
-            EV << "  Traffic generator ended! At " << simTime() << " with stop time T=" << stopTime << endl;
-            delete msg; //Simulation ended -> delete message associated to flow generation
+            // process incoming packet
+            processPacket(PK(msg));
         }
-    }
-    else
-    {
-        // process incoming packet
-        processPacket(PK(msg));
-    }
 
-    //if (ev.isGUI())
-    if (hasGUI())
-    {
-        char buf[40];
-        sprintf(buf, "rcvd: %d pks\nsent: %d pks", numReceived, numSent);
-        getDisplayString().setTagArg("t",0,buf);
-    }
+        //if (ev.isGUI())
+        if (hasGUI())
+        {
+            char buf[40];
+            sprintf(buf, "rcvd: %d pks\nsent: %d pks", numReceived, numSent);
+            getDisplayString().setTagArg("t",0,buf);
+        }
+   // }
+
     EV << "<-FlowGeneratorBase::handleMessage()" << endl;
 }
 

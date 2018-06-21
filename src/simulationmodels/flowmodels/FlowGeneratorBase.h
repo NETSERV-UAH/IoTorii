@@ -86,6 +86,7 @@ class FlowGeneratorBase : public cSimpleModule
       };
       typedef std::vector<DstSrcs> DstSrcsVector;
 
+      bool turnOn;
       unsigned int sinkIndex; //index of sink node in the topology. we assume that host 0 is sink node
       std::string sinkName;
 

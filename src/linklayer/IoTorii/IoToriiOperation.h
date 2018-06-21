@@ -34,6 +34,22 @@
 namespace iotorii {
 using namespace inet;
 
+//Global statistics
+simtime_t *joiningTimeTotal = nullptr; //interval time between the first SetHLMAC generation time and the time of the last received (AND ASSIGNED) SetHLMAC in the network.
+simtime_t *firstGenerationTime = nullptr; //this is set by core start time
+simtime_t *lastReceivedTime = nullptr;
+int *numHLMACAssignedTotal = nullptr;
+int *numNeighborsTotal = nullptr;  //saves all available neighbors
+int *numAllowedNeighborsTotal = nullptr;  //saves neighbors as long as width of HLMAC address (i.e. 3 for this case)
+int *numHelloSentTotal = nullptr;
+int *numHLMACSentTotal = nullptr;
+int *numNotJoinedTotal = nullptr;   //The number of nodes which are not joined to DODAG
+//IPv6Address *listNotJoinedTotal = nullptr; //The List of nodes which are not joined to DODAG
+MACAddress *listNotJoinedTotal = nullptr; //The List of nodes which are not joined to DODAG
+
+FILE *statisticsCollector = nullptr;
+
+int finishCounter = 0; // to count number of calling finish() method. in all finish()s, numNotJoinedTotal is calculated, then at last finish(), statistics are saved to files.
 
 class IoToriiOperation : public cSimpleModule, public ILifecycle
 {
@@ -52,6 +68,11 @@ public:
 
     int broadcastType;
 
+    int numHosts;
+    //cModule *host;
+    MACAddress myMACAddress;
+
+
     // Switch parameters
     bool isCoreSwitch;
     int corePrefix;            // main core prefix, set by ned parameter
@@ -65,6 +86,7 @@ public:
     /** HeT(Hello Table) **/
     std::vector<MACAddress> neighborList;
     int maxNeighbors; //maximum number of neighbors. changing this value needs to change HLMACAddress and eGA3Frame structure.
+    int maxHLMACs; //maximum number of HLMAC table size.
 
     IHLMACAddressTable *hlmacTable;
 
@@ -92,6 +114,7 @@ public:
     long numDiscardedUnicastFrames;
     long numDiscardedBroadcastFrames;
 
+    simtime_t joiningTime;
 
     bool isOperational;    // for lifecycle
 
@@ -147,7 +170,7 @@ public:
     virtual bool hasLoop(HLMACAddress hlmac);
 
     //saves received HLMAC address in the HLMAC table
-    virtual void saveHLMAC(HLMACAddress hlmac);
+    virtual bool saveHLMAC(HLMACAddress hlmac);
 
     virtual void routingProccess(CSMAFramePANID *macPkt);
 

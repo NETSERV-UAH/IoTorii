@@ -46,6 +46,7 @@ _6LoWPAN::_6LoWPAN() :
     ifIn(-1),
     ifOut(-1),
     udpHeaderLength(4),
+    dispatchHeaderLength(1),
     ipv6HeaderLength(2),
     icmpHeaderLength(8),
     nsHeaderLength(0),
@@ -63,12 +64,14 @@ void _6LoWPAN::initialize(int stage)
         ifOut = findGate("ifOut");
 
         udpHeaderLength = par("udpHeaderLength");
+        dispatchHeaderLength = par("dispatchHeaderLength");
         ipv6HeaderLength = par("ipv6HeaderLength");
         //icmpHeaderLength = par("icmpHeaderLength");
         nsHeaderLength = par("nsHeaderLength");
         naHeaderLength = par("naHeaderLength");
 
         WATCH(udpHeaderLength);
+        WATCH(dispatchHeaderLength);
         WATCH(ipv6HeaderLength);
         WATCH(icmpHeaderLength);
         WATCH(nsHeaderLength);
@@ -118,6 +121,7 @@ void _6LoWPAN::handleMessage(cMessage *msg)
 void _6LoWPAN::handleUpperPacket(cMessage *msg)
 {
     EV << "->_6LoWPAN::handleUpperPacket()" << endl;
+    ipv6HeaderLength += dispatchHeaderLength;
     if (dynamic_cast<IPv6Datagram *>(msg)){    //if (dynamic_cast<IPv6Datagram *>(msg)){
         IPv6Datagram *ipv6dg = check_and_cast<IPv6Datagram *>(msg);
         EV << "IPv6 datagram is received from upper layer, datagram size is " << ipv6dg->getByteLength() << " (Bytes)." << endl;

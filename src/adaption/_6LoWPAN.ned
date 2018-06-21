@@ -25,6 +25,7 @@ simple _6LoWPAN
     parameters:
         @class(iotorii::_6LoWPAN);
         int udpHeaderLength @unit(B) = default(4 B); //UDP compressed header length in Byte
+        int dispatchHeaderLength @unit(B) = default(1 B); //Dispatch header length in Byte
         int ipv6HeaderLength @unit(B) = default(2 B); //IPv6 (HC1) compressed header length in Byte
         int icmpHeaderLength @unit(B) = default(8 B); //ICMP compressed header length in Byte, only for ping traffic
         int nsHeaderLength @unit(B) = default(8 B);   //Neighbor Solicitation compressed header length in Byte

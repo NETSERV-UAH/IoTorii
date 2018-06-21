@@ -54,7 +54,7 @@ using namespace inet; //EXTRA
 #define MK_NUD_TIMEOUT                 6
 #define MK_AR_TIMEOUT                  7
 
-Define_Module(IPv6NeighbourDiscoveryIoTorii);
+Define_Module(IPv6NeighbourDiscoveryIoTorii);  //EXTRA
 
 simsignal_t IPv6NeighbourDiscoveryIoTorii::startDADSignal = registerSignal("startDAD");
 
@@ -98,7 +98,7 @@ IPv6NeighbourDiscoveryIoTorii::~IPv6NeighbourDiscoveryIoTorii()
 
 void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
 {
-    EV << "->IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;
+    EV << "->IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;  //EXTRA
     cSimpleModule::initialize(stage);
 
     if (stage == INITSTAGE_NETWORK_LAYER) {
@@ -145,6 +145,7 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
 
         //This simulates random node bootup time. Link local address assignment
         //takes place during this time.
+
         //EXTRA BEGIN
 /*        cMessage *msg = new cMessage("assignLinkLocalAddr", MK_ASSIGN_LINKLOCAL_ADDRESS);
 
@@ -193,7 +194,7 @@ void IPv6NeighbourDiscoveryIoTorii::initialize(int stage)
         //EXTRA END
 
     }
-    EV << "<-IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;
+    EV << "<-IPv6NeighbourDiscoveryIoTorii::initialize()" << endl;  //EXTRA
 }
 
 void IPv6NeighbourDiscoveryIoTorii::handleMessage(cMessage *msg)
@@ -841,7 +842,7 @@ void IPv6NeighbourDiscoveryIoTorii::sendQueuedPacketsToIPv6Module(Neighbour *nce
 
 void IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress(cMessage *timerMsg)
 {
-    EV << "-> IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress()" << endl;
+    EV << "-> IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress()" << endl;  //EXTRA
     //Node has booted up. Start assigning a link-local address for each
     //interface in this node.
     for (int i = 0; i < ift->getNumInterfaces(); i++) {
@@ -869,7 +870,7 @@ void IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress(cMessage *timerMsg)
         }
     }
     delete timerMsg;
-    EV << "<- IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress()" << endl;
+    EV << "<- IPv6NeighbourDiscoveryIoTorii::assignLinkLocalAddress()" << endl;  //EXTRA
 }
 
 void IPv6NeighbourDiscoveryIoTorii::initiateDAD(const IPv6Address& tentativeAddr, InterfaceEntry *ie)

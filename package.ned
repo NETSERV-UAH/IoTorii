@@ -1,3 +1,0 @@
-package iotorii;
-
-@license(LGPL);

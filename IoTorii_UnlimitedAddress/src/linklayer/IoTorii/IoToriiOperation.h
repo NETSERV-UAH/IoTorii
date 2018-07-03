@@ -73,6 +73,10 @@ public:
     //cModule *host;
     MACAddress myMACAddress;
 
+    //jitters
+    simtime_t maxJitter;
+    cPar *jitterPar = nullptr;
+
 
     // Switch parameters
     bool isCoreSwitch;
@@ -177,7 +181,7 @@ public:
 
     virtual void sendUp(cMessage *message);
 
-    virtual void sendDown(cMessage *message);
+    virtual void sendDown(cMessage *message, double delay = 0);
 
     virtual bool isUpperMessage(cMessage *message);
 

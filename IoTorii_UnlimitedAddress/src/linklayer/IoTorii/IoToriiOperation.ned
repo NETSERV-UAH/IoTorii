@@ -52,6 +52,14 @@ simple IoToriiOperation
         // RFC 5148:
         double maxPeriodicJitter @unit("s") = default(helloInterval / 4); // it MUST NOT be negative; it MUST NOT be greater than MESSAGE_INTERVAL/2; it SHOULD NOT be greater than MESSAGE_INTERVAL/4.
         volatile double periodicJitter @unit("s") = default(uniform(0s, maxPeriodicJitter)); // jitter for externally triggered message generation and message forwarding
+
+        // RFC 5148:
+        // need more revise: As well as the decision as to whether
+        // to use jitter being dependent on the medium access control and
+        // lower layers, the selection of the MAXJITTER parameter SHOULD
+        // be appropriate to those mechanisms.
+        double maxJitter @unit("s") = default(5ms);
+        volatile double jitter @unit("s") = default(uniform(0ms, maxJitter)); // jitter for broadcasts
               
         string hlmacTablePath = default("^.^.^.hlmacTable"); // The path to the HLMACAddressTable module
         @display("i=block/cogwheel");

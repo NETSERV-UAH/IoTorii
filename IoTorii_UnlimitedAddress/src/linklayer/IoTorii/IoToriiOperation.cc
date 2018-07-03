@@ -155,6 +155,10 @@ void IoToriiOperation::initialize(int stage)
 
         maxNeighbors = pow(2, sizeof(unsigned int) * 8) - 1;  //Type of address width is Unsigned int in this simulation
 
+        jitterPar = &par("jitter");
+
+
+        //WATCH(jitterPar->doubleValue());
         WATCH(maxHLMACs);
         WATCH(numHosts);
         WATCH(headerLength);
@@ -246,8 +250,8 @@ void IoToriiOperation::initialize(int stage)
         EV << "eGA3 0         " << b << endl;
         eGA3Frame c(2,a);
         EV << "eGA3 hlmac     " << c << endl;
-*/
 
+*/
     }
 }
 
@@ -265,7 +269,9 @@ void IoToriiOperation::sendAndScheduleHello()
     macPkt->setDestAddr(dst);
     macPkt->setBitLength(headerLength);
     EV << "Hello message from this node is broadcasted to all node in the range. " << endl;
-    sendDown(macPkt); //send(macPkt, lowerLayerOutGateId); //send(macPkt, "lowerLayerOut");
+    double delay = jitterPar->doubleValue();
+    EV << "value of random jitter is " << delay << endl;
+    sendDown(macPkt, delay); //send(macPkt, lowerLayerOutGateId); //send(macPkt, "lowerLayerOut");
     numHelloSent++;
     (*numHelloSentTotal)++;
 
@@ -326,7 +332,9 @@ void IoToriiOperation::sendToNeighbors(CSMAFrameIoTorii *frame)
         dupFrame->setDestAddr(dst);
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
         EV << "SetHLMAC frame " << dupFrame->getSrcAddr().eGA3 << " is sent to the neighbor with suffix # (" << i << ") and dst MAC address (" << dupFrame->getDestAddr().MAC << ")" << endl;
-        sendDown(dupFrame); //send(dupFrame, lowerLayerOutGateId); // send(dupFrame, "lowerLayerOut");
+        double delay = jitterPar->doubleValue();
+        EV << "value of random jitter is " << delay << endl;
+        sendDown(dupFrame, delay); //send(dupFrame, lowerLayerOutGateId); // send(dupFrame, "lowerLayerOut");
         numHLMACSent++;
         (*numHLMACSentTotal)++;
 
@@ -522,11 +530,11 @@ void IoToriiOperation::sendUp(cMessage *message)
     send(message, upperLayerOutGateId);
 }
 
-void IoToriiOperation::sendDown(cMessage *message)
+void IoToriiOperation::sendDown(cMessage *message, double delay)
 {
 //    if (message->isPacket())
 //        emit(packetSentToLowerSignal, message);
-    send(message, lowerLayerOutGateId);
+    sendDelayed(message, delay, lowerLayerOutGateId);
 }
 
 bool IoToriiOperation::isUpperMessage(cMessage *message)

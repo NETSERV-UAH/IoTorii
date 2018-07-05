@@ -53,9 +53,12 @@ public:
    */
   HLMACAddress() { address = {0}; }  //{ address = {0,0,0,0,0,0,0,0}; }
 
-  ~HLMACAddress() { address.clear(); }
+  /**
+    * copy constructor
+    */
+  HLMACAddress(const HLMACAddress& other) { address = other.address; }
 
-  HLMACAddress(int array[])  {  address.insert( address.begin(), array, array + sizeof array);}  //{  address.insert( address.begin(), array, array + sizeof array / sizeof array[0]);} //e.g. HLMACAddress::BROADCAST_ADDRESS({255.255.255.255.255.255.255.255})
+  explicit HLMACAddress(unsigned int array[])  {  address.insert( address.begin(), array, array + sizeof array);}  //{  address.insert( address.begin(), array, array + sizeof array / sizeof array[0]);} //e.g. HLMACAddress::BROADCAST_ADDRESS({255.255.255.255.255.255.255.255})
 
   /**
    * Returns the address width.
@@ -87,7 +90,7 @@ public:
    */
   void addNewId(unsigned int newPortId) {address.push_back(newPortId);}
 
-  HLMACAddress removeLastId() {address.pop_back(); }
+  void removeLastId() {address.pop_back(); }
 
   void setCore(unsigned int newCoreId) {address.at(0) = newCoreId;}
 

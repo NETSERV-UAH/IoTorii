@@ -67,7 +67,7 @@ module NodeBaseNew like INetworkNode  //EXTRA
         string osgModelColor = default(""); // tint color, no colorization by default
         string mobilityType = default(numRadios > 0 ? "StationaryMobility" : "");
         string networkLayerType = default("IPv6NetworkLayerIoTorii"); //EXTRA
-        string routingTableType = default("IPv4RoutingTable");
+        string routingTableType = default("IPv6RoutingTable");  //EXTRA
         bool forwarding = default(true);
         bool multicastForwarding = default(false);
         string energyStorageType = default("");

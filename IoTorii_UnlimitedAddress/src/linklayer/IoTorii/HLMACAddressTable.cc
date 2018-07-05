@@ -317,7 +317,7 @@ HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, un
             return HLMACAddress::UNSPECIFIED_ADDRESS;
         address.removeLastId(); //an address is not prefix of itself
 
-        while(address != HLMACAddress::UNSPECIFIED_ADDRESS){
+        while(address.getHLMACLength() > 0){
             auto iter = table->find(address);
             if (iter != table->end()) {
                 if (iter->second.insertionTime + agingTime <= simTime()) {

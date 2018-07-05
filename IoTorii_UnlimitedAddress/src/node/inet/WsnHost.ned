@@ -19,8 +19,6 @@
 package iotorii.src.node.inet; 
 
 
-import inet.linklayer.ieee802154.Ieee802154NarrowbandNic; 
-
 module WSNHostIoTorii extends WirelessHostNew 
 {
     parameters:
@@ -29,6 +27,6 @@ module WSNHostIoTorii extends WirelessHostNew
         xml routes = default(xml("<routingTable/>"));
         networkLayerType = "IPv6NetworkLayerIoTorii";
         routingTableType = "IPv6RoutingTable";
-        routingTable.routes = routes;
+        //routingTable.routes = routes;
         
 }

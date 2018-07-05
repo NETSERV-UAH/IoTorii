@@ -237,6 +237,8 @@ void IoToriiOperation::initialize(int stage)
         EV << "hlmac test is  " << a << endl;
         a.setCore(1);
         EV << "1              " << a << endl;
+        a.removeLastId();
+        EV << "empty vector!  " << a << "size vector " << a.getHLMACLength() << endl;
         a.addNewId(2);
         EV << "2              " << a << endl;
         a.addNewId(250);
@@ -250,8 +252,8 @@ void IoToriiOperation::initialize(int stage)
         EV << "eGA3 0         " << b << endl;
         eGA3Frame c(2,a);
         EV << "eGA3 hlmac     " << c << endl;
-
 */
+
     }
 }
 

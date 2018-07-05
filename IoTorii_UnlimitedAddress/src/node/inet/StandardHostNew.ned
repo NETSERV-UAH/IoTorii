@@ -65,7 +65,7 @@ module StandardHostNew extends NodeBaseNew //EXTRA
         string udpType = default(firstAvailableOrEmpty("UDP"));
         string sctpType = default(firstAvailableOrEmpty("SCTP"));
         forwarding = default(false);  // disable routing by default
-        networkLayer.proxyARP = default(false);
+        //networkLayer.proxyARP = default(false);   //EXTRA
     submodules:
         tunApp[numTunInterfaces]: <> like ITunApp {
             parameters:

@@ -26,9 +26,9 @@
 
 namespace iotorii {
 
-int unspecifiedArray[8] = {0,0,0,0,0,0,0,0};
+unsigned int unspecifiedArray[8] = {0,0,0,0,0,0,0,0};
 const HLMACAddress HLMACAddress::UNSPECIFIED_ADDRESS(unspecifiedArray);
-int broadcastArray[8] = {255,255,255,255,255,255,255,255};
+unsigned int broadcastArray[8] = {255,255,255,255,255,255,255,255};
 const HLMACAddress HLMACAddress::BROADCAST_ADDRESS(broadcastArray);
 
 

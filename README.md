@@ -9,3 +9,5 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
 Developed in OMNet++5.2.1, based on INET framework.
 
 LAST UPDATE OF THE INET FRAMEWORK: inet3.6.3 @ December 22, 2017
+
+The repository includes several implementation of IoTorii protocol. Details of each implementation are in README file in the respective folder.

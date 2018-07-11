@@ -121,8 +121,8 @@ void SimpleIdealRadioMedium::sendToNeighbors(SimpleIdealRadio *transmitter, Simp
 
     }
 
-/*    delete radioFrame;
-    double a=9.6000000000000000, b=19.600000000000000, c=b-a, d,e,f;
+    delete radioFrame;
+/*    double a=9.6000000000000000, b=19.600000000000000, c=b-a, d,e,f;
 
       d = floorf(a * 100) / 100; //rounded_down
      e = floorf(a * 100 + 0.5) / 100;  //nearest

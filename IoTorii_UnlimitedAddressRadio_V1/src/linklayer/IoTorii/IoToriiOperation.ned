@@ -58,8 +58,8 @@ simple IoToriiOperation
         // to use jitter being dependent on the medium access control and
         // lower layers, the selection of the MAXJITTER parameter SHOULD
         // be appropriate to those mechanisms.
-        //double maxJitter @unit("s") = default(5ms);
-        //volatile double jitter @unit("s") = default(uniform(0ms, maxJitter)); // jitter for broadcasts
+        double maxJitter @unit("s") = default(5ms);
+        volatile double jitter @unit("s") = default(uniform(0ms, maxJitter)); // jitter for broadcasts
               
         string hlmacTablePath = default("^.^.^.hlmacTable"); // The path to the HLMACAddressTable module
         @display("i=block/cogwheel");

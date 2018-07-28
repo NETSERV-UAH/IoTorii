@@ -74,8 +74,8 @@ public:
     MACAddress myMACAddress;
 
     //jitters
-    //simtime_t maxJitter;
-    //cPar *jitterPar = nullptr;
+    simtime_t maxJitter;
+    cPar *jitterPar = nullptr;
 
 
     // Switch parameters

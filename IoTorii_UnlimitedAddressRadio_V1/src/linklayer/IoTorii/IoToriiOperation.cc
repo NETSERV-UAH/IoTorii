@@ -154,7 +154,7 @@ void IoToriiOperation::initialize(int stage)
 
         maxNeighbors = pow(2, sizeof(unsigned int) * 8) - 1;  //Type of address width is Unsigned int in this simulation
 
-        //jitterPar = &par("jitter");
+        jitterPar = &par("jitter");
 
 
         //WATCH(jitterPar->doubleValue());
@@ -270,9 +270,9 @@ void IoToriiOperation::sendAndScheduleHello()
     macPkt->setDestAddr(dst);
     macPkt->setBitLength(headerLength);
     EV << "Hello message from this node is broadcasted to all node in the range. " << endl;
-    //double delay = jitterPar->doubleValue();
-    //EV << "value of random jitter is " << delay << endl;
-    send(macPkt, lowerLayerOutGateId);  //sendDown(macPkt, delay); //send(macPkt, "lowerLayerOut");
+    double delay = jitterPar->doubleValue();
+    EV << "value of random jitter is " << delay << endl;
+    sendDown(macPkt, delay); //send(macPkt, lowerLayerOutGateId);  //send(macPkt, "lowerLayerOut");
     numHelloSent++;
     (*numHelloSentTotal)++;
 
@@ -333,9 +333,9 @@ void IoToriiOperation::sendToNeighbors(MACFrameIoTorii *frame)
         dupFrame->setDestAddr(dst);
         emit(LayeredProtocolBase::packetSentToLowerSignal, frame);
         EV << "SetHLMAC frame " << dupFrame->getSrcAddr().eGA3 << " is sent to the neighbor with suffix # (" << i << ") and dst MAC address (" << dupFrame->getDestAddr().MAC << ")" << endl;
-        //double delay = jitterPar->doubleValue();
-        //EV << "value of random jitter is " << delay << endl;
-        send(dupFrame, lowerLayerOutGateId);  //sendDown(dupFrame, delay); // send(dupFrame, "lowerLayerOut");
+        double delay = jitterPar->doubleValue();
+        EV << "value of random jitter is " << delay << endl;
+        sendDown(dupFrame, delay);  //send(dupFrame, lowerLayerOutGateId);  // send(dupFrame, "lowerLayerOut");
         numHLMACSent++;
         (*numHLMACSentTotal)++;
 
@@ -687,7 +687,7 @@ void IoToriiOperation::finish()
         fclose(statisticsCollector);
 
         statisticsCollector = fopen("./09_HLMACSentTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numHLMACAssignedTotal);
+        fprintf(statisticsCollector,"%d\n", *numHLMACSentTotal);
         fclose(statisticsCollector);
 
         statisticsCollector = fopen("./10_HelloSentTotal.txt","a+t");

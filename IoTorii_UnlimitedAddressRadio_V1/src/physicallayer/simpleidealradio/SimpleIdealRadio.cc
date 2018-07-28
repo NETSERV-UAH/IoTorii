@@ -55,7 +55,9 @@ void SimpleIdealRadio::initialize(int stage)
         medium = check_and_cast<SimpleIdealRadioMedium *>(getModuleByPath(par("radioMediumModule")));
         //medium = check_and_cast<SimpleIdealRadioMedium *>(this->getParentModule()->getParentModule()->getSubmodule("radioMedium"));
         mediumModuleId = check_and_cast<cModule *>(medium)->getId();
-        mobility = getModuleFromPar<IMobility>(par("mobilityModule"), getContainingNode(this));
+
+        //mobility = getModuleFromPar<IMobility>(par("mobilityModule"), getContainingNode(this));
+        mobility = check_and_cast<IMobility *>(getContainingNode(this)->getSubmodule("mobility"));
         upperLayerIn = gate("upperLayerIn");
         upperLayerOut = gate("upperLayerOut");
         radioIn = gate("radioIn");

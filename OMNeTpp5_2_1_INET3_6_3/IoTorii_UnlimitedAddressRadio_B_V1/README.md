@@ -13,4 +13,4 @@ LAST UPDATE OF THE INET FRAMEWORK: inet3.6.3 @ December 22, 2017
 
 In the simulation, the width and length of HLMAC address are unlimited.
 SetHLMAC frames are sent broadcastly.
-The Mac sub layer and the physical layer in the simulation are unlimited in terms of interference, collision, and simultaneously sending and receiving one/some packet(s). The only limitation in receiving messages is the transmission range of the transmitter node.
+The Mac sub layer and the physical layer in the simulation are unlimited in terms of interference, collision, and simultaneously sending and receiving one/some packet(s). The limitation in receiving messages is only the transmission range of the transmitter node.

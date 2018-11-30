@@ -50,7 +50,7 @@
 
 //EXTRA BEGIN
 //#include "net/mac/csma/csma.h"
-#include "net/mac/csma/iotorii/iotoriicsma.h"
+#include "iotoriicsma.h"
 //EXTRA END
 #include "net/mac/csma/csma-output.h"
 #include "net/mac/mac-sequence.h"
@@ -130,21 +130,21 @@ input_packet(void)
       LOG_INFO_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
       //EXTRA BEGIN
       //NETSTACK_NETWORK.input();
-      iotorii_operation();
+      //iotorii_operation();
       //EXTRA END
     }
   }
 }
 //EXTRA BEGIN
 /*---------------------------------------------------------------------------*/
-iotorii_operation()
-{
-  if (hello)
-  handle_hello();
-  else if (sethlmac)
-  handle_sethlamc();
+//iotorii_operation()
+//{
+  //if (hello)
+  //handle_hello();
+  //else if (sethlmac)
+  //handle_sethlamc();
 
-}
+//}
 
 //EXTRA END
 /*---------------------------------------------------------------------------*/
@@ -191,7 +191,7 @@ max_payload(void)
   return CSMA_MAC_LEN - framer_hdrlen;
 }
 /*---------------------------------------------------------------------------*/
-const struct mac_driver csma_driver = {
+const struct mac_driver csma_driver = {  //const struct mac_driver csma_driver = { //EXTRA
   "CSMA",
   init,
   send_packet,

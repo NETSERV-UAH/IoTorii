@@ -43,42 +43,59 @@
 
 
 #include "contiki.h"
+#include "hlmacaddr.h"
+#include <stdio.h> //For sprintf()
+#include <stdlib.h> //For malloc()
 
-const linkaddr_t UNSPECIFIED_HLMAC_ADDRESS = {NULL, 0};
+#include "sys/log.h"
+#define LOG_MODULE "IoTorii"
+#define LOG_LEVEL LOG_LEVEL_MAC
+
+const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS = {NULL, 0};
 
 /*---------------------------------------------------------------------------*/
 unsigned char
-is_unspecified_hlmac_addr(const helmacaddr_t addr)
+is_unspecified_hlmac_addr(const hlmacaddr_t addr)
 {
-  if (addr.len == 0) && (!addr.address)
+  if ((addr.len == 0) && (!addr.address))
     return 1;
   else
     return 0;
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
-get_hlmac_len(const helmacaddr_t addr)
+get_hlmac_len(const hlmacaddr_t addr)
 {
   return addr.len;
 }
 /*---------------------------------------------------------------------------*/
-helmacaddr_t *
-create_root_id(const unsigned char root_id)
+unsigned char *
+get_hlmac_address(const hlmacaddr_t addr)
 {
-  helmacaddr_t *root_addr = (helmacaddr_t *) malloc(sixeof(helmacaddr_t));
-  root_addr->address = (unsigned char *) malloc(sixeof(unsigned char));
-  root_addr->*address = root_id;
-  root_addr->len = 0;
+  unsigned char *address = (unsigned char *) malloc(sizeof(unsigned char) * addr.len);
+  for(unsigned char i=0; i<addr.len; i++){
+    address[i] = addr.address[i];
+  }
+  return address;
 }
 /*---------------------------------------------------------------------------*/
-//void setIndexValue(unsigned int k, unsigned int addrbyte);
+hlmacaddr_t *
+create_root_addr(const unsigned char root_id)
+{
+  hlmacaddr_t *root_addr = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
+  root_addr->address = (unsigned char *) malloc(sizeof(unsigned char));
+  root_addr->address[0] = root_id;
+  root_addr->len = 0;
+  return root_addr;
+}
 /*---------------------------------------------------------------------------*/
 void
-add_new_id(helmacaddr_t *addr, const unsigned char new_id)
+add_new_id(hlmacaddr_t *addr, const unsigned char new_id)
 {
   unsigned char * temp = addr->address;
   addr->address = (unsigned char *) malloc(sizeof(unsigned char) * (addr->len + 1));
-  for(int i=0; i<addr->len; i++){
+  unsigned char i;
+  for(i=0; i<addr->len; i++){
     addr->address[i] = temp[i];
   }
   addr->address[i] = new_id;
@@ -88,7 +105,7 @@ add_new_id(helmacaddr_t *addr, const unsigned char new_id)
 }
 /*---------------------------------------------------------------------------*/
 void
-remove_Last_id(helmacaddr_t *addr)
+remove_Last_id(hlmacaddr_t *addr)
 {
   if (addr->len == 0)
     return;
@@ -109,31 +126,73 @@ remove_Last_id(helmacaddr_t *addr)
 
 }
 /*---------------------------------------------------------------------------*/
-int
-hlmac_cmp(const helmacaddr_t addr1, const helmacaddr_t addr2)
+char
+hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2)
 {
-  int minSize = (addr1->len < addr2->len) ? addr1->len : addr2->len;
+  unsigned char min_len = (addr1.len < addr2.len) ? addr1.len : addr2.len;
+  unsigned char i;
 
-  for (unsigned char i=0; i<minSize; i++){
-      if (addr1->address[i] < addr2->address[i])
+  for (i=0; i<min_len; i++){
+      if (addr1.address[i] < addr2.address[i])
           return +1;
-      else if (addr1->address[i] > addr2->address[i])
+      else if (addr1.address[i] > addr2.address[i])
           return -1;
   }
-  if (addr1->len == addr2->len)
+  if (addr1.len == addr2.len)
       return 0;
-  else if (addr1->len < addr2->len){
-      for (int i=minSize; i< address.size(); i++){
-          if (address.at(i) > 0)
-              return +1;
+  if (addr1.len < addr2.len){
+      for (; i< addr2.len; i++){ // for (unsigned char i=min_len; i< addr2->len; i++){
+
+          if (addr2.address[i] > 0) // Check whether the other IDs are 0 or not.
+              return +1; // when addr1 = 1.2.3 and addr2 = 1.2.3.4 (even, 1.2.3.0.4)
       }
-      return 0;
+      return 0; // when addr1 = 1.2.3, addr2 = 1.2.3.0 (or 1.2.3.0.0 ...)
   }
-  else if (address.size() < other.address.size()){
-      for (int i=minSize; i< other.address.size(); i++){
-          if (other.address.at(i) > 0)
-              return -1;
+  if (addr1.len > addr2.len){
+      for (; i< addr1.len; i++){ // for (unsigned char i=min_len; i< addr1->len; i++){
+          if (addr1.address[i] > 0) // Check whether the other IDs are 0 or not.
+              return -1; // when addr1 = 1.2.3.4 (even, 1.2.3.0.4) and addr2 = 1.2.3
       }
-      return 0;
+      return 0; // when addr1 = 1.2.3.0 (or 1.2.3.0.0 ...), addr2 = 1.2.3
   }
+  return -2; //\fixme not happen, for compile error
+}
+/*---------------------------------------------------------------------------*/
+/*hlmacaddr_t *
+char_array_to_hlmac_addr(const unsigned char *ch_array, const unsigned char len)
+{
+
+}*/
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief      Get the kth ID in a given HLMAC address. Since this function is just used here, we don't declare it in the header file, i.e. same as the private methods in C++.
+ * \param addr The given HLMAC address
+ * \param k  The index of the ID in the given HLMAC address, k is in range of [0 255]
+ * \return     Value of the kth ID
+ *
+ */
+unsigned char
+get_addr_index_value(const hlmacaddr_t addr, const unsigned char k)
+{
+  if (k < (addr.len))
+    return addr.address[k-1];
+  else{
+    const unsigned char *addr_str = hlmac_addr_to_str(addr);
+    LOG_ERR("get_addr_index_value(): index %d is out of range %s", k, addr_str);
+    //free(addr_str); // \fexme const => err, leakage?
+    return 0; //for ERR, x.0 is not valid addres
+  }
+
+}
+/*---------------------------------------------------------------------------*/
+const unsigned char *
+hlmac_addr_to_str(hlmacaddr_t addr)
+{
+  unsigned char *address = (unsigned char *) malloc(sizeof(unsigned char) * (addr.len * (2 +1) + 1)); //first 1 for dot,e.g 01.0F, second 1 for "\0" at the end of address array.
+  unsigned char *s = address;
+  unsigned char i;
+  for (i = 0; i < addr.len; i++, s += 3)
+      //sprintf(s, "%2.2u.", get_addr_index_value(addr, i));
+  *(s) = '\0';
+  return address;
 }

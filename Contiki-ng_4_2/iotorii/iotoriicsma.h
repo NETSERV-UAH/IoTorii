@@ -1,4 +1,13 @@
 /*
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), and David Carrascal(1);
+ *                    (1) GIST, University of Alcala, Spain.
+ *                    (2) CEIT, Amirkabir University of Technology (Tehran
+ *                        Polytechnic), Iran.
+ * Adapted to use IoTorii, a link layer protocol for Low pawer and Lossy Network
+ * (LLN), over the IEEE 802.15.4 none beacon mode.
+ *
+ */
+/*
  * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *

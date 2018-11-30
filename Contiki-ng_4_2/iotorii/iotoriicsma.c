@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2);
+ * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), and David Carrascal(1);
  *                    (1) GIST, University of Alcala, Spain.
  *                    (2) CEIT, Amirkabir University of Technology (Tehran
  *                        Polytechnic), Iran.

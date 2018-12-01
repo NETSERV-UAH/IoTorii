@@ -1,11 +1,5 @@
 /*
- * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), and David Carrascal(1);
- *                    (1) GIST, University of Alcala, Spain.
- *                    (2) CEIT, Amirkabir University of Technology (Tehran
- *                        Polytechnic), Iran.
- * Adapted to use IoTorii, a link layer protocol for Low pawer and Lossy Network
- * (LLN), over the IEEE 802.15.4 none beacon mode.
- *
+ * Copyright (c) 2013, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,32 +26,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  *
  */
 
-/**
- * \file
- *         This process starts the IoTorii mac protocol
- */
-
-#include "contiki.h"
-#include "net/netstack.h"
-#include <stdio.h>
+#ifndef CCM_STAR_PACKETBUF_H_
+#define CCM_STAR_PACKETBUF_H_
 
 /*---------------------------------------------------------------------------*/
-PROCESS(start_iotorii_root, "Process to Start IoTorii Root");
-AUTOSTART_PROCESSES(&start_iotorii_root);
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(start_iotorii_root, ev, data)
-{
+void ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward);
 
-  PROCESS_BEGIN();
-
-  //NETSTACK_MAC.init();
-  //NETSTACK_RADIO.init();
-  netstack_init();
-
-
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
+#endif /* CCM_STAR_PACKETBUF_H_ */

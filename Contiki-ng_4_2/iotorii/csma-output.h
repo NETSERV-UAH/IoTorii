@@ -1,11 +1,5 @@
 /*
- * Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), and David Carrascal(1);
- *                    (1) GIST, University of Alcala, Spain.
- *                    (2) CEIT, Amirkabir University of Technology (Tehran
- *                        Polytechnic), Iran.
- * Adapted to use IoTorii, a link layer protocol for Low pawer and Lossy Network
- * (LLN), over the IEEE 802.15.4 none beacon mode.
- *
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,32 +26,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  *
  */
 
 /**
  * \file
- *         This process starts the IoTorii mac protocol
+ *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled).
+ *         Output functions.
+ * \author
+
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
+#ifndef CSMA_OUTPUT_H_
+#define CSMA_OUTPUT_H_
+
 #include "contiki.h"
-#include "net/netstack.h"
-#include <stdio.h>
+#include "net/mac/mac.h"
 
-/*---------------------------------------------------------------------------*/
-PROCESS(start_iotorii_root, "Process to Start IoTorii Root");
-AUTOSTART_PROCESSES(&start_iotorii_root);
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(start_iotorii_root, ev, data)
-{
+void csma_output_packet(mac_callback_t sent, void *ptr);
+void csma_output_init(void);
 
-  PROCESS_BEGIN();
-
-  //NETSTACK_MAC.init();
-  //NETSTACK_RADIO.init();
-  netstack_init();
-
-
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
+#endif /* CSMA_OUTPUT_H_ */

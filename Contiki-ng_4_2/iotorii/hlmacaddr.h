@@ -48,8 +48,8 @@
 #include "contiki.h"
 
 typedef struct {
-  unsigned char *address;  // The address width is in range of [0 255]
-  unsigned char len; // The address length is in range of [0 255]
+  uint8_t *address;  // The address width is in range of [0 255]
+  uint8_t len; // The address length is in range of [0 255]
 }  hlmacaddr_t;
 
 //To define unspecified HLMAC address
@@ -62,7 +62,7 @@ extern const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS;
  * \return  0 if addr is not the unspecified address, +1 otherwise
  */
 
-unsigned char is_unspecified_hlmac_addr(const hlmacaddr_t addr);
+uint8_t is_unspecified_hlmac_addr(const hlmacaddr_t addr);
 
 /**
  * \brief      Get the len of a given HLMAC address
@@ -70,7 +70,7 @@ unsigned char is_unspecified_hlmac_addr(const hlmacaddr_t addr);
  * \return  The length of the addr
  */
 
-unsigned char get_hlmac_len(const hlmacaddr_t addr);
+uint8_t get_hlmac_len(const hlmacaddr_t addr);
 
 /**
  * \brief      Get the address fiel of a given HLMAC address. This function doesn't add '\0' at the end of address field.
@@ -78,7 +78,7 @@ unsigned char get_hlmac_len(const hlmacaddr_t addr);
  * \return  The address field of the addr
  */
 
-unsigned char *get_hlmac_address(const hlmacaddr_t addr);
+uint8_t *get_hlmac_address(const hlmacaddr_t addr);
 
 /**
  * \brief      Create a new HLMAC address, and add a root ID
@@ -86,9 +86,9 @@ unsigned char *get_hlmac_address(const hlmacaddr_t addr);
  * \return the root HLMAC address
  */
 
-hlmacaddr_t *create_root_addr(const unsigned char root_id);
+hlmacaddr_t *create_root_addr(const uint8_t root_id);
 
-//void setIndexValue(unsigned int k, unsigned int addrbyte);
+//void setIndexValue(unsigned uint8_t k, unsigned uint8_t addrbyte);
 
 /**
  * \brief      Add an ID to a given HLMAC address
@@ -97,7 +97,7 @@ hlmacaddr_t *create_root_addr(const unsigned char root_id);
  * \return addr without its last id
  */
 
-void add_new_id(hlmacaddr_t *addr, const unsigned char new_id);
+void add_new_id(hlmacaddr_t *addr, const uint8_t new_id);
 
 /**
  * \brief      Remove the last ID from a given HLMAC address
@@ -124,7 +124,7 @@ char hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2);
  * \return     An hlmacaddr_t struct
  */
 
-hlmacaddr_t *char_array_to_hlmac_addr(const unsigned char *ch_array, const unsigned char len);
+hlmacaddr_t *char_array_to_hlmac_addr(const uint8_t *ch_array, const uint8_t len);
 
 /**
  * \brief      Get the address fiel of a given HLMAC address as a string value, so this function add '\0' at the end of address field.
@@ -132,6 +132,6 @@ hlmacaddr_t *char_array_to_hlmac_addr(const unsigned char *ch_array, const unsig
  * \return  The address field of the addr
  */
 
-const unsigned char *hlmac_addr_to_str(hlmacaddr_t addr);
+const uint8_t *hlmac_addr_to_str(hlmacaddr_t addr);
 
 #endif /* HLMACADDR_H_ */

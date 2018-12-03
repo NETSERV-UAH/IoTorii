@@ -53,6 +53,11 @@
 //#include "net/mac/csma/csma-output.h"
 #include "csma-output.h"
 #include "iotoriicsma.h"
+#include "os/lib/list.h"
+#include "sys/ctimer.h"
+#include "lib/list.h"
+#include <stdlib.h> //For malloc()
+#include "lib/random.h"
 //EXTRA END
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
@@ -63,6 +68,19 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+#if IOTORII_NODE_TYPE == 1 //only root
+static struct ctimer sethlmac_timer;
+#endif
+#if IOTORII_NODE_TYPE > 0 //root and common node
+static struct ctimer hello_timer;
+#endif
+
+//EXTRA BEGIN
+//Create Neighbour table
+LIST(iotorii_nd_table);
+//number_of_neighbours = 0;
+//LIST(iotorii_hlmac_table);
+//EXTRA END
 
 static void
 init_sec(void)
@@ -136,18 +154,6 @@ input_packet(void)
     }
   }
 }
-//EXTRA BEGIN
-/*---------------------------------------------------------------------------*/
-//iotorii_operation()
-//{
-  //if (hello)
-  //handle_hello();
-  //else if (sethlmac)
-  //handle_sethlamc();
-
-//}
-
-//EXTRA END
 /*---------------------------------------------------------------------------*/
 static int
 on(void)
@@ -161,6 +167,32 @@ off(void)
   return NETSTACK_RADIO.off();
 }
 /*---------------------------------------------------------------------------*/
+//EXTRA BEGIN
+#if IOTORII_NODE_TYPE == 1
+static void
+handle_sethlmac_timer()
+{
+  //ctimer_reset(&timer);
+}
+#endif
+/*---------------------------------------------------------------------------*/
+#if IOTORII_NODE_TYPE > 0
+static void
+handle_hello_timer()
+{
+  //ctimer_reset(&timer);
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
+  LOG_DBG("Hello prepared to send\n");
+  send_packet(NULL,NULL);
+  ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
+  //ctimer_restart(&hello_timer); //Restart the timer from current time.
+  //ctimer_stop(&hello_timer); //Stop the timer.
+
+
+}
+#endif
+//EXTRA END
+/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -173,6 +205,30 @@ init(void)
 #endif /* LLSEC802154_USES_AUX_HEADER */
   csma_output_init();
   on();
+  //Common node operation
+#ifdef IOTORII_NODE_TYPE
+//LIST
+#if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
+  LOG_INFO("This node operates as the root.");
+  clock_time_t sethlmac_start_time;
+  sethlmac_start_time = CLOCK_SECOND; //after 2 seconds
+  LOG_DBG("Scheduling SetHLMAC after %u ticks in the future\n", (unsigned)sethlmac_start_time);
+  ctimer_set(&sethlmac_timer, sethlmac_start_time, handle_sethlmac_timer, NULL);
+#endif
+#if IOTORII_NODE_TYPE > 0 //Root or Common node, we set a timer to send a Hello message.
+  LOG_INFO("This node operates as a common node.");
+  clock_time_t hello_start_time;
+  hello_start_time = random_rand() % (3) * CLOCK_SECOND;//after 1 second
+  LOG_DBG("Scheduling Hello after %u ticks in the future\n", (unsigned)hello_start_time);
+  ctimer_set(&hello_timer, hello_start_time, handle_hello_timer, NULL);
+
+  //Create Neighbour table
+  list_init(iotorii_nd_table);
+  number_of_neighbours = 0;
+  //LIST(iotorii_hlmac_table);
+
+#endif
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -201,4 +257,59 @@ const struct mac_driver csma_driver = {  //const struct mac_driver csma_driver =
   off,
   max_payload,
 };
+/*---------------------------------------------------------------------------*/
+//EXTRA BEGIN
+void
+handle_hello() //To process an IoTorii Hello control broadcast packet received from another node
+{
+  if (number_of_neighbours < 256){
+    uint8_t address_is_in_table = 0;
+    const linkaddr_t *sender_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+    struct neighbour_table_entry *new_nb;
+    //Check if the address is in the list.
+    for(new_nb=list_head(iotorii_nd_table); new_nb!=NULL; new_nb=new_nb->next){
+      if (linkaddr_cmp(&(new_nb->addr), sender_addr))
+        address_is_in_table = 1;
+    }
+    if (!address_is_in_table){
+      new_nb = (struct neighbour_table_entry *)malloc(sizeof(struct neighbour_table_entry));
+      new_nb->id = ++number_of_neighbours;
+      new_nb->addr = *sender_addr;
+      list_add(iotorii_nd_table, new_nb);
+      LOG_DBG("A new neighbour was added to IoTorii neighbour table, address: ");
+      LOG_DBG_LLADDR(sender_addr);
+      LOG_DBG(", ID: %d\n", new_nb->id);
+    }else
+      LOG_ERR("Address of hello (");
+      LOG_DBG_LLADDR(sender_addr);
+      LOG_DBG(") message had been received already!\n");
+  } else{
+    LOG_ERR ("The IoTorii neighbour table is full! \n");
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+handle_sethlamc() //To process an IoTorii SetHLMAC control broadcast packet received from another node
+{
+  //maxjitter 5 ms
+  //jitter = 0~5ms
+
+
+}
+/*---------------------------------------------------------------------------*/
+void
+iotorii_operation(void)
+{
+  if (packetbuf_holds_broadcast()){
+    //if (hello identification) //
+    if (packetbuf_datalen() == 0)
+      handle_hello();
+    //else if (SetHLMAC identification)
+    else
+      handle_sethlamc();
+    //else
+      //handle_data_broadcast(); //To send a data broadcast packet, received from another node, to the upper layer
+  }//else
+    //handle_handle_unicast();  //For handling an unicast packet received from another node
+}
 /*---------------------------------------------------------------------------*/

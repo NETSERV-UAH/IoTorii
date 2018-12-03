@@ -53,11 +53,23 @@
 
 #ifndef IOTORICSMA_H_
 #define IOTORIICSMA_H_
+
+#include "hlmacaddr.h"
+//#include "net/linkaddr.h"
+#include "net/linkaddr.h"
 //EXTRA END
 
 #include "contiki.h"
 #include "net/mac/mac.h"
 #include "dev/radio.h"
+
+//EXTRA
+#ifdef IOTORII_CONF_NODE_TYPE
+#define IOTORII_NODE_TYPE IOTORII_CONF_NODE_TYPE
+#else
+#define IOTORII_NODE_TYPE 2 //A common node
+#endif
+//EXTRA
 
 #ifdef CSMA_CONF_SEND_SOFT_ACK
 #define CSMA_SEND_SOFT_ACK CSMA_CONF_SEND_SOFT_ACK
@@ -86,6 +98,20 @@
 #define CSMA_MAC_LEN 127 - 2
 #endif
 
+//EXTRA BEGIN
+struct neighbour_table_entry{
+  struct neighbour_table_entry *next;
+  linkaddr_t addr;
+  uint8_t id;
+};
+
+/*typedef struct {
+  hlmac_table_entry_t *next;
+  hlmacaddr_t addr;
+} hlmac_table_entry_t;*/
+uint8_t number_of_neighbours;
+
+//EXTRA END
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 

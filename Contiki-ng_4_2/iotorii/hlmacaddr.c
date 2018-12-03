@@ -201,3 +201,14 @@ hlmac_addr_to_str(hlmacaddr_t addr)
   *(s) = '\0';
   return address;
 }
+/*---------------------------------------------------------------------------*/
+void
+hlmac_compact_addr_to_packetbuf(char *packetbuf, hlmacaddr_t *addr)
+{
+  //char *address = (char *) malloc(sizeof(char) * (addr.len + 1)); //first 1 for len,e.g 1.2.3 => 3123
+  *packetbuf = addr->len; //first char is len
+  uint8_t i;
+  for (i=0; i<addr->len; i++){
+    *(packetbuf + i + 1) = addr->address[i];
+  }
+}

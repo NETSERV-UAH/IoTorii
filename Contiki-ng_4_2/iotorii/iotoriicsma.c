@@ -168,28 +168,54 @@ off(void)
 }
 /*---------------------------------------------------------------------------*/
 //EXTRA BEGIN
-#if IOTORII_NODE_TYPE == 1
+#ifdef IOTORII_NODE_TYPE
+#if IOTORII_NODE_TYPE == 1 //For root
 static void
 handle_sethlmac_timer()
 {
   //ctimer_reset(&timer);
+  uint8_t id = 1;
+  uint8_t *neighbour_id;
+  hlmacaddr_t *root_hlmac_addr = hlmac_create_root_addr(1);
+  hlmacaddr_t *neighbour_hlmac_addr;
+  uint8_t cleared_packetbuf = 0; //Packet buffer needs to be cleared.
+
+  neighbour_hlmac_addr = hlmac_add_new_id(root_hlmac_addr, *neighbour_id);
+  if (packetbuf_datalen() >=  (hlmac_get_len(neighbour_hlmac_addr)+1){ //1 is for adding the length of hlmac address.
+    if(!cleared_packetbuf){
+      packetbuf_clear();
+      cleared_packetbuf = 1;
+    }
+    //hlmac_compact_addr_to_packetbuf(, neighbour_hlmac_addr);
+
+  }
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null); //Broadcast address
+  LOG_DBG("SetHLMAC message is prepared to be sent\n");
+  free(root_hlmac_addr);
+  free(neighbour_hlmac_addr);
+  send_packet(NULL, NULL);
+  //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
+  ctimer_restart(&hello_timer); //Restart the timer from current time.
+  //ctimer_stop(&hello_timer); //Stop the timer.
 }
 #endif
+#endif
 /*---------------------------------------------------------------------------*/
-#if IOTORII_NODE_TYPE > 0
+#ifdef IOTORII_NODE_TYPE
+#if IOTORII_NODE_TYPE > 0 //The root or common nodes
 static void
 handle_hello_timer()
 {
   //ctimer_reset(&timer);
+  packetbuf_clear();
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
   LOG_DBG("Hello prepared to send\n");
   send_packet(NULL,NULL);
-  ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
-  //ctimer_restart(&hello_timer); //Restart the timer from current time.
+  //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
+  ctimer_restart(&hello_timer); //Restart the timer from current time.
   //ctimer_stop(&hello_timer); //Stop the timer.
-
-
 }
+#endif
 #endif
 //EXTRA END
 /*---------------------------------------------------------------------------*/
@@ -205,9 +231,8 @@ init(void)
 #endif /* LLSEC802154_USES_AUX_HEADER */
   csma_output_init();
   on();
-  //Common node operation
+  //EXTRA BEGIN
 #ifdef IOTORII_NODE_TYPE
-//LIST
 #if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
   LOG_INFO("This node operates as the root.");
   clock_time_t sethlmac_start_time;
@@ -217,8 +242,8 @@ init(void)
 #endif
 #if IOTORII_NODE_TYPE > 0 //Root or Common node, we set a timer to send a Hello message.
   LOG_INFO("This node operates as a common node.");
-  clock_time_t hello_start_time;
-  hello_start_time = random_rand() % (3) * CLOCK_SECOND;//after 1 second
+  clock_time_t hello_start_time = 10*CLOCK_SECOND;
+  hello_start_time = hello_start_time/2 + (random_rand() % (hello_start_time / 2));
   LOG_DBG("Scheduling Hello after %u ticks in the future\n", (unsigned)hello_start_time);
   ctimer_set(&hello_timer, hello_start_time, handle_hello_timer, NULL);
 
@@ -226,9 +251,9 @@ init(void)
   list_init(iotorii_nd_table);
   number_of_neighbours = 0;
   //LIST(iotorii_hlmac_table);
-
 #endif
 #endif
+//EXTRA END
 }
 /*---------------------------------------------------------------------------*/
 static int

@@ -40,7 +40,7 @@ sudo apt update
 sudo apt-get install git 
 ```
 
-> While installing Wireshark, select enable the feature that lets non-superuser capture packets (select "yes"), or you can also run > cooja as super-user
+> While installing Wireshark, select enable the feature that lets non-superuser capture packets (select "yes"), or you can also run  cooja as super-user
 
 ```bash
 sudo apt install build-essential doxygen curl wireshark python-serial srecord

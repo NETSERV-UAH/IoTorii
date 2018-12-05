@@ -66,8 +66,8 @@
 //EXTRA
 #ifdef IOTORII_CONF_NODE_TYPE
 #define IOTORII_NODE_TYPE IOTORII_CONF_NODE_TYPE
-#else
-#define IOTORII_NODE_TYPE 2 //A common node
+//#else
+//#define IOTORII_NODE_TYPE 2 //A common node
 #endif
 //EXTRA
 
@@ -104,6 +104,7 @@ struct neighbour_table_entry{
   linkaddr_t addr;
   uint8_t id;
 };
+typedef struct neighbour_table_entry neighbour_table_entry_t;
 
 /*typedef struct {
   hlmac_table_entry_t *next;

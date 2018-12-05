@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = start-iotorii
+CONTIKI_PROJECT = start-iotorii-root start-iotorii-common-node
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../..

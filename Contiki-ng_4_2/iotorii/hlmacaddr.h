@@ -52,6 +52,8 @@ typedef struct {
   uint8_t len; // The address length is in range of [0 255]
 }  hlmacaddr_t;
 
+hlmacaddr_t node_hlmac_address;
+
 //To define unspecified HLMAC address
 
 extern const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS;
@@ -86,7 +88,7 @@ uint8_t *hlmac_get_address(const hlmacaddr_t addr);
  * \return the root HLMAC address
  */
 
-hlmacaddr_t *hlmac_create_root_addr(const uint8_t root_id);
+const hlmacaddr_t *hlmac_assign_root_addr(const uint8_t root_id);
 
 //void setIndexValue(unsigned uint8_t k, unsigned uint8_t addrbyte);
 
@@ -98,6 +100,8 @@ hlmacaddr_t *hlmac_create_root_addr(const uint8_t root_id);
  */
 
 void hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id);
+
+hlmacaddr_t * hlmac_gen_new_addr_id(const uint8_t new_id);
 
 /**
  * \brief      Remove the last ID from a given HLMAC address
@@ -126,15 +130,14 @@ char hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2);
 
 hlmacaddr_t *hlmac_char_array_to_addr(const uint8_t *ch_array, const uint8_t len);
 
+uint8_t get_addr_index_value(const hlmacaddr_t addr, const uint8_t k);
+
 /**
  * \brief      Get the address fiel of a given HLMAC address as a string value, so this function add '\0' at the end of address field.
  * \param addr The given HLMAC address
  * \return  The address field of the addr
  */
 
-const uint8_t *hlmac_addr_to_str(hlmacaddr_t addr);
-
-void hlmac_compact_addr_to_packetbuf(char *packetbuf, hlmacaddr_t *addr);
-
+char *hlmac_addr_to_str(hlmacaddr_t addr);
 
 #endif /* HLMACADDR_H_ */

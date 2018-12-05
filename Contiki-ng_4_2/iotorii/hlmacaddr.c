@@ -55,7 +55,7 @@ const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS = {NULL, 0};
 
 /*---------------------------------------------------------------------------*/
 uint8_t
-is_unspecified_hlmac_addr(const hlmacaddr_t addr)
+hlmac_is_unspecified_addr(const hlmacaddr_t addr)
 {
   if ((addr.len == 0) && (!addr.address))
     return 1;
@@ -64,13 +64,13 @@ is_unspecified_hlmac_addr(const hlmacaddr_t addr)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-get_hlmac_len(const hlmacaddr_t addr)
+hlmac_get_len(const hlmacaddr_t addr)
 {
   return addr.len;
 }
 /*---------------------------------------------------------------------------*/
 uint8_t *
-get_hlmac_address(const hlmacaddr_t addr)
+hlmac_get_address(const hlmacaddr_t addr)
 {
   uint8_t *address = (uint8_t *) malloc(sizeof(uint8_t) * addr.len);
   uint8_t i;
@@ -80,18 +80,18 @@ get_hlmac_address(const hlmacaddr_t addr)
   return address;
 }
 /*---------------------------------------------------------------------------*/
-hlmacaddr_t *
-create_root_addr(const uint8_t root_id)
+const hlmacaddr_t *
+hlmac_assign_root_addr(const uint8_t root_id)
 {
-  hlmacaddr_t *root_addr = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
-  root_addr->address = (uint8_t *) malloc(sizeof(uint8_t));
-  root_addr->address[0] = root_id;
-  root_addr->len = 0;
-  return root_addr;
+  node_hlmac_address.address = (uint8_t *) malloc(sizeof(uint8_t));
+  node_hlmac_address.address[0] = root_id;
+  node_hlmac_address.len = 1;
+  //LOG_DBG("Root.address: %d, Root.len: %d", node_hlmac_address.address[0], node_hlmac_address.len);
+  return &node_hlmac_address;
 }
 /*---------------------------------------------------------------------------*/
 void
-add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
+hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
 {
   uint8_t * temp = addr->address;
   addr->address = (uint8_t *) malloc(sizeof(uint8_t) * (addr->len + 1));
@@ -100,13 +100,30 @@ add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
     addr->address[i] = temp[i];
   }
   addr->address[i] = new_id;
-  (addr->len) ++;  // \fixme parenteses are need?!
+  (addr->len) ++;
   free(temp);
   temp = NULL;
 }
 /*---------------------------------------------------------------------------*/
+hlmacaddr_t *
+hlmac_gen_new_addr_id(const uint8_t new_id)
+{
+  hlmacaddr_t *temp = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
+  temp->address = (uint8_t *) malloc(sizeof(uint8_t) * (node_hlmac_address.len + 1));
+  uint8_t i;
+  for(i=0; i<node_hlmac_address.len; i++){
+     temp->address[i] = node_hlmac_address.address[i];
+  }
+  temp->address[i] = new_id;
+  //LOG_DBG("test1: new_id: %d temp->address[i] %d, len: %d", new_id, temp->address[i], temp->len);
+  temp->len = node_hlmac_address.len + 1;
+  //LOG_DBG("test1: new_id: %d temp->address[i] %d, len: %d", new_id, temp->address[i], temp->len);
+
+  return temp;
+}
+/*---------------------------------------------------------------------------*/
 void
-remove_Last_id(hlmacaddr_t *addr)
+hlmac_remove_Last_id(hlmacaddr_t *addr)
 {
   if (addr->len == 0)
     return;
@@ -161,7 +178,7 @@ hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2)
 }
 /*---------------------------------------------------------------------------*/
 hlmacaddr_t *
-char_array_to_hlmac_addr(const uint8_t *ch_array, const uint8_t len)
+hlmac_char_array_to_addr(const uint8_t *ch_array, const uint8_t len)
 {
   hlmacaddr_t *addr = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
   addr->address = (uint8_t *) malloc(sizeof(uint8_t) * (len));
@@ -180,9 +197,9 @@ uint8_t
 get_addr_index_value(const hlmacaddr_t addr, const uint8_t k)
 {
   if (k < (addr.len))
-    return addr.address[k-1];
+    return addr.address[k]; //k is in range [0 len-1]
   else{
-    const uint8_t *addr_str = hlmac_addr_to_str(addr);
+    const char *addr_str = hlmac_addr_to_str(addr);
     LOG_ERR("get_addr_index_value(): index %d is out of range %s", k, addr_str);
     //free(addr_str); // \fexme const => err, leakage?
     return 0; //for ERR, x.0 is not valid addres
@@ -190,25 +207,14 @@ get_addr_index_value(const hlmacaddr_t addr, const uint8_t k)
 
 }
 /*---------------------------------------------------------------------------*/
-const uint8_t *
-hlmac_addr_to_str(hlmacaddr_t addr)
+char *
+hlmac_addr_to_str(const hlmacaddr_t addr)
 {
-  uint8_t *address = (uint8_t *) malloc(sizeof(uint8_t) * (addr.len * (2 +1) + 1)); //first 1 for dot,e.g 01.0F, second 1 for "\0" at the end of address array.
+  char *address = (char *) malloc(sizeof(char) * (addr.len * (2 +1) + 1)); //first 1 for dot,e.g 01.0F, second 1 for "\0" at the end of address array.
   char *s = (char *)address;
   uint8_t i;
   for (i = 0; i < addr.len; i++, s += 3)
-      sprintf(s, "%2.2u.", get_addr_index_value(addr, i));
+      sprintf(s, "%2.2u.", (char)get_addr_index_value(addr, i));
   *(s) = '\0';
   return address;
-}
-/*---------------------------------------------------------------------------*/
-void
-hlmac_compact_addr_to_packetbuf(char *packetbuf, hlmacaddr_t *addr)
-{
-  //char *address = (char *) malloc(sizeof(char) * (addr.len + 1)); //first 1 for len,e.g 1.2.3 => 3123
-  *packetbuf = addr->len; //first char is len
-  uint8_t i;
-  for (i=0; i<addr->len; i++){
-    *(packetbuf + i + 1) = addr->address[i];
-  }
 }

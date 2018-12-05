@@ -41,10 +41,10 @@
 #define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
 /*---------------------------------------------------------------------------*/
 /* Configure the IoTorii root node for iotoriicsma.h */
-//#define IOTORII_CONF_NODE_TYPE 1
+#define IOTORII_CONF_NODE_TYPE 1
 /*---------------------------------------------------------------------------*/
 /* Configure the IoTorii common nodes for iotoriicsma.h */
-#define IOTORII_CONF_NODE_TYPE 2
+//#define IOTORII_CONF_NODE_TYPE 2
 /*---------------------------------------------------------------------------*/
 /* Configure the csma_driver for netstack.h */
 #define NETSTACK_CONF_MAC      csma_driver

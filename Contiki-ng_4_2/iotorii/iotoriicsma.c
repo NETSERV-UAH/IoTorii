@@ -167,95 +167,6 @@ off(void)
   return NETSTACK_RADIO.off();
 }
 /*---------------------------------------------------------------------------*/
-//EXTRA BEGIN
-#ifdef IOTORII_NODE_TYPE
-#if IOTORII_NODE_TYPE == 1 //For root
-static void
-handle_sethlmac_timer()
-{
-  //ctimer_reset(&timer);
-  uint8_t id = 1;
-  uint8_t *neighbour_id;
-  hlmacaddr_t *root_hlmac_addr = hlmac_create_root_addr(1);
-  hlmacaddr_t *neighbour_hlmac_addr;
-  uint8_t cleared_packetbuf = 0; //Packet buffer needs to be cleared.
-
-  neighbour_hlmac_addr = hlmac_add_new_id(root_hlmac_addr, *neighbour_id);
-  if (packetbuf_datalen() >=  (hlmac_get_len(neighbour_hlmac_addr)+1){ //1 is for adding the length of hlmac address.
-    if(!cleared_packetbuf){
-      packetbuf_clear();
-      cleared_packetbuf = 1;
-    }
-    //hlmac_compact_addr_to_packetbuf(, neighbour_hlmac_addr);
-
-  }
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null); //Broadcast address
-  LOG_DBG("SetHLMAC message is prepared to be sent\n");
-  free(root_hlmac_addr);
-  free(neighbour_hlmac_addr);
-  send_packet(NULL, NULL);
-  //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
-  ctimer_restart(&hello_timer); //Restart the timer from current time.
-  //ctimer_stop(&hello_timer); //Stop the timer.
-}
-#endif
-#endif
-/*---------------------------------------------------------------------------*/
-#ifdef IOTORII_NODE_TYPE
-#if IOTORII_NODE_TYPE > 0 //The root or common nodes
-static void
-handle_hello_timer()
-{
-  //ctimer_reset(&timer);
-  packetbuf_clear();
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
-  LOG_DBG("Hello prepared to send\n");
-  send_packet(NULL,NULL);
-  //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
-  ctimer_restart(&hello_timer); //Restart the timer from current time.
-  //ctimer_stop(&hello_timer); //Stop the timer.
-}
-#endif
-#endif
-//EXTRA END
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-
-#if LLSEC802154_USES_AUX_HEADER
-#ifdef CSMA_LLSEC_DEFAULT_KEY0
-  uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
-  csma_security_set_key(0, key);
-#endif
-#endif /* LLSEC802154_USES_AUX_HEADER */
-  csma_output_init();
-  on();
-  //EXTRA BEGIN
-#ifdef IOTORII_NODE_TYPE
-#if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
-  LOG_INFO("This node operates as the root.");
-  clock_time_t sethlmac_start_time;
-  sethlmac_start_time = CLOCK_SECOND; //after 2 seconds
-  LOG_DBG("Scheduling SetHLMAC after %u ticks in the future\n", (unsigned)sethlmac_start_time);
-  ctimer_set(&sethlmac_timer, sethlmac_start_time, handle_sethlmac_timer, NULL);
-#endif
-#if IOTORII_NODE_TYPE > 0 //Root or Common node, we set a timer to send a Hello message.
-  LOG_INFO("This node operates as a common node.");
-  clock_time_t hello_start_time = 10*CLOCK_SECOND;
-  hello_start_time = hello_start_time/2 + (random_rand() % (hello_start_time / 2));
-  LOG_DBG("Scheduling Hello after %u ticks in the future\n", (unsigned)hello_start_time);
-  ctimer_set(&hello_timer, hello_start_time, handle_hello_timer, NULL);
-
-  //Create Neighbour table
-  list_init(iotorii_nd_table);
-  number_of_neighbours = 0;
-  //LIST(iotorii_hlmac_table);
-#endif
-#endif
-//EXTRA END
-}
-/*---------------------------------------------------------------------------*/
 static int
 max_payload(void)
 {
@@ -273,6 +184,135 @@ max_payload(void)
   return CSMA_MAC_LEN - framer_hdrlen;
 }
 /*---------------------------------------------------------------------------*/
+//EXTRA BEGIN
+#ifdef IOTORII_NODE_TYPE
+#if IOTORII_NODE_TYPE > 0 //The root or common nodes
+static void
+iotorii_handle_hello_timer()
+{
+  int mac_max_payload = max_payload();
+  if(mac_max_payload <= 0) {
+   /* Framing failed, drop packet */
+     LOG_WARN("output: failed to calculate payload size - dropping packet\n");
+  }else{
+    packetbuf_clear(); //Hello has no payload.
+    /*
+    * The destination address, the broadcast address, is tagged to the outbound
+    * packet.
+    */
+    packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
+    LOG_DBG("Hello prepared to send\n");
+    send_packet(NULL,NULL);
+    //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
+    //ctimer_restart(&hello_timer); //Restart the timer from current time.
+    //ctimer_stop(&hello_timer); //Stop the timer.
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+iotorii_send_sethlmac(void)
+{
+  int mac_max_payload = max_payload();
+  if(mac_max_payload <= 0) {
+   /* Framing failed, drop packet */
+     LOG_WARN("output: failed to calculate payload size - dropping packet\n");
+  }else{
+    //Accomodate SetHLMAC addresses in the payload.
+    uint8_t cleared_packetbuf = 0; //Packet buffer needs to be cleared.
+    neighbour_table_entry_t *neighbour_entry = list_head(iotorii_nd_table);
+    //uint8_t neighbour_id = neighbour_entry->id;
+    static uint8_t *packetbuf_ptr;
+    uint8_t i;
+    for (i=1; i<=number_of_neighbours && neighbour_entry; i++){
+      if (packetbuf_datalen() >=  (node_hlmac_address.len + 2 + LINKADDR_SIZE)){ //2: 1 is for adding the length of the HLMAC address prefix, 1 for adding id.
+        if(!cleared_packetbuf){
+          cleared_packetbuf = 1;
+          //Preparing the packet buffer
+          /* reset packetbuf buffer */
+          packetbuf_clear();
+          packetbuf_ptr = packetbuf_dataptr();
+          /* copy "payload" */
+          /* Prefix lenght */
+          memcpy(packetbuf_ptr, &(node_hlmac_address.len), 1);
+          packetbuf_set_datalen(1);
+          /* Neighbour prefix */
+          memcpy(packetbuf_ptr, node_hlmac_address.address, node_hlmac_address.len);
+          packetbuf_set_datalen(node_hlmac_address.len);
+        }
+        /* Neighbour ID */
+        memcpy(packetbuf_ptr, &(neighbour_entry->id), 1);
+        packetbuf_set_datalen(1);
+        /* Neighbour MAC address */
+        memcpy(packetbuf_ptr, &(neighbour_entry->addr), LINKADDR_SIZE);
+        packetbuf_set_datalen(LINKADDR_SIZE);
+      } //End if datalen
+      neighbour_entry = list_item_next(neighbour_entry);
+    } //End for
+    /*
+    * Control info: the destination address, the broadcast address, is tagged to the outbound
+    * packet.
+    */
+    packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
+    char *neighbour_hlmac_addr_str = hlmac_addr_to_str(node_hlmac_address);
+    LOG_DBG("SetHLMAC prefix (addr:%s) is sent to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);
+    free(neighbour_hlmac_addr_str);
+    send_packet(NULL, NULL);
+  }// END else
+}
+#endif
+/*---------------------------------------------------------------------------*/
+#if IOTORII_NODE_TYPE == 1 //For root
+static void
+iotorii_handle_sethlmac_timer()
+{
+  //LOG_DBG("iotorii_handle_sethlmac_timer\n");
+  //uint8_t id = 1;
+  hlmac_assign_root_addr(1);
+  iotorii_send_sethlmac();
+  //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
+  //ctimer_restart(&sethlmac_timer); //Restart the timer from current time.
+  //ctimer_stop(&sethlmac_timer); //Stop the timer.
+}
+#endif
+#endif  // end IOTORII_NODE_TYPE
+//EXTRA END
+/*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+#if LLSEC802154_USES_AUX_HEADER
+#ifdef CSMA_LLSEC_DEFAULT_KEY0
+  uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
+  csma_security_set_key(0, key);
+#endif
+#endif /* LLSEC802154_USES_AUX_HEADER */
+  csma_output_init();
+  on();
+  //EXTRA BEGIN
+#ifdef IOTORII_NODE_TYPE
+#if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
+  LOG_INFO("This node operates as the root.\n");
+  clock_time_t sethlmac_start_time;
+  sethlmac_start_time = CLOCK_SECOND; //after 2 seconds
+  LOG_DBG("Scheduling SetHLMAC after %u ticks in the future\n", (unsigned)sethlmac_start_time);
+  ctimer_set(&sethlmac_timer, sethlmac_start_time, iotorii_handle_sethlmac_timer, NULL);
+#endif
+#if IOTORII_NODE_TYPE > 0 //Root or Common node, we set a timer to send a Hello message.
+  LOG_INFO("This node operates as a common node.\n ");
+  clock_time_t hello_start_time = 10*CLOCK_SECOND;
+  hello_start_time = hello_start_time/2 + (random_rand() % (hello_start_time / 2));
+  LOG_DBG("Scheduling Hello after %u ticks in the future\n", (unsigned)hello_start_time);
+  ctimer_set(&hello_timer, hello_start_time, iotorii_handle_hello_timer, NULL);
+
+  //Create Neighbour table
+  list_init(iotorii_nd_table);
+  number_of_neighbours = 0;
+  //LIST(iotorii_hlmac_table);
+#endif
+#endif
+//EXTRA END
+}
+/*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {  //const struct mac_driver csma_driver = { //EXTRA
   "CSMA",
   init,
@@ -285,7 +325,7 @@ const struct mac_driver csma_driver = {  //const struct mac_driver csma_driver =
 /*---------------------------------------------------------------------------*/
 //EXTRA BEGIN
 void
-handle_hello() //To process an IoTorii Hello control broadcast packet received from another node
+iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast packet received from another node
 {
   if (number_of_neighbours < 256){
     uint8_t address_is_in_table = 0;
@@ -314,8 +354,11 @@ handle_hello() //To process an IoTorii Hello control broadcast packet received f
 }
 /*---------------------------------------------------------------------------*/
 void
-handle_sethlamc() //To process an IoTorii SetHLMAC control broadcast packet received from another node
+iotorii_handle_incoming_sethlamc() //To process an IoTorii SetHLMAC control broadcast packet received from another node
 {
+
+
+
   //maxjitter 5 ms
   //jitter = 0~5ms
 
@@ -328,10 +371,10 @@ iotorii_operation(void)
   if (packetbuf_holds_broadcast()){
     //if (hello identification) //
     if (packetbuf_datalen() == 0)
-      handle_hello();
+      iotorii_handle_incoming_hello();
     //else if (SetHLMAC identification)
     else
-      handle_sethlamc();
+      iotorii_handle_incoming_sethlamc();
     //else
       //handle_data_broadcast(); //To send a data broadcast packet, received from another node, to the upper layer
   }//else

@@ -42,7 +42,7 @@
 //EXTRA BEGIN
 // #include "net/mac/csma/csma.h"
 // #include "net/mac/csma/csma-security.h"
-  #include "iotoriicsma.h"
+  #include "iotorii-csma.h"
   #include "csma-security.h"
 //EXTRA END
 #include "net/packetbuf.h"

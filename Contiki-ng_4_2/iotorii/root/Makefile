@@ -3,7 +3,7 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../../..
 
-PROJECT_SOURCEFILES += ../iotoriicsma.c
+PROJECT_SOURCEFILES += ../iotorii-csma.c
 PROJECT_SOURCEFILES += ../hlmacaddr.c
 PROJECT_SOURCEFILES += ../csma-security.c
 PROJECT_SOURCEFILES += ../csma-output.c

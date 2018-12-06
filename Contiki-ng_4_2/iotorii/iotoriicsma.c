@@ -221,7 +221,8 @@ iotorii_send_sethlmac(void)
     uint8_t cleared_packetbuf = 0; //Packet buffer needs to be cleared.
     neighbour_table_entry_t *neighbour_entry = list_head(iotorii_nd_table);
     //uint8_t neighbour_id = neighbour_entry->id;
-    static uint8_t *packetbuf_ptr;
+    uint8_t *packetbuf_ptr = NULL;
+    int dalalen_counter = 0;
     uint8_t i;
     for (i=1; i<=number_of_neighbours && neighbour_entry; i++){
       if (packetbuf_datalen() >=  (node_hlmac_address.len + 2 + LINKADDR_SIZE)){ //2: 1 is for adding the length of the HLMAC address prefix, 1 for adding id.
@@ -234,20 +235,25 @@ iotorii_send_sethlmac(void)
           /* copy "payload" */
           /* Prefix lenght */
           memcpy(packetbuf_ptr, &(node_hlmac_address.len), 1);
-          packetbuf_set_datalen(1);
+          packetbuf_ptr ++;
+          dalalen_counter ++;
           /* Neighbour prefix */
           memcpy(packetbuf_ptr, node_hlmac_address.address, node_hlmac_address.len);
-          packetbuf_set_datalen(node_hlmac_address.len);
+          packetbuf_ptr += node_hlmac_address.len;
+          dalalen_counter += node_hlmac_address.len;
         }
         /* Neighbour ID */
         memcpy(packetbuf_ptr, &(neighbour_entry->id), 1);
-        packetbuf_set_datalen(1);
+        packetbuf_ptr ++;
+        dalalen_counter ++;
         /* Neighbour MAC address */
         memcpy(packetbuf_ptr, &(neighbour_entry->addr), LINKADDR_SIZE);
-        packetbuf_set_datalen(LINKADDR_SIZE);
+        packetbuf_ptr += LINKADDR_SIZE;
+        dalalen_counter += LINKADDR_SIZE;
       } //End if datalen
       neighbour_entry = list_item_next(neighbour_entry);
     } //End for
+    packetbuf_set_datalen(dalalen_counter);
     /*
     * Control info: the destination address, the broadcast address, is tagged to the outbound
     * packet.
@@ -265,7 +271,6 @@ iotorii_send_sethlmac(void)
 static void
 iotorii_handle_sethlmac_timer()
 {
-  //LOG_DBG("iotorii_handle_sethlmac_timer\n");
   //uint8_t id = 1;
   hlmac_assign_root_addr(1);
   iotorii_send_sethlmac();
@@ -307,6 +312,7 @@ init(void)
   //Create Neighbour table
   list_init(iotorii_nd_table);
   number_of_neighbours = 0;
+  node_hlmac_address = UNSPECIFIED_HLMAC_ADDRESS;
   //LIST(iotorii_hlmac_table);
 #endif
 #endif
@@ -356,13 +362,50 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
 void
 iotorii_handle_incoming_sethlamc() //To process an IoTorii SetHLMAC control broadcast packet received from another node
 {
+  uint8_t *packetbuf_ptr;
+  packetbuf_ptr = packetbuf_dataptr();
+  int dalalen_counter = 0;
+  //uint8_t pref_len;
+  uint8_t id = 0;
+  hlmacaddr_t *prefix = NULL;
+  linkaddr_t link_address = linkaddr_null;
+  uint8_t is_first_record = 1; // The first record of each payload includes a prefix lenght and prefix.
 
-
+  /* Read "payload" */
+  while(hlmac_is_unspecified_addr(node_hlmac_address) && dalalen_counter < packetbuf_datalen() && !linkaddr_cmp(&link_address, &linkaddr_node_addr)){
+    if (is_first_record){
+      is_first_record = 0;
+      /* Prefix lenght */
+      prefix = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
+      memcpy(&prefix->len, packetbuf_ptr, 1);
+      packetbuf_ptr ++;
+      dalalen_counter ++;
+      /* Neighbour prefix */
+      prefix->address = (uint8_t *) malloc(sizeof(uint8_t) * prefix->len);
+      memcpy(prefix->address, packetbuf_ptr, prefix->len);
+      packetbuf_ptr += prefix->len;
+      dalalen_counter += prefix->len;
+    }
+    /* Neighbour ID */
+    memcpy(&id, packetbuf_ptr, 1);
+    packetbuf_ptr ++;
+    dalalen_counter ++;
+    /* MAC address */
+    memcpy(&link_address, packetbuf_ptr, LINKADDR_SIZE);
+    packetbuf_ptr += LINKADDR_SIZE;
+    dalalen_counter += LINKADDR_SIZE;
+} // End while
+if(linkaddr_cmp(&link_address, &linkaddr_node_addr)){
+  hlmac_add_new_id(prefix, id);
+  hlmac_assign_address(*prefix);
+  free(prefix->address);
+  free(prefix);
+  prefix = NULL;
+  iotorii_send_sethlmac(); //To advertise the prefix
+}
 
   //maxjitter 5 ms
   //jitter = 0~5ms
-
-
 }
 /*---------------------------------------------------------------------------*/
 void

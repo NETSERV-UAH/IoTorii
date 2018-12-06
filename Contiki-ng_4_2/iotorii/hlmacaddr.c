@@ -91,6 +91,18 @@ hlmac_assign_root_addr(const uint8_t root_id)
 }
 /*---------------------------------------------------------------------------*/
 void
+hlmac_assign_address(const hlmacaddr_t addr)
+{
+  node_hlmac_address.address = (uint8_t *) malloc(sizeof(uint8_t) * addr.len);
+  //memcpy(&(node_hlmac_address.address), &addr, addr.len);
+  uint8_t i;
+  for (i=0; i<addr.len; i++){
+    node_hlmac_address.address[i] = addr.address[i];
+  }
+  node_hlmac_address.len = addr.len;
+}
+/*---------------------------------------------------------------------------*/
+void
 hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
 {
   uint8_t * temp = addr->address;

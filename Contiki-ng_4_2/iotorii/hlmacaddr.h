@@ -55,7 +55,6 @@ typedef struct {
 hlmacaddr_t node_hlmac_address;
 
 //To define unspecified HLMAC address
-
 extern const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS;
 
 /**
@@ -89,6 +88,8 @@ uint8_t *hlmac_get_address(const hlmacaddr_t addr);
  */
 
 const hlmacaddr_t *hlmac_assign_root_addr(const uint8_t root_id);
+
+void hlmac_assign_address(const hlmacaddr_t addr);
 
 //void setIndexValue(unsigned uint8_t k, unsigned uint8_t addrbyte);
 

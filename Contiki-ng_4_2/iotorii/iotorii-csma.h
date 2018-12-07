@@ -115,8 +115,10 @@ uint8_t number_of_neighbours;
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 
-
-extern const struct mac_driver csma_driver;
+//EXTRA BEGIN
+//extern const struct mac_driver csma_driver;
+extern const struct mac_driver iotori_csma_driver;
+//EXTRA END
 
 /* CSMA security framer functions */
 int csma_security_create_frame(void);

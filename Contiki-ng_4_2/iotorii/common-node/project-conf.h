@@ -47,7 +47,7 @@
 #define IOTORII_CONF_NODE_TYPE 2
 /*---------------------------------------------------------------------------*/
 /* Configure the csma_driver for netstack.h */
-#define NETSTACK_CONF_MAC      csma_driver
+#define NETSTACK_CONF_MAC      iotorii_csma_driver
 /*---------------------------------------------------------------------------*/
 /* Configure the routing_driver for netstack.h */
 //#define NETSTACK_CONF_ROUTING      nullrouting_driver

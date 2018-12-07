@@ -53,9 +53,9 @@ PROCESS_THREAD(start_iotorii_root, ev, data)
 
   PROCESS_BEGIN();
 
-  //NETSTACK_MAC.init();
-  //NETSTACK_RADIO.init();
-  netstack_init();
+  NETSTACK_RADIO.on();
+  //NETSTACK_MAC.init(); //MAC is initiated twice
+  //netstack_init(); //MAC is initiated twice
 
 
   PROCESS_END();

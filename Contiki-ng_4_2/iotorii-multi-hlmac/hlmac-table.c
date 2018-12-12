@@ -66,6 +66,12 @@ hlmac_table_init(void)
 uint8_t
 hlmactable_add(const hlmacaddr_t addr)
 {
+  if (number_of_hlmac_addresses > 255){
+    #if LOG_DBG_DEVELOPER == 1
+    LOG_DBG("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
+    #endif
+    return 0;
+  }
 
   if((HLMAC_MAX_HLMAC == -1) || ((HLMAC_MAX_HLMAC != -1) && (number_of_hlmac_addresses < HLMAC_MAX_HLMAC))){
     hlmac_table_entery_t *entry = (hlmac_table_entery_t *)malloc(sizeof(hlmac_table_entery_t));
@@ -112,7 +118,7 @@ hlmactable_has_loop(const hlmacaddr_t addr)
   #if LOG_DBG_DEVELOPER == 1
   char *addr_str = hlmac_addr_to_str(addr);
   char *pref_str = hlmac_addr_to_str(*longest_prefix);
-  LOG_DBG("Chech Loop: HLMAC address: %s, Longest Prefix: %s \n", addr_str, pref_str);
+  LOG_DBG("Check Loop: HLMAC address: %s, Longest Prefix: %s \n", addr_str, pref_str);
   free(pref_str);
   pref_str = NULL;
   #endif
@@ -176,3 +182,16 @@ hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t address)
   //return UNSPECIFIED_HLMAC_ADDRESS;
   return addr; //Here, addr = UNSPECIFIED_HLMAC_ADDRESS
 }
+/*---------------------------------------------------------------------------*/
+#if LOG_DBG_STATISTIC == 1
+int
+hlmactable_calculate_sum_hop(void)
+{
+  int sum = 0;
+  hlmac_table_entery_t *table_entry;
+  for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){
+    sum += table_entry->address.len;
+  }
+  return sum;
+}
+#endif

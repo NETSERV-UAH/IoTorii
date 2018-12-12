@@ -74,6 +74,12 @@ static struct ctimer sethlmac_timer;
 #endif
 #if IOTORII_NODE_TYPE > 0 //root and common node
 static struct ctimer hello_timer;
+#if LOG_DBG_STATISTIC == 1
+static struct ctimer statistic_timer;
+int number_of_hello_messages = 0;
+int number_of_sethlmac_messages = 0;
+//double average_hop = 0;
+#endif
 #endif
 
 #if IOTORII_NODE_TYPE > 0 //root and common node
@@ -157,6 +163,12 @@ iotorii_handle_hello_timer()
     */
     packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_null);
     LOG_DBG("Hello prepared to send\n");
+
+    #if LOG_DBG_STATISTIC == 1
+    number_of_hello_messages ++;
+    LOG_DBG("Number of Hello messages: %d\n", number_of_hello_messages);
+    #endif
+
     send_packet(NULL,NULL);
     //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
     //ctimer_restart(&hello_timer); //Restart the timer from current time.
@@ -191,10 +203,10 @@ iotorii_send_sethlmac(hlmacaddr_t addr)
      * 2=1 is for adding the length of the HLMAC address prefix+1 for adding id.
      */
 
-     ////
+     #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
      LOG_DBG("Info before sending SetHLMAC: ");
      LOG_DBG("Number of neighbours: %d, mac_max_payload: %d, LINKADDR_SIZE: %d.\n", number_of_neighbours, mac_max_payload, LINKADDR_SIZE);
-     ////
+     #endif
 
      //if (neighbour_entry && (packetbuf_datalen() >=  (node_hlmac_address.len + 2 + LINKADDR_SIZE))){ //both statements are true
      if (number_of_neighbours > 0 && i<=number_of_neighbours && neighbour_entry && (mac_max_payload >=  (addr.len + 2 + LINKADDR_SIZE))){
@@ -241,6 +253,11 @@ iotorii_send_sethlmac(hlmacaddr_t addr)
       LOG_DBG("SetHLMAC prepared to send\n");
       send_packet(NULL, NULL);
 
+      #if LOG_DBG_STATISTIC == 1
+      number_of_sethlmac_messages ++;
+      LOG_DBG("Number of SetHLMAC messages: %d\n", number_of_sethlmac_messages);
+      #endif
+
     }else{ //End if datalen
       LOG_DBG("Node hos not any neighbour/payload is low to send SetHLMAC.\n");
     }
@@ -266,6 +283,21 @@ iotorii_handle_sethlmac_timer()
 }
 #endif
 #endif  // end IOTORII_NODE_TYPE
+/*---------------------------------------------------------------------------*/
+#if IOTORII_NODE_TYPE > 0 //For root and common nodes
+#if LOG_DBG_STATISTIC == 1
+static void
+iotorii_handle_statistic_timer()
+{
+  //core_start_time
+  LOG_DBG("number_of_hello_messages: %d, number_of_sethlmac_messages: %d, number_of_neighbours: %d, number_of_hlmac_addresses: %d, sum_hop: %d\n", number_of_hello_messages, number_of_sethlmac_messages, number_of_neighbours, number_of_hlmac_addresses, hlmactable_calculate_sum_hop());
+
+  //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
+  //ctimer_restart(&sethlmac_timer); //Restart the timer from current time.
+  //ctimer_stop(&sethlmac_timer); //Stop the timer.
+}
+#endif
+#endif
 //EXTRA END
 /*---------------------------------------------------------------------------*/
 static void
@@ -296,10 +328,17 @@ init(void)
   //Create Neighbour table
   number_of_neighbours = 0;
   hlmac_table_init();
+  //Timer to collect statistics
+  #if LOG_DBG_STATISTIC == 1
+  clock_time_t statistic_start_time = 20 * CLOCK_SECOND; //Each 20 seconds onece
+  LOG_DBG("Scheduling a statistic timer after %u ticks in the future\n", (unsigned)statistic_start_time);
+  ctimer_set(&statistic_timer, statistic_start_time, iotorii_handle_statistic_timer, NULL);
+  #endif
 #endif
+
 #if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
   clock_time_t sethlmac_start_time;
-  sethlmac_start_time = 4 * CLOCK_SECOND; //after 4 seconds
+  sethlmac_start_time = 10 * CLOCK_SECOND; //after 10 seconds
   LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_start_time);
   ctimer_set(&sethlmac_timer, sethlmac_start_time, iotorii_handle_sethlmac_timer, NULL);
 #endif
@@ -342,7 +381,8 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
   }else{
     LOG_WARN("The IoTorii neighbour table is full! \n");
   }
-////
+
+  #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
   //Write neighbour table
   neighbour_table_entry_t *nb;
   LOG_DBG("Naighbour Table:");
@@ -352,7 +392,7 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
     LOG_DBG(" - ");
   }
   LOG_DBG("\n");
-////
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /* Extract the address of this node from a received packet */

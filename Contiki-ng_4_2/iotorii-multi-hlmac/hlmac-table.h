@@ -86,5 +86,8 @@ uint8_t hlmactable_has_loop(const hlmacaddr_t addr);
 
 hlmacaddr_t *hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t addr);
 
+#if LOG_DBG_STATISTIC == 1
+int hlmactable_calculate_sum_hop(void);
+#endif
 
 #endif /* HLMACTABLE_H_ */

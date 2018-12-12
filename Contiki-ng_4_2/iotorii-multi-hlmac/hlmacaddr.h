@@ -136,13 +136,11 @@ void hlmac_remove_Last_id(hlmacaddr_t *addr);
 char hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2);
 
 /**
- * \brief      Convert an array of char to a HLMAC address
- * \param ch_array The array of char
- * \param len The length of the array
- * \return     An hlmacaddr_t struct
+ * \brief      Get the value of an kth-ID in a HLMAC address
+ * \param addr The HLMAC address
+ * \param k The index of the ID
+ * \return     The value of the kth-ID
  */
-
-hlmacaddr_t *hlmac_char_array_to_addr(const uint8_t *ch_array, const uint8_t len);
 
 uint8_t get_addr_index_value(const hlmacaddr_t addr, const uint8_t k);
 

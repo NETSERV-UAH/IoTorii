@@ -160,15 +160,6 @@ hlmac_cmp(const hlmacaddr_t addr1, const hlmacaddr_t addr2)
   return -2; //\fixme not happen, for compile error only
 }
 /*---------------------------------------------------------------------------*/
-hlmacaddr_t *
-hlmac_char_array_to_addr(const uint8_t *ch_array, const uint8_t len)
-{
-  hlmacaddr_t *addr = (hlmacaddr_t *) malloc(sizeof(hlmacaddr_t));
-  addr->address = (uint8_t *) malloc(sizeof(uint8_t) * (len));
-  addr->len = len;
-  return addr;
-}
-/*---------------------------------------------------------------------------*/
 /**
  * \brief      Get the kth ID in a given HLMAC address.
  * \param addr The given HLMAC address

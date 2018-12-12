@@ -50,7 +50,7 @@
 
 struct hlmac_table_entery{
   struct hlmac_table_entery *next;
-  hlmacaddr_t addr;
+  hlmacaddr_t address;
 };
 
 typedef struct hlmac_table_entery hlmac_table_entery_t;
@@ -84,7 +84,7 @@ uint8_t hlmactable_has_loop(const hlmacaddr_t addr);
  * \return  return the longest matched prefix if there is, UNSPECIFIED address otherwise.
  */
 
-hlmacaddr_t hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t addr);
+hlmacaddr_t *hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t addr);
 
 
 #endif /* HLMACTABLE_H_ */

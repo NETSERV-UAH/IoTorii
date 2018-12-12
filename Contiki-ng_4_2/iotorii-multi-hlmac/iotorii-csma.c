@@ -356,8 +356,8 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
 }
 /*---------------------------------------------------------------------------*/
 /* Extract the address of this node from a received packet */
-
-hlmacaddr_t iotorii_extract_address(void){
+hlmacaddr_t *iotorii_extract_address(void){
+//hlmacaddr_t iotorii_extract_address(void){ //For this comment see mentioned solution
 
   uint8_t *packetbuf_ptr;
   packetbuf_ptr = packetbuf_dataptr();
@@ -393,7 +393,28 @@ hlmacaddr_t iotorii_extract_address(void){
     dalalen_counter += LINKADDR_SIZE;
   } // End while
 
-  hlmacaddr_t return_value = UNSPECIFIED_HLMAC_ADDRESS;
+/* the follow approach doesn't work correctly because return_value.address is
+ * a pointer, and when we use return_value = *prefix; ,
+ * return_value.address = prefix->address. By using free(prefix->address),
+ * return_value.address refers to a unreliable place in memory.
+ *
+ * SOLUTION 1:
+ * Eliminating free(prefix->address);, so we can free return_value.address
+ * at the end (whenever we want to delete  it from the HLMAC table, or if it
+ * create a loop)
+ *
+ * SOLUTION 2:
+ * We can return the pointer of prefix instead of the return_value variable,so
+ * we can free the allocated memory based on the SOLUTION 1.
+ *
+ * SOLUTION 3:
+ * We can alloacle new memory to the return_value.address,
+ * then free(prefix->address); , and delete memory based on SOLUTION 1.
+ *
+ * SELECTETED SOLUTION: SOLUTION 2
+ */
+
+/*  hlmacaddr_t return_value = UNSPECIFIED_HLMAC_ADDRESS;
   if(linkaddr_cmp(&link_address, &linkaddr_node_addr)){
     hlmac_add_new_id(prefix, id);
     return_value = *prefix;
@@ -403,8 +424,14 @@ hlmacaddr_t iotorii_extract_address(void){
     free(prefix);
     prefix = NULL;
   }
-
-  return return_value;
+*/
+  //return return_value;
+  if(linkaddr_cmp(&link_address, &linkaddr_node_addr)){
+    hlmac_add_new_id(prefix, id);
+    return prefix;
+  }
+  *prefix = UNSPECIFIED_HLMAC_ADDRESS;
+  return prefix;
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -420,36 +447,46 @@ iotorii_handle_incoming_sethlamc()
   LOG_DBG("\n");
   #endif
 
-  hlmacaddr_t received_hlmac_addr;
+  hlmacaddr_t *received_hlmac_addr;
   received_hlmac_addr = iotorii_extract_address();
 
-  if(hlmac_is_unspecified_addr(received_hlmac_addr)){
+  if(hlmac_is_unspecified_addr(*received_hlmac_addr)){
     #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Packet dosn't any address for me!\n");
     #endif
   }else{
     #if LOG_DBG_DEVELOPER == 1
-    char *new_hlmac_addr_str = hlmac_addr_to_str(received_hlmac_addr);
+    char *new_hlmac_addr_str = hlmac_addr_to_str(*received_hlmac_addr);
     LOG_DBG("New HLMAC is: %s\n", new_hlmac_addr_str);
-    free(new_hlmac_addr_str);
+    //free(new_hlmac_addr_str);
     #endif
 
-    if(!hlmactable_has_loop(received_hlmac_addr)){
-      uint8_t is_added = hlmactable_add(received_hlmac_addr);
+    if(!hlmactable_has_loop(*received_hlmac_addr)){
+      uint8_t is_added = hlmactable_add(*received_hlmac_addr);
       if (is_added){
         #if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address is assigned to the node.\n");
         LOG_DBG("New HLMAC address is sent to the neighbours.\n");
         #endif
-        iotorii_send_sethlmac(received_hlmac_addr); //To advertise the prefix
+        iotorii_send_sethlmac(*received_hlmac_addr); //To advertise the prefix
       }else{
         #if LOG_DBG_DEVELOPER == 1
-        LOG_DBG("New HLMAC address not assigned to the node.\n");
+        LOG_DBG("New HLMAC address not added to the HLMAC table, and memory is free.\n");
         #endif
+        free(received_hlmac_addr->address);
+        received_hlmac_addr->address = NULL;
+        free(received_hlmac_addr);
+        received_hlmac_addr = NULL;
       }
+    }else{
+      #if LOG_DBG_DEVELOPER == 1
+      LOG_DBG("New HLMAC address not assigned to the node (loop), and memory is free.\n");
+      #endif
+      free(received_hlmac_addr->address);
+      received_hlmac_addr->address = NULL;
+      free(received_hlmac_addr);
+      received_hlmac_addr = NULL;
     }
-
-
   }
 }
 /*---------------------------------------------------------------------------*/

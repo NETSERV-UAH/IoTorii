@@ -66,9 +66,10 @@ hlmac_table_init(void)
 uint8_t
 hlmactable_add(const hlmacaddr_t addr)
 {
+
   if((HLMAC_MAX_HLMAC == -1) || ((HLMAC_MAX_HLMAC != -1) && (number_of_hlmac_addresses < HLMAC_MAX_HLMAC))){
     hlmac_table_entery_t *entry = (hlmac_table_entery_t *)malloc(sizeof(hlmac_table_entery_t));
-    entry->addr = addr;
+    entry->address = addr;
     list_add(hlmac_table_entery_list, entry);
     number_of_hlmac_addresses ++;
 
@@ -105,37 +106,49 @@ hlmactable_add(const hlmacaddr_t addr)
 uint8_t
 hlmactable_has_loop(const hlmacaddr_t addr)
 {
-  hlmacaddr_t longets_prefix = hlmactable_get_longest_matchhed_prefix(addr);
 
-  if (hlmac_is_unspecified_addr(longets_prefix)){
+  hlmacaddr_t *longest_prefix = hlmactable_get_longest_matchhed_prefix(addr);
+
+  #if LOG_DBG_DEVELOPER == 1
+  char *addr_str = hlmac_addr_to_str(addr);
+  char *pref_str = hlmac_addr_to_str(*longest_prefix);
+  LOG_DBG("Chech Loop: HLMAC address: %s, Longest Prefix: %s \n", addr_str, pref_str);
+  free(pref_str);
+  pref_str = NULL;
+  #endif
+
+
+  if (hlmac_is_unspecified_addr(*longest_prefix)){
     #if LOG_DBG_DEVELOPER == 1
-    char *addr_str = hlmac_addr_to_str(addr);
     LOG_DBG("HLMAC address %s doesn't create a loop\n", addr_str);
     free(addr_str);
     addr_str = NULL;
     #endif
-
+    free(longest_prefix);
+    longest_prefix = NULL;
     return 0;
   }else{
     #if LOG_DBG_DEVELOPER == 1
-    char *addr_str = hlmac_addr_to_str(addr);
     LOG_DBG("HLMAC address %s creates a loop\n", addr_str);
     free(addr_str);
     addr_str = NULL;
     #endif
-
+    free(longest_prefix->address);
+    longest_prefix->address = NULL;
+    free(longest_prefix);
+    longest_prefix = NULL;
     return 1;
   }
 
 }
 
 /*---------------------------------------------------------------------------*/
-hlmacaddr_t
+hlmacaddr_t *
 hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t address)
 {
 
-  if (list_length(hlmac_table_entery_list) == 0)
-      return UNSPECIFIED_HLMAC_ADDRESS;
+  //if (list_length(hlmac_table_entery_list) == 0)
+      //return UNSPECIFIED_HLMAC_ADDRESS;
 
   hlmacaddr_t *addr = (hlmacaddr_t *)malloc(sizeof(hlmacaddr_t));
   addr->address = (uint8_t *)malloc(sizeof(uint8_t) * address.len);
@@ -153,15 +166,13 @@ hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t address)
   while(hlmac_get_len(*addr) > 0){
     /* Find address in the table */
     for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){
-      if (hlmac_cmp(table_entry->addr, *addr)){ //This condithion can be merged with the "for" condition.
-        hlmacaddr_t return_value = *addr;
-        free(addr->address);
-        addr->address = NULL;
-        return return_value;
+      if (hlmac_cmp(table_entry->address, *addr) == 0){ //This condithion can be merged with the "for" condition.
+        return addr;
       }
     }
     hlmac_remove_Last_id(addr);
   }
 
-  return UNSPECIFIED_HLMAC_ADDRESS;
+  //return UNSPECIFIED_HLMAC_ADDRESS;
+  return addr; //Here, addr = UNSPECIFIED_HLMAC_ADDRESS
 }

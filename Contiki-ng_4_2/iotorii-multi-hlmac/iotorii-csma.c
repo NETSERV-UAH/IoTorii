@@ -83,11 +83,6 @@ static struct ctimer hello_timer;
 static struct ctimer statistic_timer;
 int number_of_hello_messages = 0;
 int number_of_sethlmac_messages = 0;
-#if IOTORII_NODE_TYPE == 1 //only root
-rtimer_clock_t convergence_time_start;
-#endif
-rtimer_clock_t convergence_time_end;
-//double average_hop = 0;
 #endif
 #endif
 
@@ -283,11 +278,9 @@ iotorii_handle_sethlmac_timer()
   hlmacaddr_t root_addr;
   hlmac_create_root_addr(&root_addr, 1);
   hlmactable_add(root_addr);
-/*  #if LOG_DBG_STATISTIC == 1
-  convergence_time_start = RTIMER_NOW();
-  //double convergence_time_start_second = convergence_time_start/RTIMER_SECOND;
-  LOG_DBG("Periodic Statistics: %d, %d node_id: %u, convergence_time_start: %u(in tick), each second is %u ticks\n", sizeof(convergence_time_start), sizeof(RTIMER_SECOND), node_id, (unsigned)convergence_time_start, (unsigned)RTIMER_SECOND);
-  #endif */
+  #if LOG_DBG_STATISTIC == 1
+  LOG_DBG("Periodic Statistics: node_id: %u, convergence_time_start\n", node_id);
+  #endif
   iotorii_send_sethlmac(root_addr);
   free(root_addr.address); //malloc() in hlmac_create_root_addr()
   root_addr.address = NULL;
@@ -303,10 +296,6 @@ iotorii_handle_sethlmac_timer()
 static void
 iotorii_handle_statistic_timer()
 {
-/*  #if IOTORII_NODE_TYPE == 1 //For root
-  //double convergence_time_start_second = (unsigned)convergence_time_start/(double)RTIMER_SECOND;
-  LOG_DBG("Periodic Statistics: node_id: %u, convergence_time_start: %u(in tick), each second is %u ticks\n", node_id, (unsigned)convergence_time_start, (unsigned)RTIMER_SECOND);
-  #endif */
   LOG_DBG("Periodic Statistics: node_id: %u, number_of_hello_messages: %d, number_of_sethlmac_messages: %d, number_of_neighbours: %d, number_of_hlmac_addresses: %d, sum_hop: %d\n", node_id, number_of_hello_messages, number_of_sethlmac_messages, number_of_neighbours, number_of_hlmac_addresses, hlmactable_calculate_sum_hop());
 
   //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
@@ -545,6 +534,10 @@ iotorii_handle_incoming_sethlamc()
       received_hlmac_addr = NULL;
     }
   }
+  #if LOG_DBG_STATISTIC == 1
+  LOG_DBG("Periodic Statistics: node_id: %u, convergence_time_end\n", node_id);
+  #endif
+
 }
 /*---------------------------------------------------------------------------*/
 void

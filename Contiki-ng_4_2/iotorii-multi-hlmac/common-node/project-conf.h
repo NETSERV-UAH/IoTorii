@@ -52,7 +52,7 @@
  * -1 is unlimited
  * default value is 1
  */
-#define HLMAC_CONF_MAX_HLMAC 1
+#define HLMAC_CONF_MAX_HLMAC 3
 /*---------------------------------------------------------------------------*/
 /* Configure the IoTorii root node for iotoriicsma.h */
 //#define IOTORII_CONF_NODE_TYPE 1

@@ -186,11 +186,3 @@ int filetracer(FILE *fp, char *destfile){
        return 1;
 }
 
-/*
-check_condition[4]=common_check&&(strstr(line,"number_of_hello_messages"));
-check_condition[5]=common_check&&(strstr(line,"number_of_sethlmac_messages"));
-check_condition[6]=common_check&&(strstr(line,"number_of_neighbours"));
-check_condition[7]=common_check&&(strstr(line,"number_of_hlmac_addresses"));
-check_condition[7]=common_check&&(strstr(line,"sum_hop"));
-average_hop
-*/

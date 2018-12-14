@@ -11,6 +11,7 @@
 #include <string.h>
 
 #define NODE_NUMBERS_MAX 500
+#define CONDITION_MAX 4
 
 int main(int argc, char *argv[])
 {
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
 int filetracer(FILE *fp, char *destfile){
 
     char line[200];
-    int i,common_check=0,check_condition[7]={0,0,0,0,0,0,0};
+    int i,common_check=0,check_condition[CONDITION_MAX]={0,0,0,0};
 
 
     FILE *destfp;
@@ -76,23 +77,35 @@ int filetracer(FILE *fp, char *destfile){
            float average_sum_hop = 0;
 
            while (fgets(line,200,fp)){
-                for(i=1;i<8;i++)
+                for(i=1;i<CONDITION_MAX;i++)
                     check_condition[i]=0;
 
                 common_check=(strstr(line,"Periodic Statistics:")) || 1; // || 1 to avoid warning because type of common_check is int and the type of strstr() is char *.
-                check_condition[1]=common_check&&(strstr(line,"convergence_time_start:"));
-                check_condition[2]=common_check&&(strstr(line,"convergence_time_end:"));
-                check_condition[3]=common_check&&(strstr(line,"node_id:"));
+                check_condition[1]=common_check&&(strstr(line,"convergence_time_start"));
+                check_condition[2]=common_check&&(strstr(line,"convergence_time_end"));
+                check_condition[3]=common_check && (strstr(line,"node_id:")) && (strstr(line,"number_of_neighbours")); //strstr(line,"number_of_neighbours") : because "node_id:" exist in condition 1 and 2.
 
                 if(check_condition[1]){ //convergence_time_start
-                  sscanf(strstr(line,"convergence_time_start:") + strlen("convergence_time_start:"), "%f", &convergence_time_start);
+                  int convergence_time_start_minute = 0;
+                  float convergence_time_start_sec = 0;
+
+                  //sscanf(strstr(line,"convergence_time_start:") + strlen("convergence_time_start:"), "%f", &convergence_time_start);
+                  sscanf(line, "%2d:%f", &convergence_time_start_minute, &convergence_time_start_sec);
+                  convergence_time_start = convergence_time_start_minute * 60 + convergence_time_start_sec;
+
                 }
 
                 if(check_condition[2]){ //convergence_time_end
                   float convergence_time_end_temp;
-                  sscanf(strstr(line,"convergence_time_end:") + strlen("convergence_time_end:"), "%f", &convergence_time_end_temp);
-                  if (convergence_time_end_temp > convergence_time_end)
+                  int convergence_time_end_temp_minute;
+                  float convergence_time_end_temp_sec;
+                  //sscanf(strstr(line,"convergence_time_end:") + strlen("convergence_time_end:"), "%f", &convergence_time_end_temp);
+                  sscanf(line, "%2d:%f", &convergence_time_end_temp_minute, &convergence_time_end_temp_sec);
+                  convergence_time_end_temp = convergence_time_end_temp_minute * 60 + convergence_time_end_temp_sec;
+                  if (convergence_time_end_temp > convergence_time_end){
                     convergence_time_end = convergence_time_end_temp;
+                  }
+
                 }
 
                 if(check_condition[3]){ //node_id
@@ -113,27 +126,27 @@ int filetracer(FILE *fp, char *destfile){
 
            }//END while
 
-           printf("convergence_time_start: %f\n", convergence_time_start);
+           printf("convergence_time_start:\t%f\n", convergence_time_start);
            //fputs("convergence_time_start\n",destfp);
-           fprintf(destfp, "convergence_time_start %f\n", convergence_time_start);
+           fprintf(destfp, "convergence_time_start\t%f\n", convergence_time_start);
 
-           printf("convergence_time_end: %f\n", convergence_time_end);
-           fprintf(destfp, "convergence_time_end %f\n", convergence_time_end);
+           printf("convergence_time_end:\t%f\n", convergence_time_end);
+           fprintf(destfp, "convergence_time_end\t%f\n", convergence_time_end);
 
            convergence_time = convergence_time_end - convergence_time_start;
-           printf("convergence_time: %f\n", convergence_time);
-           fprintf(destfp, "convergence_time %f\n", convergence_time_end);
+           printf("convergence_time:\t%f\n", convergence_time);
+           fprintf(destfp, "convergence_time\t%f\n", convergence_time);
            fputs("---------------------------------------------------------------\n",destfp);
 
            //print to std out
-           printf("node_id    number_of_neighbours    number_of_hlmac_addresses    number_of_table_entries");
-           printf("    number_of_hello_messages    number_of_sethlmac_messages    number_of_messages");
-           printf("    sum_hop    average_sum_hop_for_node\n");
+           printf("node_id\tnumber_of_neighbours\tnumber_of_hlmac_addresses\tnumber_of_table_entries");
+           printf("\tnumber_of_hello_messages\tnumber_of_sethlmac_messages\tnumber_of_messages");
+           printf("\tsum_hop\taverage_sum_hop_for_node\n");
 
            //print to file
-           fprintf(destfp, "node_id    number_of_neighbours    number_of_hlmac_addresses    number_of_table_entries");
-           fprintf(destfp, "    number_of_hello_messages    number_of_sethlmac_messages    number_of_messages");
-           fprintf(destfp, "    sum_hop    average_sum_hop_for_node\n");
+           fprintf(destfp, "node_id\tnumber_of_neighbours\tnumber_of_hlmac_addresses\tnumber_of_table_entries");
+           fprintf(destfp, "\tnumber_of_hello_messages\tnumber_of_sethlmac_messages\tnumber_of_messages");
+           fprintf(destfp, "\tsum_hop\taverage_sum_hop_for_node\n");
            //uint16_t i;
            unsigned int i;
            for (i=0; i<node_id_max; i++){
@@ -141,16 +154,16 @@ int filetracer(FILE *fp, char *destfile){
              if (number_of_hlmac_addresses[i] != 0){
                average_sum_hop_for_node = sum_hop[i] / (float)number_of_hlmac_addresses[i];
                //print to std output
-               printf("%7u    %20d    %25d    %23d    %24d    %27d    %18d    %7d    %24f\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
+               printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t%24f\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
 
                //print to file
-               fprintf(destfp, "%7u    %20d    %25d    %23d    %24d    %27d    %18d    %7d    %24f\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
+               fprintf(destfp, "%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t%24f\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
              }else{
                //print to std output
-               printf("%7u    %20d    %25d    %23d    %24d    %27d    %18d    %7d               div by zerro!\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
+               printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t           div_by_zerro!\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
 
                //print to file
-               fprintf(destfp, "%7u    %20d    %25d    %23d    %24d    %27d    %18d    %7d               div by zerro!\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
+               fprintf(destfp, "%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t           div_by_zerro!\n", i, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
              }
 
              //Summation calculation
@@ -173,10 +186,10 @@ int filetracer(FILE *fp, char *destfile){
            average_number_of_messages /= node_id_max;
 
            //print to std output
-           printf("Average    %20f    %25f    %23f    %24f    %27f    %18f    %7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
+           printf("Average\t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\t%7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
 
            //print to file
-           fprintf(destfp, "Average    %20f    %25f    %23f    %24f    %27f    %18f    %7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
+           fprintf(destfp, "Average\t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\t%7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
 
 
            fputs("---------------------------------------------------------------\n",destfp);
@@ -185,4 +198,3 @@ int filetracer(FILE *fp, char *destfile){
        }
        return 1;
 }
-

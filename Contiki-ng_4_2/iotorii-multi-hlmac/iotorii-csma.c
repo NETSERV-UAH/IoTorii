@@ -58,6 +58,11 @@
 #include <stdlib.h> //For malloc()
 #include "lib/random.h"
 #include "hlmac-table.h"
+
+#if LOG_DBG_STATISTIC == 1
+#include "sys/node-id.h" //For node_id
+#include "sys/rtimer.h" //For rtimer_clock_t, RTIMER_NOW()
+#endif
 //EXTRA END
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
@@ -78,6 +83,10 @@ static struct ctimer hello_timer;
 static struct ctimer statistic_timer;
 int number_of_hello_messages = 0;
 int number_of_sethlmac_messages = 0;
+#if IOTORII_NODE_TYPE == 1 //only root
+rtimer_clock_t convergence_time_start;
+#endif
+rtimer_clock_t convergence_time_end;
 //double average_hop = 0;
 #endif
 #endif
@@ -274,6 +283,11 @@ iotorii_handle_sethlmac_timer()
   hlmacaddr_t root_addr;
   hlmac_create_root_addr(&root_addr, 1);
   hlmactable_add(root_addr);
+/*  #if LOG_DBG_STATISTIC == 1
+  convergence_time_start = RTIMER_NOW();
+  //double convergence_time_start_second = convergence_time_start/RTIMER_SECOND;
+  LOG_DBG("Periodic Statistics: %d, %d node_id: %u, convergence_time_start: %u(in tick), each second is %u ticks\n", sizeof(convergence_time_start), sizeof(RTIMER_SECOND), node_id, (unsigned)convergence_time_start, (unsigned)RTIMER_SECOND);
+  #endif */
   iotorii_send_sethlmac(root_addr);
   free(root_addr.address); //malloc() in hlmac_create_root_addr()
   root_addr.address = NULL;
@@ -289,8 +303,11 @@ iotorii_handle_sethlmac_timer()
 static void
 iotorii_handle_statistic_timer()
 {
-  //core_start_time
-  LOG_DBG("number_of_hello_messages: %d, number_of_sethlmac_messages: %d, number_of_neighbours: %d, number_of_hlmac_addresses: %d, sum_hop: %d\n", number_of_hello_messages, number_of_sethlmac_messages, number_of_neighbours, number_of_hlmac_addresses, hlmactable_calculate_sum_hop());
+/*  #if IOTORII_NODE_TYPE == 1 //For root
+  //double convergence_time_start_second = (unsigned)convergence_time_start/(double)RTIMER_SECOND;
+  LOG_DBG("Periodic Statistics: node_id: %u, convergence_time_start: %u(in tick), each second is %u ticks\n", node_id, (unsigned)convergence_time_start, (unsigned)RTIMER_SECOND);
+  #endif */
+  LOG_DBG("Periodic Statistics: node_id: %u, number_of_hello_messages: %d, number_of_sethlmac_messages: %d, number_of_neighbours: %d, number_of_hlmac_addresses: %d, sum_hop: %d\n", node_id, number_of_hello_messages, number_of_sethlmac_messages, number_of_neighbours, number_of_hlmac_addresses, hlmactable_calculate_sum_hop());
 
   //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
   //ctimer_restart(&sethlmac_timer); //Restart the timer from current time.

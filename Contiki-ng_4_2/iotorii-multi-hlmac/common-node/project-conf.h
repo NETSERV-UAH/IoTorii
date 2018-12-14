@@ -40,6 +40,8 @@
 /*---------------------------------------------------------------------------*/
 #define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
 /*---------------------------------------------------------------------------*/
+//#define RTIMER_CONF_CLOCK_SIZE 4
+/*---------------------------------------------------------------------------*/
 /* Configuring the developer debug log */
 #define LOG_CONF_DBG_DEVELOPER 1
 /*---------------------------------------------------------------------------*/
@@ -50,7 +52,7 @@
  * -1 is unlimited
  * default value is 1
  */
-#define HLMAC_CONF_MAX_HLMAC 3
+#define HLMAC_CONF_MAX_HLMAC 1
 /*---------------------------------------------------------------------------*/
 /* Configure the IoTorii root node for iotoriicsma.h */
 //#define IOTORII_CONF_NODE_TYPE 1

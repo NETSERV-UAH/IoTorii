@@ -66,7 +66,7 @@ hlmac_table_init(void)
 uint8_t
 hlmactable_add(const hlmacaddr_t addr)
 {
-  if (number_of_hlmac_addresses > 255){
+  if (number_of_hlmac_addresses > 255){ //1~255, 0 is not used in the simulation
     #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
     #endif
@@ -79,9 +79,9 @@ hlmactable_add(const hlmacaddr_t addr)
     list_add(hlmac_table_entery_list, entry);
     number_of_hlmac_addresses ++;
 
-    #if LOG_DBG_DEVELOPER == 1
+    #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
     char *addr_str = hlmac_addr_to_str(addr);
-    LOG_DBG("HLMAC address %s saved to HLMAC table.\n", addr_str);
+    LOG_DBG("Periodic Statistics: HLMAC address: %s saved to HLMAC table.\n", addr_str);
     free(addr_str);
     addr_str = NULL;
     #endif

@@ -188,7 +188,7 @@ hlmac_addr_to_str(const hlmacaddr_t addr)
   char *s = (char *)address;
   uint8_t i;
   for (i = 0; i < addr.len; i++, s += 3)
-      sprintf(s, "%2.2u.", (char)get_addr_index_value(addr, i));
+      sprintf(s, "%2.2X.", (char)get_addr_index_value(addr, i));
   *(s) = '\0';
   return address;
 }

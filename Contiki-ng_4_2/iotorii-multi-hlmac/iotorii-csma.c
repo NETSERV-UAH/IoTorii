@@ -79,6 +79,7 @@ static struct ctimer sethlmac_timer;
 #endif
 #if IOTORII_NODE_TYPE > 0 //root and common node
 static struct ctimer hello_timer;
+static struct ctimer send_sethlmac_timer;
 #if LOG_DBG_STATISTIC == 1
 static struct ctimer statistic_timer;
 int number_of_hello_messages = 0;
@@ -181,6 +182,11 @@ iotorii_handle_hello_timer()
 }
 /*---------------------------------------------------------------------------*/
 void
+iotorii_handle_send_sethlmac_timer(){
+  send_packet(NULL, NULL);
+}
+/*---------------------------------------------------------------------------*/
+void
 iotorii_send_sethlmac(hlmacaddr_t addr)
 {
   int mac_max_payload = max_payload();
@@ -255,7 +261,12 @@ iotorii_send_sethlmac(hlmacaddr_t addr)
       LOG_DBG("SetHLMAC prefix (addr:%s) sent to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);
       free(neighbour_hlmac_addr_str);
       LOG_DBG("SetHLMAC prepared to send\n");
-      send_packet(NULL, NULL);
+      //send_packet(NULL, NULL);
+      //Scheduling a delay before sending a SetHLMAC messages
+      clock_time_t sethlmac_delay_time = (CLOCK_SECOND / 128) * (random_rand() % 3);
+      LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+      ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
+
 
       #if LOG_DBG_STATISTIC == 1
       number_of_sethlmac_messages ++;

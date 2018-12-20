@@ -62,7 +62,62 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+/*---------------------------------------------------------------------------*/
+/* To find common ancestor between two Addresses*/
+hlmacaddr_t get_lonest_common_prefix(hlmacaddr_t src, hlmacaddr_t dst)
+{
+  uint8_t min_len = (src.len < dst.len) ? src.len : dst.len;
+  uint8_t i = 0;
+  hlmacaddr_t commonPrexif = UNSPECIFIED_HLMAC_ADDRESS;
 
+  while(i<min_len && (get_addr_index_value(src, i) == get_addr_index_value(dst, i)))
+  {
+    hlmac_add_new_id(&commonPrexif, i);
+    i++;
+  }
+  return commonPrexif;
+}
+/*---------------------------------------------------------------------------*/
+int num_hops_between_nodes(hlmacaddr_t src, hlmacaddr_t dst)
+{
+  hlmacaddr_t ancestor = get_lonest_common_prefix(src, dst);
+  uint8_t ancestor_len = ancestor.len;
+  if(ancestor.address != NULL){ //if ancestor == unspecified address, ancestor.address is NULL. for adding the first ID
+    free(ancestor.address);
+    ancestor.address = NULL;
+    //return src.len - ancestor.len + dst.len - ancestor_len;
+    return src.len + dst.len - 2 * ancestor_len;
+  }
+  /* For ancestor == unspecified address
+   * when a node has not any HLMAC address, ancestor will be unspecified.
+   */
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+void find_best_addr(uint8_t src_id, uint8_t dst_id, hlmacaddr_t *best_src, hlmacaddr_t *best_dst)
+{
+  if ((nodes[src_id] != NULL) && (nodes[dst_id] != NULL)){
+    *best_src = nodes[src_id]->address; //We assiume the first src addr is the best one
+    *best_dst = nodes[dst_id]->address; //We assiume the first dst addr is the best one
+    int old_num_hop = num_hops_between_nodes(*best_src, *best_dst);
+    if (old_num_hop != -1){
+      for(hlmac_table_entery_t *src=nodes[src_id]; src!=NULL; src=src->next){
+        for(hlmac_table_entery_t *dst=nodes[dst_id]; dst!=NULL; dst=dst->next){
+          int new_num_hop = num_hops_between_nodes(src->address, dst->address);
+          if((new_num_hop) && (old_num_hop > new_num_hop)){
+            *best_src = src->address;
+            *best_dst = dst->address;
+            old_num_hop = new_num_hop;
+          } //if
+        } //for dst
+      } //for src
+    }else{ //if old_num_hop
+      *best_src = *best_dst = UNSPECIFIED_HLMAC_ADDRESS; //There is not the best addresses
+    }
+  }else{
+    *best_src = *best_dst = UNSPECIFIED_HLMAC_ADDRESS; //There is not the best addresses
+  }
+}
 /*---------------------------------------------------------------------------*/
 void add_address_to_node(unsigned int node_id, hlmacaddr_t addr)
 {
@@ -127,7 +182,8 @@ int log_file_parser(FILE *fp, char *destfile){
                 check_condition[2]=common_check&&(strstr(line,"convergence_time_end"));
                 check_condition[3]=common_check && (strstr(line,"node_id:")) && (strstr(line,"number_of_neighbours")); //strstr(line,"number_of_neighbours") : because "node_id:" exist in condition 1 and 2.
 
-                if(check_condition[0]){ //HLMAC addresses
+                if(check_condition[0]){ //HLMAC addresses associated to each node
+
                   unsigned int node_id;
                   char hlmac_str[HLMAC_STR_LEN_MAX];
                   hlmacaddr_t temp;
@@ -177,16 +233,16 @@ int log_file_parser(FILE *fp, char *destfile){
 
            }//END while
 
-           printf("convergence_time_start:\t%f\n", convergence_time_start);
+           printf("convergence_time_start:\t%f(s)\n", convergence_time_start);
            //fputs("convergence_time_start\n",destfp);
-           fprintf(destfp, "convergence_time_start\t%f\n", convergence_time_start);
+           fprintf(destfp, "convergence_time_start\t%f(s)\n", convergence_time_start);
 
-           printf("convergence_time_end:\t%f\n", convergence_time_end);
-           fprintf(destfp, "convergence_time_end\t%f\n", convergence_time_end);
+           printf("convergence_time_end:\t%f(s)\n", convergence_time_end);
+           fprintf(destfp, "convergence_time_end\t%f(s)\n", convergence_time_end);
 
            convergence_time = convergence_time_end - convergence_time_start;
-           printf("convergence_time:\t%f\n", convergence_time);
-           fprintf(destfp, "convergence_time\t%f\n", convergence_time);
+           printf("convergence_time:\t%f(s)\n", convergence_time);
+           fprintf(destfp, "convergence_time\t%f(s)\n", convergence_time);
            fputs("---------------------------------------------------------------\n",destfp);
 
            //print to std out
@@ -245,6 +301,7 @@ int log_file_parser(FILE *fp, char *destfile){
 
            fputs("---------------------------------------------------------------\n",destfp);
 
+           //Print Addresses associated to each node
            //print to std out
            printf("Addresses associated to each node:\nnode_id\tHLMAC addresses\n");
 
@@ -267,6 +324,51 @@ int log_file_parser(FILE *fp, char *destfile){
              printf("\n");
              fprintf(destfp, "\n");
            }
+           fputs("---------------------------------------------------------------\n",destfp);
+
+           //Hop count calculation
+           /*Create, set, and initailize a 2-dimentional array/matrix to hold
+            *the metric values.
+            */
+           int **num_hops = (int **)malloc(sizeof(int *) * node_id_max);
+           hlmacaddr_t best_src, best_dst;
+           char *best_src_str, *best_dst_str;
+           //fprintf(destfp, "node_id");
+           for(uint8_t i=0; i<node_id_max; i++){
+             num_hops[i] = (int *)malloc(sizeof(int) * node_id_max);
+             for(uint8_t j=0; j<node_id_max; j++){
+               if (i != j){
+                 find_best_addr(i, j, &best_src, &best_dst);
+                 num_hops[i][j] = num_hops_between_nodes(best_src, best_dst);
+                 best_src_str = hlmac_addr_to_str(best_src);
+                 best_dst_str = hlmac_addr_to_str(best_dst);
+                 fprintf(destfp, "(src:%s => dst:%s, hops:%d)\t", best_src_str, best_dst_str, num_hops[i][j]);
+                 free(best_src_str); //Because of malloc() in hlmac_addr_to_str()
+                 best_src_str = NULL;
+                 free(best_dst_str); //Because of malloc() in hlmac_addr_to_str()
+                 best_dst_str = NULL;
+                 /*
+                  * If best_src.address be deleted (free(best_src.address)), the
+                  * memory to which best_src.address refers (e.g. nodes[i]) is
+                  * deleted.
+                  *
+                  *free(best_src.address);
+                  *best_src.address = NULL;
+                  *free(best_dst.address);
+                  *best_dst.address = NULL;
+                 */
+               }else{
+                 num_hops[i][j] = 0;
+                 fprintf(destfp, "(%d)\t", num_hops[i][j]);
+               }
+             }
+             fprintf(destfp, "\n");
+           }
+
+           fputs("---------------------------------------------------------------\n",destfp);
+
+           //Average calculation of hop count
+
 
 
            fclose(destfp);

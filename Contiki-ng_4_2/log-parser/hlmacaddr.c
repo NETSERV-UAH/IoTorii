@@ -44,7 +44,8 @@
 
 #include "hlmacaddr.h"
 #include <stdio.h> //For sprintf()
-#include <stdlib.h> //For malloc(), isxdigit()
+#include <stdlib.h> //For malloc()
+#include <ctype.h> //For isdigit(), islower()
 #include <string.h> //For memcpy()
 
 const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS = {NULL, 0};
@@ -97,8 +98,10 @@ hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
   }
   addr->address[i] = new_id;
   (addr->len) ++;
-  free(temp);
-  temp = NULL;
+  if(temp !=NULL){ //if addr == unspecified address, temp is NULL. for adding the first ID
+    free(temp);
+    temp = NULL;
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -181,7 +184,7 @@ get_addr_index_value(const hlmacaddr_t addr, const uint8_t k)
 char *
 hlmac_addr_to_str(const hlmacaddr_t addr)
 {
-  char *address = (char *) malloc(sizeof(char) * (addr.len * (2 +1) + 1)); //first 1 for dot,e.g 01.0F, second 1 for "\0" at the end of address array.
+  char *address = (char *) malloc(sizeof(char) * (addr.len * (2 +1) + 1)); //first 1 for dot,e.g. 01.0F, second 1 for "\0" at the end of address array.
   char *s = (char *)address;
   uint8_t i;
   for (i = 0; i < addr.len; i++, s += 3)

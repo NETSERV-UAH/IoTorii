@@ -94,7 +94,7 @@ int num_hops_between_nodes(hlmacaddr_t src, hlmacaddr_t dst)
   return -1;
 }
 /*---------------------------------------------------------------------------*/
-void find_best_addr(uint8_t src_id, uint8_t dst_id, hlmacaddr_t *best_src, hlmacaddr_t *best_dst)
+void find_best_addr(unsigned int src_id, unsigned int dst_id, hlmacaddr_t *best_src, hlmacaddr_t *best_dst)
 {
   if ((nodes[src_id] != NULL) && (nodes[dst_id] != NULL)){
     *best_src = nodes[src_id]->address; //We assiume the first src addr is the best one
@@ -333,10 +333,19 @@ int log_file_parser(FILE *fp, char *destfile){
            int **num_hops = (int **)malloc(sizeof(int *) * node_id_max);
            hlmacaddr_t best_src, best_dst;
            char *best_src_str, *best_dst_str;
-           //fprintf(destfp, "node_id");
-           for(uint8_t i=0; i<node_id_max; i++){
+
+           //Print header of table
+           fprintf(destfp, "node_id");
+           for(unsigned int i=0; i<node_id_max; i++){
+             fprintf(destfp, "\t%u", i+1);
+           }
+           fprintf(destfp, "\n");
+
+           for(unsigned int i=0; i<node_id_max; i++){
+             fprintf(destfp, "%u\t", i+1); //The left collumn of the table
+
              num_hops[i] = (int *)malloc(sizeof(int) * node_id_max);
-             for(uint8_t j=0; j<node_id_max; j++){
+             for(unsigned int j=0; j<node_id_max; j++){
                if (i != j){
                  find_best_addr(i, j, &best_src, &best_dst);
                  num_hops[i][j] = num_hops_between_nodes(best_src, best_dst);
@@ -368,10 +377,69 @@ int log_file_parser(FILE *fp, char *destfile){
            fputs("---------------------------------------------------------------\n",destfp);
 
            //Average calculation of hop count
+           float average_hop_count_mp2p = 0; //average hop count for Multi Point to Point traffic type
+           float average_hop_count_p2mp = 0; //average hop count for Point to Multi Point traffic type
+           float average_hop_count_p2p = 0;  //average hop count for Point to Point traffic type
+           float average_hop_count_all = 0;  //average hop count for all traffic type
 
+           int sum_hop_count_mp2p = 0;
+           int sum_hop_count_p2mp = 0;
+           int sum_hop_count_p2p = 0;
+           int sum_hop_count_all = 0;
 
+           for (unsigned int i=0; i<node_id_max; i++){
+             for (unsigned int j=0; j<node_id_max; j++){
+               if (num_hops[i][j] != -1){
+                 /* All nodes,i, except the root node,i!=0, are src, and the root
+                 * node,j==0, is dst.
+                 */
+                if ((i != 0) && (j == 0)){
+                  average_hop_count_mp2p += num_hops[i][j];
+                  sum_hop_count_mp2p ++;
+                }
+                /* The root node,i==0, is src, and all nodes,j, except the root
+                 * node,j==0, is dst.
+                 */
+                if ((i == 0) && (j != 0)){
+                  average_hop_count_p2mp += num_hops[i][j];
+                  sum_hop_count_p2mp ++;
+                }
+                /* All nodes except the root node,i!=0 and j!=0, are src and dst,
+                 * and src and dst are not the same, i!=j.
+                 */
+                if ((i != 0) && (j != 0 ) && (i != j)){
+                  average_hop_count_p2p += num_hops[i][j];
+                  sum_hop_count_p2p ++;
+                }
+                /* All nodes are src and dst,
+                 * and src and dst are not the same, i!=j.
+                 */
+                if (i != j){
+                  average_hop_count_all += num_hops[i][j];
+                  sum_hop_count_all ++;
+                }
+               }
+             }
+           }
+
+           //sum_hop_count_mp2p = node_id_max - 1
+           average_hop_count_mp2p /= sum_hop_count_mp2p;
+           //sum_hop_count_p2mp = node_id_max - 1
+           average_hop_count_p2mp /= sum_hop_count_p2mp;
+           //sum_hop_count_p2p = node_id_max * node_id_max - 3 * node_id_max + 2
+           average_hop_count_p2p /= sum_hop_count_p2p;
+           //sum_hop_count_all = node_id_max * node_id_max - node_id_max
+           average_hop_count_all /= sum_hop_count_all;
+
+           fprintf(destfp, "average_hop_count_mp2p\t%f\n", average_hop_count_mp2p);
+           fprintf(destfp, "average_hop_count_p2mp\t%f\n", average_hop_count_p2mp);
+           fprintf(destfp, "average_hop_count_p2p\t%f\n", average_hop_count_p2p);
+           fprintf(destfp, "average_hop_count_all\t%f\n", average_hop_count_all);
 
            fclose(destfp);
        }
+       //Release memory
+       //nodes array
+       //for ()
        return 1;
 }

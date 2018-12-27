@@ -69,9 +69,15 @@
 #include "net/netstack.h"
 
 /* Log configuration */
+//EXTRA BEGIN
 #include "sys/log.h"
+#if IOTORII_NODE_TYPE == 0 //The traditional MAC operation
 #define LOG_MODULE "CSMA"
+#elif IOTORII_NODE_TYPE > 0 // 1 => the root node, 2 => the common nodes
+#define LOG_MODULE "IoTorii-CSMA"
+#endif
 #define LOG_LEVEL LOG_LEVEL_MAC
+//EXTRA END
 
 //EXTRA BEGIN
 /* Time to send Hello messages
@@ -114,7 +120,7 @@
 /* Time to print statistics
  * Unit : second
  * IoTorii nodes start to print statistic logs on the output
- * at t = IOTORII_CONF_SETHLMAC_START_TIME
+ * at t = IOTORII_CONF_STATISTICS_TIME
  * after initializing a node.
  */
 #ifdef IOTORII_CONF_STATISTICS_TIME
@@ -141,24 +147,19 @@ int number_of_sethlmac_messages = 0;
 //Create Neighbour table
 LIST(neighbour_table_entry_list);
 //number_of_neighbours = 0; //This variable is initialized in the init function.
-
-/* This version of IoTorii assigns one HLMAC address, so there is not used in
- * thiis case. We just use a variable to hold an assigned HLMAC address, and it
- * is initialized in the init function.
- */
-//LIST(iotorii_hlmac_table);
 //EXTRA END
 
 //A list/queue to hold messages (Payloads and receiver addresses)
 struct payload_entry{
   struct payload_entry *next;
   uint8_t *payload;
-  uint8_t data_len;
-  //linkaddr_t receiver_addr; //Since all receiver_addrs are Broadcas, it is eliminated.
+  int data_len;
+  //linkaddr_t receiver_addr; //Since all receiver_addrs are Broadcast, it is eliminated.
 };
 typedef struct payload_entry payload_entry_t;
 LIST(payload_entry_list);
 #endif
+//EXTRA End
 
 static void
 init_sec(void)
@@ -211,7 +212,6 @@ max_payload(void)
 }
 /*---------------------------------------------------------------------------*/
 //EXTRA BEGIN
-#ifdef IOTORII_NODE_TYPE
 #if IOTORII_NODE_TYPE > 0 //The root or common nodes
 static void
 iotorii_handle_hello_timer()
@@ -276,7 +276,9 @@ iotorii_handle_send_sethlmac_timer(){
       //Schedule next packet
       clock_time_t sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
       sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
+      #if LOG_DBG_DEVELOPER == 1
       LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+      #endif
       ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
     }
 
@@ -318,7 +320,7 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
      * 2=(1 is for adding the length of the HLMAC address prefix)+(1 for adding id).
      */
 
-     #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+     #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
      LOG_DBG("Info before sending SetHLMAC: ");
      LOG_DBG("Number of neighbours: %d, mac_max_payload: %d, LINKADDR_SIZE: %d.\n", number_of_neighbours, mac_max_payload, LINKADDR_SIZE);
      #endif
@@ -406,19 +408,22 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
            //Scheduling a delay before sending a SetHLMAC messages
            clock_time_t sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
            sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
+           #if LOG_DBG_DEVELOPER == 1
            LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+           #endif
            ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
         }
 
         //Add the payload to the end of the queue/list
         list_add(payload_entry_list, payload_entry);
-
+        #if LOG_DBG_DEVELOPER == 1
         char *neighbour_hlmac_addr_str = hlmac_addr_to_str(addr);
         LOG_DBG("SetHLMAC prefix (addr:%s) added to queue to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);
         free(neighbour_hlmac_addr_str);
+        #endif
 
       }else{ //End if random_list[i-1]
-        LOG_DBG("Node hos not any neighbour/payload is low to send SetHLMAC.\n");
+        LOG_DBG("Node hos not any neighbour (or payload is low) to send SetHLMAC.\n");
       }
 
       /* Release memory
@@ -457,7 +462,6 @@ iotorii_handle_sethlmac_timer()
   //ctimer_stop(&sethlmac_timer); //Stop the timer.
 }
 #endif
-#endif  // end IOTORII_NODE_TYPE
 /*---------------------------------------------------------------------------*/
 #if IOTORII_NODE_TYPE > 0 //For root and common nodes
 #if LOG_DBG_STATISTIC == 1
@@ -486,7 +490,6 @@ init(void)
   csma_output_init();
   on();
   //EXTRA BEGIN
-#ifdef IOTORII_NODE_TYPE
 #if IOTORII_NODE_TYPE == 1 //Root node
   LOG_INFO("This node operates as a root.\n");
 #endif
@@ -537,11 +540,11 @@ init(void)
   LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_start_time);
   ctimer_set(&sethlmac_timer, sethlmac_start_time, iotorii_handle_sethlmac_timer, NULL);
 #endif
-#endif
 //EXTRA END
 }
 /*---------------------------------------------------------------------------*/
 //EXTRA BEGIN
+#if IOTORII_NODE_TYPE > 0 //Root or Common node
 void
 iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast packet received from other nodes
 {
@@ -577,7 +580,7 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
     LOG_WARN("The IoTorii neighbour table is full! \n");
   }
 
-  #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+  #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
   //Write neighbour table
   neighbour_table_entry_t *nb;
   LOG_DBG("Naighbour Table:");
@@ -587,7 +590,7 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
     LOG_DBG(" - ");
   }
   LOG_DBG("\n");
-#endif
+  #endif
 }
 /*---------------------------------------------------------------------------*/
 /* Extract the address of this node from a received packet */
@@ -688,48 +691,49 @@ hlmacaddr_t *iotorii_extract_address(void){
 void
 iotorii_handle_incoming_sethlamc()
 {
-  #if LOG_DBG_DEVELOPER == 1
+  //#if LOG_DBG_DEVELOPER == 1
   LOG_DBG("A SetHLMAC message received from ");
   LOG_DBG_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
   LOG_DBG("\n");
-  #endif
+  //#endif
 
   hlmacaddr_t *received_hlmac_addr;
   linkaddr_t sender_link_address = *packetbuf_addr(PACKETBUF_ADDR_SENDER);
   received_hlmac_addr = iotorii_extract_address();
 
   if(hlmac_is_unspecified_addr(*received_hlmac_addr)){
-    #if LOG_DBG_DEVELOPER == 1
+    //#if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Packet dosn't any address for me!\n");
-    #endif
+    //#endif
   }else{
-    #if LOG_DBG_DEVELOPER == 1
+    //#if LOG_DBG_DEVELOPER == 1
     char *new_hlmac_addr_str = hlmac_addr_to_str(*received_hlmac_addr);
     LOG_DBG("New HLMAC is: %s\n", new_hlmac_addr_str);
-    //free(new_hlmac_addr_str);
-    #endif
+    free(new_hlmac_addr_str);
+    //#endif
 
     if(!hlmactable_has_loop(*received_hlmac_addr)){
       uint8_t is_added = hlmactable_add(*received_hlmac_addr);
       if (is_added){
-        #if LOG_DBG_DEVELOPER == 1
+        //#if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address is assigned to the node.\n");
+        #if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address is sent to the neighbours.\n");
         #endif
         iotorii_send_sethlmac(*received_hlmac_addr, sender_link_address); //To advertise the prefix
       }else{
-        #if LOG_DBG_DEVELOPER == 1
+        //#if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address not added to the HLMAC table, and memory is free.\n");
-        #endif
+        //#endif
         free(received_hlmac_addr->address);
         received_hlmac_addr->address = NULL;
         free(received_hlmac_addr);
         received_hlmac_addr = NULL;
       }
     }else{
-      #if LOG_DBG_DEVELOPER == 1
+      //#if LOG_DBG_DEVELOPER == 1
       LOG_DBG("New HLMAC address not assigned to the node (loop), and memory is free.\n");
-      #endif
+      //#endif
       free(received_hlmac_addr->address);
       received_hlmac_addr->address = NULL;
       free(received_hlmac_addr);
@@ -757,6 +761,7 @@ iotorii_operation(void)
   }//else
     //handle_handle_unicast();  //For handling an unicast packet received from another node
 }
+#endif //#if IOTORII_NODE_TYPE == 0
 //EXTRA END
 /*---------------------------------------------------------------------------*/
 static void
@@ -804,15 +809,25 @@ input_packet(void)
       LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_INFO_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
       //EXTRA BEGIN
-      //NETSTACK_NETWORK.input();
+      #if IOTORII_NODE_TYPE == 0
+      NETSTACK_NETWORK.input();
+      #elif IOTORII_NODE_TYPE > 0
       iotorii_operation();
+      #endif
       //EXTRA END
     }
   }
 }
 /*---------------------------------------------------------------------------*/
-const struct mac_driver iotorii_csma_driver = {  //const struct mac_driver csma_driver = { //EXTRA
+//EXTRA BEGIN
+#if IOTORII_NODE_TYPE == 0
+const struct mac_driver csma_driver = {
+  "CSMA",
+#elif IOTORII_NODE_TYPE > 0
+const struct mac_driver iotorii_csma_driver = {
   "IoTorii CSMA",
+#endif
+//EXTRA END
   init,
   send_packet,
   input_packet,

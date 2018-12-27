@@ -95,7 +95,15 @@
 #define IOTORII_CONF_STATISTICS_TIME 20
 /*---------------------------------------------------------------------------*/
 /* Configure the csma_driver for netstack.h */
+#ifndef IOTORII_CONF_NODE_TYPE
+#define IOTORII_CONF_NODE_TYPE 2 //Default is the common node
+#endif
+
+#if IOTORII_CONF_NODE_TYPE > 0 //For the IoTorii root ar common nodes
 #define NETSTACK_CONF_MAC      iotorii_csma_driver
+#elif IOTORII_CONF_NODE_TYPE == 0 //For the traditional MAC operation
+#define NETSTACK_CONF_MAC      csma_driver
+#endif
 /*---------------------------------------------------------------------------*/
 /* Configure the routing_driver for netstack.h */
 //#define NETSTACK_CONF_ROUTING      nullrouting_driver

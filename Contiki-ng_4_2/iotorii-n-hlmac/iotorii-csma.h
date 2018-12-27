@@ -65,8 +65,8 @@
 //EXTRA
 #ifdef IOTORII_CONF_NODE_TYPE
 #define IOTORII_NODE_TYPE IOTORII_CONF_NODE_TYPE
-//#else
-//#define IOTORII_NODE_TYPE 0 //To support the traditional MAC operation
+#else
+#define IOTORII_NODE_TYPE 0 //To support the traditional MAC operation
 #endif
 //EXTRA
 
@@ -105,19 +105,17 @@ struct neighbour_table_entry{
 };
 typedef struct neighbour_table_entry neighbour_table_entry_t;
 uint8_t number_of_neighbours;
-
-/*typedef struct {
-  hlmac_table_entry_t *next;
-  hlmacaddr_t addr;
-} hlmac_table_entry_t;*/
 //EXTRA END
 
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 
 //EXTRA BEGIN
-//extern const struct mac_driver csma_driver;
+#if IOTORII_NODE_TYPE == 0 //The traditional MAC operation
+extern const struct mac_driver csma_driver;
+#elif IOTORII_NODE_TYPE > 0 // 1 => the root node, 2 => the common nodes
 extern const struct mac_driver iotori_csma_driver;
+#endif
 //EXTRA END
 
 /* CSMA security framer functions */

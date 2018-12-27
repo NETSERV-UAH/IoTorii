@@ -50,7 +50,7 @@
 
 
 #include "sys/log.h"
-#define LOG_MODULE "IoTorii"
+#define LOG_MODULE "IoTorii-HLMAC-Table"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
 LIST(hlmac_table_entery_list);
@@ -66,7 +66,7 @@ hlmac_table_init(void)
 uint8_t
 hlmactable_add(const hlmacaddr_t addr)
 {
-  if (number_of_hlmac_addresses > 255){ //1~255, 0 is not used in the simulation
+  if (number_of_hlmac_addresses >= 255){ //1~255, 0 is not used in the simulation
     #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
     #endif
@@ -86,7 +86,7 @@ hlmactable_add(const hlmacaddr_t addr)
     addr_str = NULL;
     #endif
 
-    #if LOG_DBG_STATISTIC == 1
+    #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
     #endif
 
@@ -100,7 +100,7 @@ hlmactable_add(const hlmacaddr_t addr)
     addr_str = NULL;
     #endif
 
-    #if LOG_DBG_STATISTIC == 1
+    #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
     #endif
 

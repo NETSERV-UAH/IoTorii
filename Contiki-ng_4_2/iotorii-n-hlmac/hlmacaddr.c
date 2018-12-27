@@ -48,7 +48,7 @@
 #include <stdlib.h> //For malloc()
 
 #include "sys/log.h"
-#define LOG_MODULE "IoTorii"
+#define LOG_MODULE "IoTorii-HLMAC-Address"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
 const hlmacaddr_t UNSPECIFIED_HLMAC_ADDRESS = {NULL, 0};
@@ -101,7 +101,7 @@ hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
   }
   addr->address[i] = new_id;
   (addr->len) ++;
-  if(temp !=NULL){ //if addr == unspecified address, temp is NULL. for adding the first ID 
+  if(temp !=NULL){ //if addr == unspecified address, temp is NULL. for adding the first ID
     free(temp);
     temp = NULL;
   }

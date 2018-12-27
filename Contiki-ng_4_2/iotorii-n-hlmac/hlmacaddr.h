@@ -59,6 +59,11 @@
 #define LOG_DBG_STATISTIC LOG_CONF_DBG_STATISTIC
 #endif
 
+/*
+ * By default, IoTorii works with the setting of n-HLMAC = 1 (1-HLMAC).
+ * If HLMAC_CONF_MAX_HLMAC == -1, it works with the setting of
+ * n-HLMAC = unlimited (all-HLMAC).
+ */
 #ifndef HLMAC_CONF_MAX_HLMAC
 #define HLMAC_MAX_HLMAC 1
 #else

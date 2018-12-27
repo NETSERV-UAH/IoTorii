@@ -61,6 +61,39 @@
 /* Configure the IoTorii common nodes for iotoriicsma.h */
 //#define IOTORII_CONF_NODE_TYPE 2
 /*---------------------------------------------------------------------------*/
+/* Time to send Hello messages
+ * Unit : second
+ * IoTorii starts to randomly send a hello message in range
+ * [IOTORII_CONF_HELLO_START_TIME/2 IOTORII_CONF_HELLO_START_TIME]
+ * after initializing a node.
+ */
+#define IOTORII_CONF_HELLO_START_TIME 4
+/*---------------------------------------------------------------------------*/
+/* Time to send the first SetHLMAC message by a root node
+ * Unit : second
+ * IoTorii starts to send a SetHLMAC message
+ * at t = IOTORII_CONF_SETHLMAC_START_TIME
+ * after initializing the root node.
+ */
+#define IOTORII_CONF_SETHLMAC_START_TIME 10
+/*---------------------------------------------------------------------------*/
+/* Delay before sending a SetHLMAC message
+ * Unit : tick
+ * 1 second is 128 ticks
+ * IoTorii uniformly waits for random delay in range
+ * [IOTORII_CONF_SETHLMAC_DELAY/2 IOTORII_CONF_SETHLMAC_DELAY]
+ * before sending a SetHLMAC in a common node.
+ */
+#define IOTORII_CONF_SETHLMAC_DELAY 10
+/*---------------------------------------------------------------------------*/
+/* Time to print statistics
+ * Unit : second
+ * IoTorii nodes start to print statistic logs on the output
+ * at t = IOTORII_CONF_SETHLMAC_START_TIME
+ * after initializing a node.
+ */
+#define IOTORII_CONF_STATISTICS_TIME 20
+/*---------------------------------------------------------------------------*/
 /* Configure the csma_driver for netstack.h */
 #define NETSTACK_CONF_MAC      iotorii_csma_driver
 /*---------------------------------------------------------------------------*/

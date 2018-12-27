@@ -101,8 +101,10 @@ hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
   }
   addr->address[i] = new_id;
   (addr->len) ++;
-  free(temp);
-  temp = NULL;
+  if(temp !=NULL){ //if addr == unspecified address, temp is NULL. for adding the first ID 
+    free(temp);
+    temp = NULL;
+  }
 }
 /*---------------------------------------------------------------------------*/
 void

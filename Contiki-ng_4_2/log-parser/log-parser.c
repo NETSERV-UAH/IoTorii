@@ -440,6 +440,17 @@ int log_file_parser(FILE *fp, char *destfile){
        }
        //Release memory
        //nodes array
-       //for ()
+       for (int i=0; i<NODE_NUMBERS_MAX; i++){
+         if (nodes[i]){
+           while(nodes[i]->next){
+             hlmac_table_entery_t *temp = nodes[i];
+             for (; temp->next->next; temp=temp->next);
+             free(temp->next);
+             temp->next = NULL;
+           }
+           free(nodes[i]);
+           nodes[i] = NULL;
+         }
+       }
        return 1;
 }

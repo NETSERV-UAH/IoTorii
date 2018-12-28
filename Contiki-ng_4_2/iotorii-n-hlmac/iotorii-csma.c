@@ -294,31 +294,8 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
    /* Framing failed, SetHLMAC can not be created */
      LOG_WARN("output: failed to calculate payload size - SetHLMAC can not be created\n");
   }else{
-    //Accomodate SetHLMAC addresses in the payload.
+
     neighbour_table_entry_t *neighbour_entry;
-    /* Is packetbuf a common repository? By using
-     * "packetbuf_ptr = packetbuf_dataptr();", when we apply a process
-     * on the packetbuf, if node want to send another SetHLMAC message (or
-     * receive a new packet), packetbuf is overwrote. To avoid this, we create
-     * a copy from packetbuf before starting a process on the packetbuf.
-     */
-    //Creating a payload
-    uint8_t *packetbuf_ptr_head = (uint8_t *) malloc(sizeof(uint8_t) * mac_max_payload);
-    /* A pointer to walk on the payload array/pointer */
-    uint8_t *packetbuf_ptr = packetbuf_ptr_head;
-
-    int datalen_counter = 0;
-    uint8_t i = 1;
-
-    /* The ayload structure:
-     * +------------+--------+-----+------+-----+-----+------+
-     * | Prefix len | Prefix | ID1 | MAC1 | ... | IDn | MACn |
-     * +------------+--------+-----+------+-----+-----+------+
-     */
-
-    /* Add first neighbour
-     * 2=(1 is for adding the length of the HLMAC address prefix)+(1 for adding id).
-     */
 
      #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
      LOG_DBG("Info before sending SetHLMAC: ");
@@ -367,8 +344,35 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
          }
        }
 
+       //Accomodate SetHLMAC addresses in the payload.
+       /* Is packetbuf a common repository? By using
+        * "packetbuf_ptr = packetbuf_dataptr();", when we apply a process
+        * on the packetbuf, if node want to send another SetHLMAC message (or
+        * receive a new packet), packetbuf is overwrote. To avoid this, we create
+        * a copy from packetbuf before starting a process on the packetbuf.
+        */
+       //Creating a payload
+       uint8_t *packetbuf_ptr_head;
+       /* A pointer to walk on the payload array/pointer */
+       uint8_t *packetbuf_ptr;
+
+       int datalen_counter = 0;
+       uint8_t i = 1;
+
+       /* The ayload structure:
+        * +------------+--------+-----+------+-----+-----+------+
+        * | Prefix len | Prefix | ID1 | MAC1 | ... | IDn | MACn |
+        * +------------+--------+-----+------+-----+-----+------+
+        */
+
+       /* Add first neighbour
+        * 2=(1 is for adding the length of the HLMAC address prefix)+(1 for adding id).
+        */
+
        if (random_list[i-1] && (mac_max_payload >=  (addr.len + 2 + LINKADDR_SIZE))){
           //Preparing the payload
+          packetbuf_ptr_head = (uint8_t *) malloc(sizeof(uint8_t) * mac_max_payload);
+          packetbuf_ptr = packetbuf_ptr_head;
           //packetbuf_ptr = packetbuf_dataptr();
           /* Create the payload */
           /* Prefix lenght */
@@ -405,17 +409,30 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
          * if the list is empty, set a timer.
          */
         if (!list_head(payload_entry_list)){
-           //Scheduling a delay before sending a SetHLMAC messages
-           clock_time_t sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
-           sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
-           #if LOG_DBG_DEVELOPER == 1
-           LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
-           #endif
-           ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
+           /* Scheduling a delay before sending a SetHLMAC messages.
+            * Delay before the first SetHLMAC, transmitted by the root node,
+            * is zero.
+            */
+           clock_time_t sethlmac_delay_time = 0;
+           #if IOTORII_NODE_TYPE > 1
+             sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
+             sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
+             #if LOG_DBG_DEVELOPER == 1
+             LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+             #endif
+          #elif IOTORII_NODE_TYPE == 1
+             //sethlmac_delay_time = 0;
+             #if LOG_DBG_DEVELOPER == 1
+             LOG_DBG("Scheduling a SetHLMAC message by the root node after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+             #endif
+          #endif
+          //First, add the payload to the end of the queue/list, then set the timer
+          list_add(payload_entry_list, payload_entry);
+          ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
+        }else{
+          list_add(payload_entry_list, payload_entry);
         }
 
-        //Add the payload to the end of the queue/list
-        list_add(payload_entry_list, payload_entry);
         #if LOG_DBG_DEVELOPER == 1
         char *neighbour_hlmac_addr_str = hlmac_addr_to_str(addr);
         LOG_DBG("SetHLMAC prefix (addr:%s) added to queue to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);

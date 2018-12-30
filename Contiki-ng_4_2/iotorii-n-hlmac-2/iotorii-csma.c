@@ -381,11 +381,11 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
         * 2=(1 is for adding the length of the HLMAC address prefix)+(1 for adding id).
         */
          while (((number_of_neighbours_new - i - 1) > 0) && (mac_max_payload >=  (addr.len + 2 + LINKADDR_SIZE))){
-           //Preparing the payload
            packetbuf_ptr_head = (uint8_t *) malloc(sizeof(uint8_t) * mac_max_payload);
            packetbuf_ptr = packetbuf_ptr_head;
            datalen_counter = 0;
 
+            //Preparing the payload
             //packetbuf_ptr = packetbuf_dataptr();
             /* Create the payload */
             /* Prefix lenght */

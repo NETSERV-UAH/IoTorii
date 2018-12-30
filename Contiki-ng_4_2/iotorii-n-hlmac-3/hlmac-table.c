@@ -130,10 +130,10 @@ hlmactable_add(const hlmacaddr_t addr)
      */
     hlmacaddr_t exchanged = hlmactable_is_exchanged(addr);
     if(!hlmac_is_unspecified_addr(exchanged)){
-      #if LOG_DBG_DEVELOPER == 1
+      #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
       char *addr_str = hlmac_addr_to_str(addr);
       char *exchanged_str = hlmac_addr_to_str(exchanged);
-      LOG_DBG("HLMAC address %s is exchanged to %s and saved to HLMAC table.\n", addr_str, exchanged_str);
+      LOG_DBG("Periodic Statistics: new HLMAC address %s is exchanged to old %s and saved to HLMAC table.\n", addr_str, exchanged_str);
       free(addr_str);
       addr_str = NULL;
       free(exchanged_str);

@@ -113,8 +113,10 @@ hlmac_add_new_id(hlmacaddr_t *addr, const uint8_t new_id)
   }
   addr->address[i] = new_id;
   (addr->len) ++;
-  free(temp);
-  temp = NULL;
+  if(temp !=NULL){ //if addr == unspecified address, temp is NULL. for adding the first ID 
+    free(temp);
+    temp = NULL;
+  }
 }
 /*---------------------------------------------------------------------------*/
 hlmacaddr_t *
@@ -226,7 +228,7 @@ hlmac_addr_to_str(const hlmacaddr_t addr)
   char *s = (char *)address;
   uint8_t i;
   for (i = 0; i < addr.len; i++, s += 3)
-      sprintf(s, "%2.2u.", (char)get_addr_index_value(addr, i));
+      sprintf(s, "%2.2X.", (char)get_addr_index_value(addr, i));
   *(s) = '\0';
   return address;
 }

@@ -23,9 +23,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky1</identifier>
       <description>Sky Mote Type #sky1</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/iotorii/common-node/start-iotorii-common-node.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/iotorii-1-hlmac/common-node/start-iotorii-common-node.c</source>
       <commands EXPORT="discard">make start-iotorii-common-node.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/iotorii/common-node/start-iotorii-common-node.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-1-hlmac/common-node/start-iotorii-common-node.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -46,9 +46,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky2</identifier>
       <description>Sky Mote Type #sky2</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/iotorii/root/start-iotorii-root.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/iotorii-1-hlmac/root/start-iotorii-root.c</source>
       <commands EXPORT="discard">make start-iotorii-root.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/iotorii/root/start-iotorii-root.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-1-hlmac/root/start-iotorii-root.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -206,4 +206,3 @@
     <location_y>0</location_y>
   </plugin>
 </simconf>
-

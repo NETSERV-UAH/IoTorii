@@ -12,8 +12,9 @@
 #include "hlmacaddr.h"
 
 #define NODE_NUMBERS_MAX 500
-#define CONDITION_MAX 4
+#define CONDITION_MAX 5
 #define HLMAC_STR_LEN_MAX 20
+#define GLOBAL_STATISTICS 1  //To print a metric for all runs in a file
 
 struct hlmac_table_entery{
   struct hlmac_table_entery *next;
@@ -136,6 +137,30 @@ void add_address_to_node(unsigned int node_id, hlmacaddr_t addr)
 }
 
 /*---------------------------------------------------------------------------*/
+int exchange_addresses_in_node(unsigned int node_id, hlmacaddr_t old_hlmac, hlmacaddr_t new_hlmac)
+{
+    for(hlmac_table_entery_t *temp = nodes[node_id]; temp!=NULL; temp=temp->next){
+      if (hlmac_cmp(temp->address, old_hlmac) == 0){
+        //release memory for old entry
+        free(temp->address.address);
+        temp->address.address = NULL;
+        //exchange pointers and variables
+        temp->address.address = new_hlmac.address;
+        temp->address.len = new_hlmac.len;
+        //release memory
+        free(old_hlmac.address);
+        old_hlmac.address = NULL;
+
+        return 1;
+
+      }
+    }
+
+    return 0;
+
+}
+
+/*---------------------------------------------------------------------------*/
 int log_file_parser(FILE *fp, char *destfile){
 
     char line[200];
@@ -144,6 +169,35 @@ int log_file_parser(FILE *fp, char *destfile){
     for (int i=0; i<=NODE_NUMBERS_MAX; i++){
       nodes[i] = NULL;
     }
+#if GLOBAL_STATISTICS == 1
+    FILE *ConvergenceTime; //A file to save convergence time for all nodes
+    if((ConvergenceTime=fopen("../ConvergenceTime.txt","a"))==NULL){
+       fprintf(stderr,"\nCan't open destination file (../ConvergenceTime.txt)\n");
+       return 0;
+
+     }
+
+     FILE *NumberOfMessages; //A file to save convergence time for all nodes
+     if((NumberOfMessages=fopen("../NumberOfMessages.txt","a"))==NULL){
+        fprintf(stderr,"\nCan't open destination file (../NumberOfMessages.txt)\n");
+        return 0;
+
+      }
+
+      FILE *numberOfTableEntries; //A file to save convergence time for all nodes
+      if((numberOfTableEntries=fopen("../numberOfTableEntries.txt","a"))==NULL){
+         fprintf(stderr,"\nCan't open destination file (../numberOfTableEntries.txt)\n");
+         return 0;
+
+       }
+
+       FILE *numberOfHops; //A file to save convergence time for all nodes
+       if((numberOfHops=fopen("../numberOfHops.txt","a"))==NULL){
+          fprintf(stderr,"\nCan't open destination file (../numberOfHops.txt)\n");
+          return 0;
+
+        }
+#endif
 
     FILE *destfp;
     if((destfp=fopen(destfile,"w"))==NULL){
@@ -177,10 +231,11 @@ int log_file_parser(FILE *fp, char *destfile){
                     check_condition[i]=0;
 
                 common_check=(strstr(line,"Periodic Statistics:")) && 1; // || 1 to avoid warning because type of common_check is int and the type of strstr() is char *.
-                check_condition[0]=common_check && (strstr(line,"HLMAC address:")) && (strstr(line,"saved to HLMAC table"));
-                check_condition[1]=common_check&&(strstr(line,"convergence_time_start"));
-                check_condition[2]=common_check&&(strstr(line,"convergence_time_end"));
-                check_condition[3]=common_check && (strstr(line,"node_id:")) && (strstr(line,"number_of_neighbours")); //strstr(line,"number_of_neighbours") : because "node_id:" exist in condition 1 and 2.
+                check_condition[0] = common_check && (strstr(line,"HLMAC address:")) && (strstr(line,"saved to HLMAC table"));
+                check_condition[1] = common_check&&(strstr(line,"convergence_time_start"));
+                check_condition[2] = common_check&&(strstr(line,"convergence_time_end"));
+                check_condition[3] = common_check && (strstr(line,"node_id:")) && (strstr(line,"number_of_neighbours")); //strstr(line,"number_of_neighbours") : because "node_id:" exist in condition 1 and 2.
+                check_condition[4] = common_check && (strstr(line,"new HLMAC address")) && (strstr(line,"is exchanged to old"));
 
                 if(check_condition[0]){ //HLMAC addresses associated to each node
 
@@ -231,24 +286,45 @@ int log_file_parser(FILE *fp, char *destfile){
                     node_id_max = node_id;
                 }
 
+                if(check_condition[4]){ //exchange 2 address
+                  unsigned int node_id;
+                  char new_hlmac_str[HLMAC_STR_LEN_MAX];
+                  char old_hlmac_str[HLMAC_STR_LEN_MAX];
+
+                  sscanf(strstr(line,"ID:") + strlen("ID:"), "%u", &node_id);
+                  sscanf(strstr(line,"new HLMAC address") + strlen("new HLMAC address"), "%s", new_hlmac_str);
+                  sscanf(strstr(line,"is exchanged to old") + strlen("is exchanged to old"), "%s", old_hlmac_str);
+                  printf("Node ID %u, new address %s is exchanget to address %s : ", node_id, new_hlmac_str, old_hlmac_str);
+                  int done = exchange_addresses_in_node(node_id-1, hlmac_str_to_addr(old_hlmac_str), hlmac_str_to_addr(new_hlmac_str));
+                  if(done){
+                    printf("Done!\n");
+                  }else{
+                    printf("Not Done!\n");
+                  }
+                }
+
            }//END while
 
-           printf("convergence_time_start:\t%f(s)\n", convergence_time_start);
+           //printf("convergence_time_start:\t%f(s)\n", convergence_time_start);
            //fputs("convergence_time_start\n",destfp);
-           fprintf(destfp, "convergence_time_start\t%f(s)\n", convergence_time_start);
+           fprintf(destfp, "convergence_time_start\t%f\t(s)\n", convergence_time_start);
 
-           printf("convergence_time_end:\t%f(s)\n", convergence_time_end);
-           fprintf(destfp, "convergence_time_end\t%f(s)\n", convergence_time_end);
+           //printf("convergence_time_end:\t%f(s)\n", convergence_time_end);
+           fprintf(destfp, "convergence_time_end\t%f\t(s)\n", convergence_time_end);
 
            convergence_time = convergence_time_end - convergence_time_start;
-           printf("convergence_time:\t%f(s)\n", convergence_time);
-           fprintf(destfp, "convergence_time\t%f(s)\n", convergence_time);
+           //printf("convergence_time:\t%f(s)\n", convergence_time);
+           fprintf(destfp, "convergence_time\t%f\t(s)\n", convergence_time);
+           #if GLOBAL_STATISTICS == 1
+           fprintf(ConvergenceTime, "%f\n", convergence_time);
+           #endif
+
            fputs("---------------------------------------------------------------\n",destfp);
 
            //print to std out
-           printf("node_id\tnumber_of_neighbours\tnumber_of_hlmac_addresses\tnumber_of_table_entries");
-           printf("\tnumber_of_hello_messages\tnumber_of_sethlmac_messages\tnumber_of_messages");
-           printf("\tsum_hop\taverage_sum_hop_for_node\n");
+           //printf("node_id\tnumber_of_neighbours\tnumber_of_hlmac_addresses\tnumber_of_table_entries");
+           //printf("\tnumber_of_hello_messages\tnumber_of_sethlmac_messages\tnumber_of_messages");
+           //printf("\tsum_hop\taverage_sum_hop_for_node\n");
 
            //print to file
            fprintf(destfp, "node_id\tnumber_of_neighbours\tnumber_of_hlmac_addresses\tnumber_of_table_entries");
@@ -261,13 +337,13 @@ int log_file_parser(FILE *fp, char *destfile){
              if (number_of_hlmac_addresses[i] != 0){
                average_sum_hop_for_node = sum_hop[i] / (float)number_of_hlmac_addresses[i];
                //print to std output
-               printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t%24f\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
+               //printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t%24f\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
 
                //print to file
                fprintf(destfp, "%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t%24f\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i], average_sum_hop_for_node);
              }else{
                //print to std output
-               printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t           div_by_zerro!\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
+               //printf("%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t           div_by_zerro!\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
 
                //print to file
                fprintf(destfp, "%7u\t%20d\t%25d\t%23d\t%24d\t%27d\t%18d\t%7d\t           div_by_zerro!\n", i+1, number_of_neighbours[i], number_of_hlmac_addresses[i], number_of_table_entries[i], number_of_hello_messages[i], number_of_sethlmac_messages[i], number_of_messages[i], sum_hop[i]);
@@ -283,6 +359,8 @@ int log_file_parser(FILE *fp, char *destfile){
              average_sum_hop += sum_hop[i];
            }
 
+           fprintf(destfp, "Sum    \t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages);
+
            //Average calculation
            average_sum_hop /= average_number_of_hlmac_addresses; //Now, average_number_of_hlmac_addresses includes the total number of the hlmac addresses
            average_number_of_neighbours /= node_id_max;
@@ -293,35 +371,41 @@ int log_file_parser(FILE *fp, char *destfile){
            average_number_of_messages /= node_id_max;
 
            //print to std output
-           printf("Average\t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\t%7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
+           //printf("Average\t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\t%7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
 
            //print to file
            fprintf(destfp, "Average\t%20f\t%25f\t%23f\t%24f\t%27f\t%18f\t%7f\n", average_number_of_neighbours, average_number_of_hlmac_addresses, average_number_of_table_entries, average_number_of_hello_messages, average_number_of_sethlmac_messages, average_number_of_messages, average_sum_hop);
+
+           #if GLOBAL_STATISTICS == 1
+           fprintf(numberOfTableEntries, "%f\n", average_number_of_hlmac_addresses);
+           fprintf(NumberOfMessages, "%f\n", average_number_of_sethlmac_messages);
+           #endif
+
 
 
            fputs("---------------------------------------------------------------\n",destfp);
 
            //Print Addresses associated to each node
            //print to std out
-           printf("Addresses associated to each node:\nnode_id\tHLMAC addresses\n");
+           //printf("Addresses associated to each node:\nnode_id\tHLMAC addresses\n");
 
            //print to file
            fprintf(destfp, "Addresses which is associated to each node:\nnode_id\tHLMAC addresses\n");
 
            for (i=0; i<node_id_max; i++){
              //print to std out
-             printf("%-7d", i+1);
+             //printf("%-7d", i+1);
              //print to file
              fprintf(destfp, "%-7d", i+1);
 
              for(hlmac_table_entery_t *node_address_entry = nodes[i]; node_address_entry!=NULL; node_address_entry=node_address_entry->next){
                char *hlmac_addr_str;
                hlmac_addr_str = hlmac_addr_to_str(node_address_entry->address);
-               printf("\t%s", hlmac_addr_str);
+               //printf("\t%s", hlmac_addr_str);
                fprintf(destfp, "\t%s", hlmac_addr_str);
                free(hlmac_addr_str); //Because of malloc() in hlmac_addr_to_str()
              }
-             printf("\n");
+             //printf("\n");
              fprintf(destfp, "\n");
            }
            fputs("---------------------------------------------------------------\n",destfp);
@@ -436,7 +520,17 @@ int log_file_parser(FILE *fp, char *destfile){
            fprintf(destfp, "average_hop_count_p2p\t%f\n", average_hop_count_p2p);
            fprintf(destfp, "average_hop_count_all\t%f\n", average_hop_count_all);
 
+           #if GLOBAL_STATISTICS == 1
+           fprintf(numberOfHops, "%f\n", average_hop_count_all);
+           #endif
+
+
            fclose(destfp);
+           fclose(numberOfHops);
+           fclose(ConvergenceTime);
+           fclose(NumberOfMessages);
+           fclose(numberOfTableEntries);
+
        }
        //Release memory
        //nodes array
@@ -445,9 +539,13 @@ int log_file_parser(FILE *fp, char *destfile){
            while(nodes[i]->next){
              hlmac_table_entery_t *temp = nodes[i];
              for (; temp->next->next; temp=temp->next);
+             free(temp->next->address.address);
+             temp->next->address.address = NULL;
              free(temp->next);
              temp->next = NULL;
            }
+           free(nodes[i]->address.address);
+           nodes[i]->address.address = NULL;
            free(nodes[i]);
            nodes[i] = NULL;
          }

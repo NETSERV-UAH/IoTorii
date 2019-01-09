@@ -67,7 +67,7 @@ systemctl enable docker
 ```bash
 docker pull contiker/contiki-ng
 ```
-> ([Noted from the Contiki-NG Wiki:](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "This will automatically download contiker/contiki-ng:latest, which is the image used in Travis and which we recommend for development. The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container. This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container. If you do not have it already, you need to check out Contiki-NG:"
+> ([Noted from the Contiki-NG Wiki](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "This will automatically download contiker/contiki-ng:latest, which is the image used in Travis and which we recommend for development. The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container. This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container. If you do not have it already, you need to check out Contiki-NG:"
 
 ```bash
 git clone https://github.com/contiki-ng/contiki-ng.git
@@ -79,7 +79,7 @@ cd contiki-ng
 git submodule update --init --recursive
 ```
 
-> ([Noted from the Contiki-NG Wiki:](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "Then, it is a good idea to create an alias that will help start docker with all required options. On Linux, you can add the following to ~/.profile:"
+> ([Noted from the Contiki-NG Wiki](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "Then, it is a good idea to create an alias that will help start docker with all required options. On Linux, you can add the following to ~/.profile:"
 ```bash
 export CNG_PATH=<absolute-path-to-your-contiki-ng>
 ```

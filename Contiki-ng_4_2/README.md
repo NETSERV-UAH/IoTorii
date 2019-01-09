@@ -25,6 +25,70 @@ Requirements:
   
 ---
 ### Installation
+---
+
+#### Docker image (Linux)
+
+First of all, install Docker. An easy way to install Docker on deb and rpm distributions of linux is using a [shell script](https://get.docker.com/) provided by docker.com (to install Docker on Arch Linux, use [this link](https://wiki.archlinux.org/index.php/Docker)). The script finds a suitable Docker version for your system. If there is, it will install Docker on the system. Let's run the script: :
+
+> Let's get the script.
+```bash
+curl -fsSL get.docker.com -o get-docker.sh
+```
+
+> Let's run the Script.
+```bash
+sh get-docker.sh
+```
+
+> Let's run the Docker version after the installation.
+```bash
+docker version
+```
+
+> Now, the Root user can use Docker. Let's add the access to Docker to yor user-name.
+```bash
+sudo usermod -aG docker user-name
+```
+
+> If your linux distribution is based on the deb, you can restart(or log out then log in again), and Docker is ready to use. Otherwise if the linux distribution is based on the rpm, you must start the Docker service. Let's start the service.
+```bash
+systemctl start docker
+```
+```bash
+systemctl status docker
+```
+
+> Let's start the Docker while the system is turning on.
+```bash
+systemctl enable docker
+```
+
+> The steps to install the Contiki-NG is according to the Contiki-NG Wiki. A brief review is available here. Let's download the Contiki-NG image.
+```bash
+docker pull contiker/contiki-ng
+```
+> ([Noted from the Contiki-NG Wiki:](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "This will automatically download contiker/contiki-ng:latest, which is the image used in Travis and which we recommend for development. The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container. This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container. If you do not have it already, you need to check out Contiki-NG:"
+
+```bash
+git clone https://github.com/contiki-ng/contiki-ng.git
+```
+```bash
+cd contiki-ng
+```
+```bash
+git submodule update --init --recursive
+```
+
+> ([Noted from the Contiki-NG Wiki:](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "Then, it is a good idea to create an alias that will help start docker with all required options. On Linux, you can add the following to ~/.profile:"
+```bash
+export CNG_PATH=<absolute-path-to-your-contiki-ng>
+```
+```bash
+alias contiker="docker run --privileged --mount type=bind,source=$CNG_PATH,destination=/home/user/contiki-ng -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/bus/usb:/dev/bus/usb -ti contiker/contiki-ng"
+```
+
+#### Native toolchain installation (Linux)
 
 First of all, certain packages are required to build Cooja, let's add them! :turtle: :
 

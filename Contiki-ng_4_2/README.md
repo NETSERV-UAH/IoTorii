@@ -25,7 +25,6 @@ Requirements:
   
 ---
 ### Installation
----
 
 #### Docker image (Linux)
 

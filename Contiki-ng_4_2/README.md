@@ -13,7 +13,7 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
 ---                     
 ## Contiki-ng installation
 
-There are different ways to install Contiki-ng, in this guide, we will explain how to install **Contiki-ng on Ubuntu 16.04** and launch the IoT simulator(GUI), called **Cooja**.
+There are different ways to install Contiki-ng, in this guide, we will explain how to install Contiki-ng on Linux.
 
 ---
 Requirements:
@@ -40,12 +40,12 @@ curl -fsSL get.docker.com -o get-docker.sh
 sh get-docker.sh
 ```
 
-> Let's run the Docker version after the installation.
+> Let's see the Docker version after the installation.
 ```bash
 docker version
 ```
 
-> Now, the Root user can use Docker. Let's add the access to Docker to yor user-name.
+> Now, the Root user can use Docker. Let's add the access to your user-name.
 ```bash
 sudo usermod -aG docker user-name
 ```
@@ -67,8 +67,12 @@ systemctl enable docker
 ```bash
 docker pull contiker/contiki-ng
 ```
-> ([Noted from the Contiki-NG Wiki](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "This will automatically download contiker/contiki-ng:latest, which is the image used in Travis and which we recommend for development. The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container. This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container. If you do not have it already, you need to check out Contiki-NG:"
+> In case you did not have git yet, it will be necessary to clone the project from GitHub.
+```bash
+sudo apt install git
+```
 
+> ([Noted from the Contiki-NG Wiki](https://github.com/contiki-ng/contiki-ng/wiki/Docker)) "This will automatically download contiker/contiki-ng:latest, which is the image used in Travis and which we recommend for development. The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container. This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container. If you do not have it already, you need to check out Contiki-NG." 
 ```bash
 git clone https://github.com/contiki-ng/contiki-ng.git
 ```
@@ -88,6 +92,8 @@ alias contiker="docker run --privileged --mount type=bind,source=$CNG_PATH,desti
 ```
 
 #### Native toolchain installation (Linux)
+
+In this section, we will explain how to install **Contiki-ng on Ubuntu 16.04** and launch the IoT simulator(GUI), called **Cooja**.
 
 First of all, certain packages are required to build Cooja, let's add them! :turtle: :
 
@@ -109,7 +115,7 @@ sudo apt-get install git
 sudo apt install build-essential doxygen curl wireshark python-serial srecord
 ```
 
-> It is necessary to compile the programs in C for each mote
+> It is necessary to compile the programs in C for each mote. 
 
 ```bash
 sudo apt install gcc-msp430

@@ -16,6 +16,7 @@
 #define HLMAC_STR_LEN_MAX 20
 #define GLOBAL_STATISTICS 1  //To print a metric for all runs in a file
 #define LOG_SCRIPT_SEARCH_MAX 100
+#define NUMBER_OF_STATS_FILES 12  //To order parsed and raw data
 
 struct hlmac_table_entery{
   struct hlmac_table_entery *next;
@@ -38,6 +39,7 @@ hlmac_table_entery_t *nodes[NODE_NUMBERS_MAX];
 int main(int argc, char *argv[])
 {
     int log_file_parser(FILE *, char *, char *);
+    void log_file_order(char *, int , int );  //To order parsed and raw data
 
     FILE *input_file_fp;
     char destfile[62];
@@ -58,7 +60,7 @@ int main(int argc, char *argv[])
             char base_name[20];
             char seed_str[10];
             char num_ok_run_str[5];
-            int seed_int;
+            int seed_int, aux_seed_int;
             int num_ok_run_int;
             char input_file[50];
 
@@ -71,6 +73,7 @@ int main(int argc, char *argv[])
             strcat(strcat(strcat(strcpy(input_file, base_name), "."), seed_str), ".scriptlog");
 
             seed_int = atoi(seed_str);
+            aux_seed_int = seed_int;
             num_ok_run_int = atoi(num_ok_run_str);
 
             int fail_count = 0;
@@ -127,10 +130,13 @@ int main(int argc, char *argv[])
             }
             fclose(parser_log_fp);
 
+            log_file_order(base_name, aux_seed_int, seed_int - 1); //To order parsed and raw data
     }
 
     return ok_count;
 }
+
+/*---------------------------------------------------------------------------*/
 /* To find common ancestor between two Addresses*/
 hlmacaddr_t get_lonest_common_prefix(hlmacaddr_t src, hlmacaddr_t dst)
 {
@@ -649,3 +655,77 @@ int log_file_parser(FILE *fp, char *destfile, char *seed){
 
        return return_value;
 }
+
+/*---------------------------------------------------------------------------*/
+void log_file_order(char * base_name, int seed , int last_seed ){  //To order parsed and raw data
+
+  //Var aux.
+  char command[200];
+  char aux_seed_str[10];
+
+  //To create directories tree
+  system("mkdir Cooja_logs");
+  system("mkdir Raw_data");
+  system("mkdir Parsed_data");
+  
+  //To move the cooja logs
+  for(int i = seed; i < last_seed + 1; i++){
+    sprintf(aux_seed_str,"%d", i);
+    strcat(strcat(strcat(strcat(strcpy(command, "mv "),base_name),"."),aux_seed_str),".coojalog ./Cooja_logs/");
+    system(command);
+  }
+
+  //To move the script logs
+  for(int i = seed; i < last_seed + 1; i++){
+    sprintf(aux_seed_str,"%d", i);
+    strcat(strcat(strcat(strcat(strcpy(command, "mv "),base_name),"."),aux_seed_str),".scriptlog ./Raw_data/");
+    system(command);
+  }
+
+  //To move the parsed data
+  for(int i = seed; i < last_seed + 1; i++){
+    sprintf(aux_seed_str,"%d", i);
+    strcat(strcat(strcat(strcat(strcat(strcpy(command, "mv "),"output_file_"),base_name),"."),aux_seed_str),".scriptlog ./Parsed_data/");
+    system(command);
+  }
+
+  for(int i=1; i < NUMBER_OF_STATS_FILES + 1; i ++){
+    switch(i){
+      case 1:
+        strcpy(command, "mv 1_ConvergenceTime.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 2:
+        strcpy(command, "mv 2_NumberOfTableEntries.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 3:
+        strcpy(command, "mv 3_NumberOfMessages.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 4:
+        strcpy(command, "mv 4_NumberOfHops.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 5:
+        strcpy(command, "mv 5_NumberOfHelloMessages.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 6: 
+        strcpy(command, "mv 6_NumberOfSetHLMACMessages.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 7:
+        strcpy(command, "mv 7_NumberOfNeighbors.txt ./Parsed_data/");
+        system(command);
+        break;
+      case 8:
+        strcpy(command, "mv 8_NumberOfHLMACAddresses.txt ./Parsed_data/");
+        system(command);
+        break;
+     }
+    
+  }
+
+}
+

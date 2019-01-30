@@ -1,0 +1,120 @@
+Random seed: 123474
+302796 ID:4 Scheduling a statistic timer after 2560 ticks in the future
+307745 ID:4 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+310616 ID:4 [INFO: Main      ] - Routing: nullrouting
+312940 ID:4 [INFO: Main      ] - Net: nullnet
+315606 ID:4 [INFO: Main      ] - MAC: IoTorii CSMA
+318984 ID:4 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+322542 ID:4 [INFO: Main      ] - 802.15.4 Default channel: 26
+324656 ID:4 [INFO: Main      ] Node ID: 4
+330104 ID:4 [INFO: Main      ] Link-layer address: 0404.0400.0474.1200
+333491 ID:4 [INFO: Sky       ] CC2420 CCA threshold -45
+614896 ID:5 Scheduling a statistic timer after 2560 ticks in the future
+619845 ID:5 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+622716 ID:5 [INFO: Main      ] - Routing: nullrouting
+625040 ID:5 [INFO: Main      ] - Net: nullnet
+627706 ID:5 [INFO: Main      ] - MAC: IoTorii CSMA
+631084 ID:5 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+634642 ID:5 [INFO: Main      ] - 802.15.4 Default channel: 26
+636756 ID:5 [INFO: Main      ] Node ID: 5
+642204 ID:5 [INFO: Main      ] Link-layer address: 0505.0500.0574.1200
+645591 ID:5 [INFO: Sky       ] CC2420 CCA threshold -45
+920173 ID:3 Scheduling a statistic timer after 2560 ticks in the future
+925122 ID:3 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+927992 ID:3 [INFO: Main      ] - Routing: nullrouting
+930316 ID:3 [INFO: Main      ] - Net: nullnet
+932982 ID:3 [INFO: Main      ] - MAC: IoTorii CSMA
+936360 ID:3 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+939918 ID:3 [INFO: Main      ] - 802.15.4 Default channel: 26
+942032 ID:3 [INFO: Main      ] Node ID: 3
+947480 ID:3 [INFO: Main      ] Link-layer address: 0303.0300.0374.1200
+950868 ID:3 [INFO: Sky       ] CC2420 CCA threshold -45
+1068152 ID:2 Scheduling a statistic timer after 2560 ticks in the future
+1073101 ID:2 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+1075971 ID:2 [INFO: Main      ] - Routing: nullrouting
+1078295 ID:2 [INFO: Main      ] - Net: nullnet
+1080961 ID:2 [INFO: Main      ] - MAC: IoTorii CSMA
+1084339 ID:2 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+1087898 ID:2 [INFO: Main      ] - 802.15.4 Default channel: 26
+1090011 ID:2 [INFO: Main      ] Node ID: 2
+1095459 ID:2 [INFO: Main      ] Link-layer address: 0202.0200.0274.1200
+1098847 ID:2 [INFO: Sky       ] CC2420 CCA threshold -45
+1103647 ID:1 Scheduling a statistic timer after 2560 ticks in the future
+1108720 ID:1 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+1111591 ID:1 [INFO: Main      ] - Routing: nullrouting
+1113915 ID:1 [INFO: Main      ] - Net: nullnet
+1116581 ID:1 [INFO: Main      ] - MAC: IoTorii CSMA
+1119959 ID:1 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+1123517 ID:1 [INFO: Main      ] - 802.15.4 Default channel: 26
+1125631 ID:1 [INFO: Main      ] Node ID: 1
+1131079 ID:1 [INFO: Main      ] Link-layer address: 0101.0100.0174.1200
+1134466 ID:1 [INFO: Sky       ] CC2420 CCA threshold -45
+1165366 ID:6 Scheduling a statistic timer after 2560 ticks in the future
+1170315 ID:6 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+1173185 ID:6 [INFO: Main      ] - Routing: nullrouting
+1175509 ID:6 [INFO: Main      ] - Net: nullnet
+1178175 ID:6 [INFO: Main      ] - MAC: IoTorii CSMA
+1181553 ID:6 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+1185112 ID:6 [INFO: Main      ] - 802.15.4 Default channel: 26
+1187225 ID:6 [INFO: Main      ] Node ID: 6
+1192673 ID:6 [INFO: Main      ] Link-layer address: 0606.0600.0674.1200
+1196061 ID:6 [INFO: Sky       ] CC2420 CCA threshold -45
+3213733 ID:2 Number of Hello messages: 1
+3315486 ID:5 Number of Hello messages: 1
+3917639 ID:3 Number of Hello messages: 1
+4151511 ID:4 Number of Hello messages: 1
+4398086 ID:1 Number of Hello messages: 1
+4717198 ID:6 Number of Hello messages: 1
+11103330 ID:1 Periodic Statistics: HLMAC address: 01. saved to HLMAC table.
+11107207 ID:1 Periodic Statistics: node_id: 1, convergence_time_start
+11113552 ID:1 Number of SetHLMAC messages: 1
+11150142 ID:5 Periodic Statistics: HLMAC address: 01.02. saved to HLMAC table.
+11150178 ID:6 Periodic Statistics: HLMAC address: 01.05. saved to HLMAC table.
+11150248 ID:3 Periodic Statistics: HLMAC address: 01.03. saved to HLMAC table.
+11150324 ID:2 Periodic Statistics: HLMAC address: 01.01. saved to HLMAC table.
+11150393 ID:4 Periodic Statistics: HLMAC address: 01.04. saved to HLMAC table.
+11155909 ID:5 Periodic Statistics: node_id: 5, convergence_time_end
+11156012 ID:6 Periodic Statistics: node_id: 6, convergence_time_end
+11156015 ID:3 Periodic Statistics: node_id: 3, convergence_time_end
+11156094 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+11156163 ID:4 Periodic Statistics: node_id: 4, convergence_time_end
+11190299 ID:5 Number of SetHLMAC messages: 1
+11201299 ID:1 Periodic Statistics: node_id: 1, convergence_time_end
+11203033 ID:4 Periodic Statistics: node_id: 4, convergence_time_end
+11203107 ID:6 Periodic Statistics: node_id: 6, convergence_time_end
+11203172 ID:3 Periodic Statistics: node_id: 3, convergence_time_end
+11203224 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+11205678 ID:6 Number of SetHLMAC messages: 1
+11213547 ID:2 Number of SetHLMAC messages: 1
+11214327 ID:3 Number of SetHLMAC messages: 1
+11224408 ID:1 Periodic Statistics: node_id: 1, convergence_time_end
+11226195 ID:5 Periodic Statistics: node_id: 5, convergence_time_end
+11226403 ID:3 Periodic Statistics: node_id: 3, convergence_time_end
+11226453 ID:4 Periodic Statistics: node_id: 4, convergence_time_end
+11226469 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+11229404 ID:4 Number of SetHLMAC messages: 1
+11236669 ID:1 Periodic Statistics: node_id: 1, convergence_time_end
+11238482 ID:5 Periodic Statistics: node_id: 5, convergence_time_end
+11238502 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+11238503 ID:6 Periodic Statistics: node_id: 6, convergence_time_end
+11238581 ID:4 Periodic Statistics: node_id: 4, convergence_time_end
+11260929 ID:1 Periodic Statistics: node_id: 1, convergence_time_end
+11262532 ID:6 Periodic Statistics: node_id: 6, convergence_time_end
+11262698 ID:5 Periodic Statistics: node_id: 5, convergence_time_end
+11262729 ID:3 Periodic Statistics: node_id: 3, convergence_time_end
+11262746 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+11273025 ID:1 Periodic Statistics: node_id: 1, convergence_time_end
+11274723 ID:3 Periodic Statistics: node_id: 3, convergence_time_end
+11274786 ID:4 Periodic Statistics: node_id: 4, convergence_time_end
+11274899 ID:6 Periodic Statistics: node_id: 6, convergence_time_end
+11274908 ID:5 Periodic Statistics: node_id: 5, convergence_time_end
+20308915 ID:4 Periodic Statistics: node_id: 4, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 2
+20621005 ID:5 Periodic Statistics: node_id: 5, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 2
+20926283 ID:3 Periodic Statistics: node_id: 3, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 2
+21074262 ID:2 Periodic Statistics: node_id: 2, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 2
+21109766 ID:1 Periodic Statistics: node_id: 1, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 1
+21171477 ID:6 Periodic Statistics: node_id: 6, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 5, number_of_hlmac_addresses: 1, sum_hop: 2
+30302796 check convergence
+converged
+TEST OK
+Test ended at simulation time: 30367715

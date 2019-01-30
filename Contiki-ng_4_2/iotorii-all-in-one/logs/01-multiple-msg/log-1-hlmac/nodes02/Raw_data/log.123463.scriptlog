@@ -1,0 +1,34 @@
+Random seed: 123463
+1063784 ID:1 Scheduling a statistic timer after 2560 ticks in the future
+1068857 ID:1 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+1071728 ID:1 [INFO: Main      ] - Routing: nullrouting
+1074052 ID:1 [INFO: Main      ] - Net: nullnet
+1076718 ID:1 [INFO: Main      ] - MAC: IoTorii CSMA
+1080096 ID:1 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+1083654 ID:1 [INFO: Main      ] - 802.15.4 Default channel: 26
+1085768 ID:1 [INFO: Main      ] Node ID: 1
+1091216 ID:1 [INFO: Main      ] Link-layer address: 0101.0100.0174.1200
+1094603 ID:1 [INFO: Sky       ] CC2420 CCA threshold -45
+1237960 ID:2 Scheduling a statistic timer after 2560 ticks in the future
+1242909 ID:2 [INFO: Main      ] Starting Contiki-NG-release/v4.2-129-g4928a5e-dirty
+1245779 ID:2 [INFO: Main      ] - Routing: nullrouting
+1248103 ID:2 [INFO: Main      ] - Net: nullnet
+1250769 ID:2 [INFO: Main      ] - MAC: IoTorii CSMA
+1254147 ID:2 [INFO: Main      ] - 802.15.4 PANID: 0xabcd
+1257706 ID:2 [INFO: Main      ] - 802.15.4 Default channel: 26
+1259819 ID:2 [INFO: Main      ] Node ID: 2
+1265267 ID:2 [INFO: Main      ] Link-layer address: 0202.0200.0274.1200
+1268655 ID:2 [INFO: Sky       ] CC2420 CCA threshold -45
+3383541 ID:2 Number of Hello messages: 1
+4358223 ID:1 Number of Hello messages: 1
+11063405 ID:1 Periodic Statistics: HLMAC address: 01. saved to HLMAC table.
+11067284 ID:1 Periodic Statistics: node_id: 1, convergence_time_start
+11070817 ID:1 Number of SetHLMAC messages: 1
+11082294 ID:2 Periodic Statistics: HLMAC address: 01.01. saved to HLMAC table.
+11086404 ID:2 Periodic Statistics: node_id: 2, convergence_time_end
+21069903 ID:1 Periodic Statistics: node_id: 1, number_of_hello_messages: 1, number_of_sethlmac_messages: 1, number_of_neighbours: 1, number_of_hlmac_addresses: 1, sum_hop: 1
+21244068 ID:2 Periodic Statistics: node_id: 2, number_of_hello_messages: 1, number_of_sethlmac_messages: 0, number_of_neighbours: 1, number_of_hlmac_addresses: 1, sum_hop: 2
+31063784 check convergence
+converged
+TEST OK
+Test ended at simulation time: 31310293

@@ -1,0 +1,233 @@
+ INFO [main] (Cooja.java:1316) - > Starting Cooja
+ INFO [main] (Cooja.java:2857) - External tools default settings: /external_tools_linux.config
+ WARN [main] (Cooja.java:2889) - Error when reading user settings from: /home/user/.cooja.user.properties
+ INFO [main] (Simulation.java:422) - Simulation random seed: 123456
+ WARN [main] (Cooja.java:4262) - Replaced [CONTIKI_DIR]/examples/iotorii-n-hlmac-3/code/root/iotorii-root.sky with /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/root/iotorii-root.sky (default: ../../../../..), but could not find it. This does not have to be an error, as the file might be created later.
+ INFO [main] (CompileContiki.java:140) - > make iotorii-root.sky TARGET=sky 
+Message:
+Message:> make iotorii-root.sky TARGET=sky 
+Message:  MKDIR     build/sky///obj
+Message:  CC        ../../../../os/contiki-main.c
+Message:  CC        ../../../../arch/platform/sky/./contiki-sky-platform.c
+Message:  CC        ../../../../arch/dev/sht11/sht11.c
+Message:  CC        ../../../../arch/dev/sht11/sht11-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/light-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/battery-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/button-sensor.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/spi-legacy.c
+Message:  CC        ../../../../arch/dev/ds2411/ds2411.c
+Message:  CC        ../../../../arch/platform/sky/dev/xmem.c
+Message:  CC        ../../../../arch/platform/sky/dev/i2c.c
+Message:  CC        ../../../../os/lib/sensors.c
+Message:  CC        ../../../../os/storage/cfs/cfs-coffee.c
+Message:  CC        ../../../../arch/dev/cc2420/cc2420.c
+Message:  CC        ../../../../arch/cpu/msp430/./cc2420-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./cc2420-arch-sfd.c
+Message:  CC        ../../../../arch/platform/sky/dev/sky-sensors.c
+Message:  CC        ../../../../arch/cpu/msp430/./uip-ipchksum.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/uart1.c
+Message:  CC        ../../../../arch/cpu/msp430/./slip_uart1.c
+Message:  CC        ../../../../arch/cpu/msp430/dev/uart1-putchar.c
+Message:  CC        ../../../../arch/platform/sky/./platform.c
+Message:  CC        ../../../../os/dev/slip.c
+Message:  CC        ../../../../os/lib/crc16.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/msp430.c
+Message:  CC        ../../../../arch/cpu/msp430/./flash.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/clock.c
+Message:  CC        ../../../../os/dev/leds.c
+Message:  CC        ../../../../arch/cpu/msp430/./leds-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./watchdog.c
+Message:  CC        ../../../../arch/cpu/msp430/./lpm.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/rtimer-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./int-master.c
+Message:  CC        ../../../../os/sys/ctimer.c
+Message:  CC        ../../../../os/sys/log.c
+Message:  CC        ../../../../os/sys/autostart.c
+Message:  CC        ../../../../os/sys/energest.c
+Message:  CC        ../../../../os/sys/etimer.c
+Message:  CC        ../../../../os/sys/node-id.c
+Message:  CC        ../../../../os/sys/mutex.c
+Message:  CC        ../../../../os/sys/stimer.c
+Message:  CC        ../../../../os/sys/compower.c
+Message:  CC        ../../../../os/sys/process.c
+Message:  CC        ../../../../os/sys/rtimer.c
+Message:  CC        ../../../../os/sys/timer.c
+Message:  CC        ../../../../os/sys/stack-check.c
+Message:  CC        ../../../../os/dev/button-hal.c
+Message:  CC        ../../../../os/dev/serial-line.c
+Message:  CC        ../../../../os/dev/spi.c
+Message:  CC        ../../../../os/dev/nullradio.c
+Message:  CC        ../../../../os/dev/gpio-hal.c
+Message:  CC        ../../../../os/lib/dbl-circ-list.c
+Message:  CC        ../../../../os/lib/ifft.c
+Message:  CC        ../../../../os/lib/ccm-star.c
+Message:  CC        ../../../../os/lib/dbl-list.c
+Message:  CC        ../../../../os/lib/ringbufindex.c
+Message:  CC        ../../../../os/lib/list.c
+Message:  CC        ../../../../os/lib/circular-list.c
+Message:  CC        ../../../../os/lib/aes-128.c
+Message:  CC        ../../../../os/lib/trickle-timer.c
+Message:  CC        ../../../../os/lib/memb.c
+Message:  CC        ../../../../os/lib/heapmem.c
+Message:  CC        ../../../../os/lib/random.c
+Message:  CC        ../../../../os/lib/assert.c
+Message:  CC        ../../../../os/lib/ringbuf.c
+Message:  CC        ../../../../os/net/queuebuf.c
+Message:  CC        ../../../../os/net/nbr-table.c
+Message:  CC        ../../../../os/net/packetbuf.c
+Message:  CC        ../../../../os/net/netstack.c
+Message:  CC        ../../../../os/net/linkaddr.c
+Message:  CC        ../../../../os/net/net-debug.c
+Message:  CC        ../../../../os/net/link-stats.c
+Message:  CC        ../../../../os/net/mac/mac-sequence.c
+Message:  CC        ../../../../os/net/mac/mac.c
+Message:  CC        ../../../../os/net/mac/framer/frame802154e-ie.c
+Message:  CC        ../../../../os/net/mac/framer/framer-802154.c
+Message:  CC        ../../../../os/net/mac/framer/nullframer.c
+Message:  CC        ../../../../os/net/mac/framer/frame802154.c
+Message:  CC        ../../../../arch/dev/cc2420/cc2420-tsch-15ms.c
+Message:  CC        ../../../../os/net/nullnet/nullnet.c
+Message:  CC        ../../../../os/net/routing/nullrouting/nullrouting.c
+Message:  AR        build/sky///contiki-ng-sky.a
+Message:  CC        iotorii-root.c
+Message:  CC        ../iotorii-csma.c
+Message:  CC        ../hlmacaddr.c
+Message:  CC        ../hlmac-table.c
+Message:  CC        ../csma-security.c
+Message:  CC        ../csma-output.c
+Message:  LD        build/sky///iotorii-root.sky
+Message:  CP        build/sky///iotorii-root.sky --> iotorii-root.sky
+Message:rm build/sky///obj/../hlmac-table.o build/sky///obj/../iotorii-csma.o build/sky///obj/../csma-output.o build/sky///obj/../hlmacaddr.o iotorii-root.o build/sky///obj/../csma-security.o
+ WARN [main] (Cooja.java:4262) - Replaced [CONTIKI_DIR]/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky with /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky (default: ../../../../..), but could not find it. This does not have to be an error, as the file might be created later.
+ INFO [main] (CompileContiki.java:140) - > make iotorii-common-node.sky TARGET=sky 
+Message:
+Message:> make iotorii-common-node.sky TARGET=sky 
+Message:  MKDIR     build/sky///obj
+Message:  CC        ../../../../os/contiki-main.c
+Message:  CC        ../../../../arch/platform/sky/./contiki-sky-platform.c
+Message:  CC        ../../../../arch/dev/sht11/sht11.c
+Message:  CC        ../../../../arch/dev/sht11/sht11-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/light-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/battery-sensor.c
+Message:  CC        ../../../../arch/platform/sky/dev/button-sensor.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/spi-legacy.c
+Message:  CC        ../../../../arch/dev/ds2411/ds2411.c
+Message:  CC        ../../../../arch/platform/sky/dev/xmem.c
+Message:  CC        ../../../../arch/platform/sky/dev/i2c.c
+Message:  CC        ../../../../os/lib/sensors.c
+Message:  CC        ../../../../os/storage/cfs/cfs-coffee.c
+Message:  CC        ../../../../arch/dev/cc2420/cc2420.c
+Message:  CC        ../../../../arch/cpu/msp430/./cc2420-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./cc2420-arch-sfd.c
+Message:  CC        ../../../../arch/platform/sky/dev/sky-sensors.c
+Message:  CC        ../../../../arch/cpu/msp430/./uip-ipchksum.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/uart1.c
+Message:  CC        ../../../../arch/cpu/msp430/./slip_uart1.c
+Message:  CC        ../../../../arch/cpu/msp430/dev/uart1-putchar.c
+Message:  CC        ../../../../arch/platform/sky/./platform.c
+Message:  CC        ../../../../os/dev/slip.c
+Message:  CC        ../../../../os/lib/crc16.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/msp430.c
+Message:  CC        ../../../../arch/cpu/msp430/./flash.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/clock.c
+Message:  CC        ../../../../os/dev/leds.c
+Message:  CC        ../../../../arch/cpu/msp430/./leds-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./watchdog.c
+Message:  CC        ../../../../arch/cpu/msp430/./lpm.c
+Message:  CC        ../../../../arch/cpu/msp430/f1xxx/rtimer-arch.c
+Message:  CC        ../../../../arch/cpu/msp430/./int-master.c
+Message:  CC        ../../../../os/sys/ctimer.c
+Message:  CC        ../../../../os/sys/log.c
+Message:  CC        ../../../../os/sys/autostart.c
+Message:  CC        ../../../../os/sys/energest.c
+Message:  CC        ../../../../os/sys/etimer.c
+Message:  CC        ../../../../os/sys/node-id.c
+Message:  CC        ../../../../os/sys/mutex.c
+Message:  CC        ../../../../os/sys/stimer.c
+Message:  CC        ../../../../os/sys/compower.c
+Message:  CC        ../../../../os/sys/process.c
+Message:  CC        ../../../../os/sys/rtimer.c
+Message:  CC        ../../../../os/sys/timer.c
+Message:  CC        ../../../../os/sys/stack-check.c
+Message:  CC        ../../../../os/dev/button-hal.c
+Message:  CC        ../../../../os/dev/serial-line.c
+Message:  CC        ../../../../os/dev/spi.c
+Message:  CC        ../../../../os/dev/nullradio.c
+Message:  CC        ../../../../os/dev/gpio-hal.c
+Message:  CC        ../../../../os/lib/dbl-circ-list.c
+Message:  CC        ../../../../os/lib/ifft.c
+Message:  CC        ../../../../os/lib/ccm-star.c
+Message:  CC        ../../../../os/lib/dbl-list.c
+Message:  CC        ../../../../os/lib/ringbufindex.c
+Message:  CC        ../../../../os/lib/list.c
+Message:  CC        ../../../../os/lib/circular-list.c
+Message:  CC        ../../../../os/lib/aes-128.c
+Message:  CC        ../../../../os/lib/trickle-timer.c
+Message:  CC        ../../../../os/lib/memb.c
+Message:  CC        ../../../../os/lib/heapmem.c
+Message:  CC        ../../../../os/lib/random.c
+Message:  CC        ../../../../os/lib/assert.c
+Message:  CC        ../../../../os/lib/ringbuf.c
+Message:  CC        ../../../../os/net/queuebuf.c
+Message:  CC        ../../../../os/net/nbr-table.c
+Message:  CC        ../../../../os/net/packetbuf.c
+Message:  CC        ../../../../os/net/netstack.c
+Message:  CC        ../../../../os/net/linkaddr.c
+Message:  CC        ../../../../os/net/net-debug.c
+Message:  CC        ../../../../os/net/link-stats.c
+Message:  CC        ../../../../os/net/mac/mac-sequence.c
+Message:  CC        ../../../../os/net/mac/mac.c
+Message:  CC        ../../../../os/net/mac/framer/frame802154e-ie.c
+Message:  CC        ../../../../os/net/mac/framer/framer-802154.c
+Message:  CC        ../../../../os/net/mac/framer/nullframer.c
+Message:  CC        ../../../../os/net/mac/framer/frame802154.c
+Message:  CC        ../../../../arch/dev/cc2420/cc2420-tsch-15ms.c
+Message:  CC        ../../../../os/net/nullnet/nullnet.c
+Message:  CC        ../../../../os/net/routing/nullrouting/nullrouting.c
+Message:  AR        build/sky///contiki-ng-sky.a
+Message:  CC        iotorii-common-node.c
+Message:  CC        ../iotorii-csma.c
+Message:  CC        ../hlmacaddr.c
+Message:  CC        ../hlmac-table.c
+Message:  CC        ../csma-security.c
+Message:  CC        ../csma-output.c
+Message:  LD        build/sky///iotorii-common-node.sky
+Message:  CP        build/sky///iotorii-common-node.sky --> iotorii-common-node.sky
+Message:rm build/sky///obj/../hlmac-table.o build/sky///obj/../iotorii-csma.o build/sky///obj/../csma-output.o build/sky///obj/../hlmacaddr.o build/sky///obj/../csma-security.o iotorii-common-node.o
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/root/iotorii-root.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (MspMote.java:235) - Loading firmware from: /home/user/contiki-ng/examples/iotorii-n-hlmac-3/code/common-node/iotorii-common-node.sky
+ INFO [main] (Cooja.java:1782) - Visualized plugin was not started: class org.contikios.cooja.plugins.SimControl
+ INFO [main] (Cooja.java:1782) - Visualized plugin was not started: class org.contikios.cooja.plugins.Visualizer
+ INFO [main] (Cooja.java:1782) - Visualized plugin was not started: class org.contikios.cooja.plugins.LogListener
+ INFO [main] (Cooja.java:1782) - Visualized plugin was not started: class org.contikios.cooja.plugins.TimeLine
+ INFO [main] (Cooja.java:1782) - Visualized plugin was not started: class org.contikios.cooja.plugins.Notes
+ INFO [main] (ScriptRunner.java:430) - Test script deactivated
+ INFO [main] (LogScriptEngine.java:263) - Default script timeout in 1200000 ms
+ INFO [main] (ScriptRunner.java:387) - Test script activated
+ INFO [Thread-2] (Simulation.java:253) - Simulation main loop started, system time: 1548787130149
+ INFO [Thread-1] (LogScriptEngine.java:309) - Test script finished
+ INFO [Thread-2] (Simulation.java:312) - Simulation main loop stopped, system time: 1548787170682	Duration: 40533 ms	Simulated time 30308 ms	Ratio 0.7477364123060223
+ INFO [AWT-EventQueue-0] (ScriptRunner.java:430) - Test script deactivated

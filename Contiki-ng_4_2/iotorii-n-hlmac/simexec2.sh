@@ -62,7 +62,10 @@ for (( SEED=$BASESEED; OKCOUNT<$RUNCOUNT; SEED++ )); do
 		OKCOUNT+=1
 		echo " OK"
 	else
-		FAILSEEDS+=" $BASESEED"
+		#EXTRA BEGIN
+		#FAILSEEDS+=" $BASESEED"
+		FAILSEEDS+=" $SEED"
+		#EXTRA END
 		echo " FAIL"
 		echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
 		echo "==== $BASENAME.$SEED.scriptlog ====" ; cat $BASENAME.$SEED.scriptlog;
@@ -71,7 +74,11 @@ done
 
 if [ $TESTCOUNT -ne $OKCOUNT ] ; then
 	# At least one test failed
-	printf "%-40s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
+	# EXTRA BEGIN	
+	#printf "%-40s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
+	printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
+	printf "%-40s TEST FAIL  -- failed seeds:%s\n" "$BASENAME" "$FAILSEEDS" > $BASENAME.testlog;
+	#EXTRA END
 else
 	printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 fi

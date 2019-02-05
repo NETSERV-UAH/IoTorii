@@ -57,6 +57,12 @@ int main(int argc, char *argv[])
             if (parser_log_fp = fopen("parser.log.txt", "w"))
               has_log = 1;
 
+           FILE *convergenceRate;
+           if((convergenceRate = fopen("../9_ConvergenceRate.txt","a"))== NULL){
+              fprintf(stderr,"\nCan't open destination file (../9_ConvergenceRate.txt)\n");
+              return 0;
+            }
+
             char base_name[20];
             char seed_str[10];
             char num_ok_run_str[5];
@@ -124,11 +130,13 @@ int main(int argc, char *argv[])
 
             printf("number of converged: %d\n", ok_count);
             printf("number of not converged: %d\n", not_converged);
+            fprintf(convergenceRate, "%f\n", (float)ok_count / (ok_count + not_converged));
             if (has_log){
               fprintf(parser_log_fp, "number of converged: %d\n", ok_count);
               fprintf(parser_log_fp, "number of not converged: %d\n", not_converged);
             }
             fclose(parser_log_fp);
+            fclose(convergenceRate);
 
             log_file_order(base_name, aux_seed_int, seed_int - 1); //To order parsed and raw data
     }
@@ -298,6 +306,7 @@ int log_file_parser(FILE *fp, char *destfile, char *seed){
               return -1;
 
             }
+
 #endif
 
     FILE *destfp;
@@ -667,7 +676,7 @@ void log_file_order(char * base_name, int seed , int last_seed ){  //To order pa
   system("mkdir Cooja_logs");
   system("mkdir Raw_data");
   system("mkdir Parsed_data");
-  
+
   //To move the cooja logs
   for(int i = seed; i < last_seed + 1; i++){
     sprintf(aux_seed_str,"%d", i);
@@ -711,7 +720,7 @@ void log_file_order(char * base_name, int seed , int last_seed ){  //To order pa
         strcpy(command, "mv 5_NumberOfHelloMessages.txt ./Parsed_data/");
         system(command);
         break;
-      case 6: 
+      case 6:
         strcpy(command, "mv 6_NumberOfSetHLMACMessages.txt ./Parsed_data/");
         system(command);
         break;
@@ -724,8 +733,7 @@ void log_file_order(char * base_name, int seed , int last_seed ){  //To order pa
         system(command);
         break;
      }
-    
+
   }*/
 
 }
-

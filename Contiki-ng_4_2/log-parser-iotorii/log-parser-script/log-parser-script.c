@@ -379,7 +379,7 @@ int log_file_parser(FILE *fp, char *destfile, char *seed){
                 if(check_condition[3]){ //node_id
                   //uint16_t node_id;
                   unsigned int node_id;
-                  sscanf(strstr(line,"node_id:") + strlen("node_id:"), "%d", &node_id);
+                  sscanf(strstr(line,"ID:") + strlen("ID:"), "%d", &node_id);
                   sscanf(strstr(line,"number_of_neighbours:") + strlen("number_of_neighbours:"), "%d", &number_of_neighbours[node_id-1]);
                   sscanf(strstr(line,"number_of_hlmac_addresses:") + strlen("number_of_hlmac_addresses:"), "%d", &number_of_hlmac_addresses[node_id-1]);
                   sscanf(strstr(line,"number_of_hello_messages:") + strlen("number_of_hello_messages:"), "%d", &number_of_hello_messages[node_id-1]);
@@ -734,6 +734,7 @@ void log_file_order(char * base_name, int seed , int last_seed ){  //To order pa
         break;
      }
 
-  }*/
+  }
+*/
 
 }

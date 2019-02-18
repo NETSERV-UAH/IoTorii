@@ -31,7 +31,7 @@ function checkConvergence(idMax, numHLMAC){
     if (converged == 1){
         log.log("converged\n");
         //log.testOK();  //It doesn't correctly work for the Cooja mote
-        log.log("testOK\n");
+        log.log("TEST OK\n");
         exit(0);
     }else{
         log.log("Not converged\n");

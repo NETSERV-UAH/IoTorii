@@ -1,9 +1,12 @@
-
 Repeatedly run the simulation(in Docker):
 
 If you use Docker, log in to Docker.
 
-./simexec-article.sh 
+To run the Sky mote simulation:
+./simexec-article-sky.sh 
+
+To run the Cooja mote simulation:
+./simexec-article-cooja.sh 
 
 
 

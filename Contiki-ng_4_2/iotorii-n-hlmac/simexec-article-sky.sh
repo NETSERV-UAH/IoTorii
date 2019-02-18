@@ -7,10 +7,10 @@ NUMOKRUN=10
 CONTIKING=../../../../..
 
 #Simulation list
-SIMULATIONS=(002 005) #(002 005 010 015 020 025 050 100 200)
+SIMULATIONS=(002 005 010 015 020 025 050 100 200)
 
 #Scenario list
-SCENARIOS=(01) #(01 02 03 04 05 06 07 08 09 10)
+SCENARIOS=(01 02 03 04 05 06 07 08 09 10)
 
 cd ~/contiki-ng/examples/iotorii-n-hlmac
 mkdir logs-sky

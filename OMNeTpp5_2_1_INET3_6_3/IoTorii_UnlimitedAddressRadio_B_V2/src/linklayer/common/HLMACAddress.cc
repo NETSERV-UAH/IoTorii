@@ -20,7 +20,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "HLMACAddress.h"
+#include "src/linklayer/common/HLMACAddress.h"
 
 #include <ctype.h>
 

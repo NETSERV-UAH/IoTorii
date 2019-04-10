@@ -35,61 +35,16 @@
 #include "src/linklayer/IoTorii/HLMACAddressTable.h"
 #include "inet/linklayer/common/SimpleLinkLayerControlInfo.h"
 
+#include "src/statisticcollector/StatisticCollector.h"
 
 
 namespace iotorii {
 using namespace inet;
 
-void globalStatisticsMemoryAllocation(int numHosts){
-    joiningTimeTotal = new simtime_t;  //default constructor returne 0
-    firstGenerationTime = new simtime_t;
-    lastReceivedTime = new simtime_t;
-
-    numHLMACAssignedTotal = new int(0);
-    numNeighborsTotal = new int(0);
-    numAllowedNeighborsTotal = new int(0);
-    numHelloSentTotal = new int(0);
-    numHLMACSentTotal = new int(0);
-    numNotJoinedTotal = new int(0);
-    //listNotJoinedTotal = new IPv6Address(numHosts);
-    listNotJoinedTotal = new MACAddress[numHosts];
-    for (int i=0; i<numHosts; i++){
-        //listNotJoinedTotal[i] = IPv6Address::UNSPECIFIED_ADDRESS;
-        listNotJoinedTotal[i] = MACAddress::UNSPECIFIED_ADDRESS;
-    }
-    numWithoutNeighborTotal = new int(0);
-}
-
-void globalStatisticsMemoryDeallocation(){
-    delete joiningTimeTotal;
-    joiningTimeTotal = nullptr;  //for mutual exclusion, to prevent twice deleting
-    delete firstGenerationTime;
-    firstGenerationTime = nullptr;
-    delete lastReceivedTime;
-    lastReceivedTime = nullptr;
-
-    delete numHLMACAssignedTotal;
-    numHLMACAssignedTotal = nullptr;
-    delete numNeighborsTotal;
-    numNeighborsTotal = nullptr;
-    delete numAllowedNeighborsTotal;
-    numAllowedNeighborsTotal = nullptr;
-    delete numHelloSentTotal;
-    numHelloSentTotal = nullptr;
-    delete numHLMACSentTotal;
-    numHLMACSentTotal = nullptr;
-    delete numNotJoinedTotal;
-    numNotJoinedTotal = nullptr;
-    delete[] listNotJoinedTotal;
-    listNotJoinedTotal = nullptr;
-    delete numWithoutNeighborTotal;
-    numWithoutNeighborTotal = nullptr;
-
-}
-
 Define_Module(IoToriiOperation);
 
 IoToriiOperation::IoToriiOperation() :
+    statisticCollector(nullptr),
     headerLength(0),
     headerLengthPANID(0),
     broadcastType(0),
@@ -111,6 +66,7 @@ IoToriiOperation::IoToriiOperation() :
     numDiscardedBroadcastFrames(0),
     numHelloRcvd(0),
     numHelloSent(0),
+    numAllowedNeighbors(0),
     numNeighbors(0),
     numDiscardedNoHLMAC(0),
     hlmacLenIsLow(0),
@@ -127,8 +83,7 @@ IoToriiOperation::IoToriiOperation() :
     helloInterval(0),
     isOperational(false),
     //host(nullptr),
-    myMACAddress(MACAddress::UNSPECIFIED_ADDRESS),
-    numHosts(0)
+    myMACAddress(MACAddress::UNSPECIFIED_ADDRESS)
 {
 }
 
@@ -140,8 +95,6 @@ void IoToriiOperation::initialize(int stage)
         upperLayerOutGateId = findGate("upperLayerOut");
         lowerLayerInGateId = findGate("lowerLayerIn");
         lowerLayerOutGateId = findGate("lowerLayerOut");
-
-        numHosts = getParentModule()->getParentModule()->getParentModule()->getParentModule()->par( "numHosts" );
 
         headerLength = par("headerLength");
         headerLengthPANID = par("headerLengthPANID");
@@ -157,10 +110,8 @@ void IoToriiOperation::initialize(int stage)
 
         jitterPar = &par("jitter");
 
-
         //WATCH(jitterPar->doubleValue());
         WATCH(maxHLMACs);
-        WATCH(numHosts);
         WATCH(headerLength);
         WATCH(headerLengthPANID);
         WATCH(broadcastType);
@@ -173,6 +124,7 @@ void IoToriiOperation::initialize(int stage)
         WATCH(hlmacWidthIsLow);
         WATCH(numHelloRcvd);
         WATCH(numHelloSent);
+        WATCH(numAllowedNeighbors);
         WATCH(numNeighbors); //number of neighbors discovered by Hello message
         WATCH(numHLMACRcvd);
         WATCH(numHLMACAssigned);
@@ -187,39 +139,30 @@ void IoToriiOperation::initialize(int stage)
         WATCH(numRoutedBroadcastFrames);
         WATCH(numDiscardedUnicastFrames);
         WATCH(numDiscardedBroadcastFrames);
-
-        if (!numHelloSentTotal)
-            globalStatisticsMemoryAllocation(numHosts);
-        WATCH(*numHelloSentTotal);
-        WATCH(*numHLMACSentTotal);
-        WATCH(*numNeighborsTotal);
-        WATCH(*numAllowedNeighborsTotal);
-        WATCH(*numHLMACAssignedTotal);
-        WATCH(*joiningTimeTotal);
-        WATCH(*firstGenerationTime);
-        WATCH(*lastReceivedTime);
-
-
-
     }
     else if (stage == INITSTAGE_LINK_LAYER) {
         NodeStatus *nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
 
-        HelloTimer = new cMessage("HelloTimer");
-        scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
-
         hlmacTable = check_and_cast<IHLMACAddressTable *>(getModuleByPath(par("hlmacTablePath")));
         myMACAddress = check_and_cast<SimpleIdealWirelessMAC *>(getParentModule()->getSubmodule("simpleidealwirelessMAC"))->getMACAddress();
         corePrefix = par("corePrefix");
+
+    }else if (stage == NUM_INIT_STAGES){
+        statisticCollector = check_and_cast<StatisticCollector *>(getSimulation()->getSystemModule()->getSubmodule("statisticCollector"));
+
+        HelloTimer = new cMessage("HelloTimer");
+        scheduleAt(helloStartTime, HelloTimer); //Next Hello broadcasting
+
         if (isCoreSwitch = par("isCoreSwitch"))
         {
             EV<< "This switch is a core switch and its prefix is  "<< corePrefix << "\n";
             startCoreEvent = new cMessage("startCoreEvent");
             coreStartTime = par("coreStartTime");
             coreInterval = par("coreInterval");
-            scheduleAt(simTime() + coreStartTime, startCoreEvent);
-            *firstGenerationTime = coreStartTime;
+            simtime_t startTime = simTime() + coreStartTime;
+            scheduleAt(startTime, startCoreEvent);
+            statisticCollector->startStatistics(myMACAddress, startTime);
 
             WATCH(coreStartTime);
             WATCH(corePrefix);
@@ -273,7 +216,6 @@ void IoToriiOperation::sendAndScheduleHello()
     EV << "value of random jitter is " << delay << endl;
     sendDown(macPkt, delay); //send(macPkt, lowerLayerOutGateId);  //send(macPkt, "lowerLayerOut");
     numHelloSent++;
-    (*numHelloSentTotal)++;
 
     EV << "<-IoToriiOperation::sendAndScheduleHello()" << endl;
 }
@@ -336,18 +278,12 @@ void IoToriiOperation::sendToNeighbors(HLMACAddress prefix)
     emit(LayeredProtocolBase::packetSentToLowerSignal, SetHLMACFrame);
     sendDown(SetHLMACFrame, delay);  //send(dupFrame, lowerLayerOutGateId);  // send(dupFrame, "lowerLayerOut");
     numHLMACSent++;
-    (*numHLMACSentTotal)++;
 
     EV << "<-IoToriiOperation::sendToNeighbors()" << endl;
 }
 
 HLMACAddress IoToriiOperation::extractMyAddress(cPacket *frame){
     EV << "->IoToriiOperation::extractMyAddress()" << endl;
-
-    numHLMACRcvd++;
-    if ((*lastReceivedTime) < simTime())
-        *lastReceivedTime = simTime();
-    *joiningTimeTotal = *lastReceivedTime - *firstGenerationTime;
 
     SetHLMACFrame *SetHLMACFramePayload = check_and_cast<SetHLMACFrame *>(frame->decapsulate());
     HLMACAddress hlmac;
@@ -366,13 +302,14 @@ HLMACAddress IoToriiOperation::extractMyAddress(cPacket *frame){
 
     EV << "<-IoToriiOperation::extractMyAddress()" << endl;
 }
-void IoToriiOperation::receiveSetHLMACMessage(HLMACAddress hlmac)
+void IoToriiOperation::receiveSetHLMACMessage(HLMACAddress hlmac, simtime_t arrivalTime)
 {
     if (!hasLoop(hlmac)){
         bool isSaved = saveHLMAC(hlmac);
         if (isSaved){
             EV << "HLMAC address " << hlmac << " has assigned to this node." << endl;
             EV << "Prefix " << hlmac << " is sent to neighbors by this node after creating broadcast SetHLMAC frame." << endl;
+            statisticCollector->nodeJoined(myMACAddress, arrivalTime);
             sendToNeighbors(hlmac);
         }
         else{
@@ -410,9 +347,7 @@ bool IoToriiOperation::saveHLMAC(HLMACAddress hlmac)
     if ((maxHLMACs == -1) || ((maxHLMACs != -1) && (numHLMACAssigned < maxHLMACs))){
         hlmacTable->updateTableWithAddress(-1, hlmac);
         numHLMACAssigned++;
-        (*numHLMACAssignedTotal)++;
-        int numHLMACAssignedTemp = *numHLMACAssignedTotal;
-        EV << "HLMAC adress " << hlmac << " was saved to this node, number of assigned HLMAC is " << numHLMACAssigned << ", number of total assigned HLMAC is " << numHLMACAssignedTemp << endl;
+        EV << "HLMAC adress " << hlmac << " was saved to this node, number of assigned HLMAC is " << numHLMACAssigned << "." << endl;
         return true;
     }
     else{
@@ -502,9 +437,8 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
             neighborList.push_back(frame->getSrcAddr());
             EV << "Hello message is received from : " << frame->getSrcAddr() << "; Number of neighbors is " << neighborList.size() <<endl;
             numNeighbors++;
-            (*numNeighborsTotal)++;
             if (numNeighbors <= maxNeighbors)
-                (*numAllowedNeighborsTotal)++;
+                numAllowedNeighbors++;
             return;
         }
         else {
@@ -513,10 +447,12 @@ void IoToriiOperation::handleLowerPacket(cPacket *msg)
         }
     } // END Hello
     else if ((strcmp(msg->getName(),"SetHLMAC")==0)) {
+        numHLMACRcvd++;
         MACFrameBase *frame = check_and_cast<MACFrameBase *>(msg);
         HLMACAddress hlmac = extractMyAddress(frame);
-        if (hlmac != HLMACAddress::UNSPECIFIED_ADDRESS)
-            receiveSetHLMACMessage(hlmac);
+        if (hlmac != HLMACAddress::UNSPECIFIED_ADDRESS){
+            receiveSetHLMACMessage(hlmac, frame->getArrivalTime());
+        }
         return;
     } //END SetHLMAC
     EV << "<-IoToriiOperation::handleLowerPacket()" << endl;
@@ -546,6 +482,18 @@ void IoToriiOperation::sendDown(cMessage *message, double delay)
 //    if (message->isPacket())
 //        emit(packetSentToLowerSignal, message);
     sendDelayed(message, delay, lowerLayerOutGateId);
+}
+
+void IoToriiOperation::getMessageStatistics(long &numHelloSent, long &numHLMACSent)
+{
+    numHelloSent = this->numHelloSent;
+    numHLMACSent = this->numHLMACSent;
+}
+
+void IoToriiOperation::getTableStatistics(long &numAllowedNeighbors, long &numNeighbors)
+{
+    numAllowedNeighbors = this->numAllowedNeighbors;
+    numNeighbors = this->numNeighbors;
 }
 
 bool IoToriiOperation::isUpperMessage(cMessage *message)
@@ -610,24 +558,6 @@ void IoToriiOperation::finish()
 {
     EV << "->IoToriiOperation::finish()" << endl;
 
-    finishCounter++;
-
-    if (numHLMACAssigned == 0){
-        (*numNotJoinedTotal)++;
-        int i = 0;
-/*        while ((i < numHosts) && (listNotJoinedTotal[i++] != MACAddress::UNSPECIFIED_ADDRESS));
-        if (--i < numHosts)
-            listNotJoinedTotal[i] = myMACAddress;
-        else
-            throw cRuntimeError("IoToriiOperation::finish() : Array len is low!");
- */   }
-
-    if (numNeighbors == 0){
-        (*numWithoutNeighborTotal)++;
-    }
-
-
-
     recordScalar("hlmacLenIsLow", hlmacLenIsLow);
     recordScalar("hlmacWidthIsLow", hlmacWidthIsLow);
     recordScalar("Received Hello", numHelloRcvd);
@@ -648,85 +578,13 @@ void IoToriiOperation::finish()
     recordScalar("numDiscardedBroadcastFrames", numDiscardedBroadcastFrames);
 
 
-    //if(numHelloSentTotal){  //when first finish() is run
-    if(finishCounter == numHosts){  //when last finish() is run. this is only because of numNotJoinedTotal
-        statisticsCollector = fopen("./01_IoToriiGlobalStats.txt","a+t");
-        fprintf(statisticsCollector," _____________________________________________________________________________________\n");
-        fprintf(statisticsCollector,"|Results of new run                                                |\n");
-        fprintf(statisticsCollector,"|------------------------------------------------------------------|------------------\n");
-        fprintf(statisticsCollector,"| Total joining time (convergence time)                            | %f\n", joiningTimeTotal->dbl());
-        fprintf(statisticsCollector,"| Number of total table entries (HLMAC table + Neighbor table)     | %d\n", *numAllowedNeighborsTotal + *numHLMACAssignedTotal);
-        fprintf(statisticsCollector,"| Number of All total table entries (HLMAC table + Neighbor table) | %d\n", *numNeighborsTotal + *numHLMACAssignedTotal);
-        fprintf(statisticsCollector,"| Number of total assigned HLMAC (or number of HLMAC table entries)| %d\n", *numHLMACAssignedTotal);
-        fprintf(statisticsCollector,"| Number of tot limited neighbors(number of neighbor table entries)| %d\n", *numAllowedNeighborsTotal);
-        fprintf(statisticsCollector,"| Number of ALL total neighbors (All neighbor table entries)       | %d\n", *numNeighborsTotal);
-        fprintf(statisticsCollector,"| Number of total messages (Hello + HLMAC)                         | %d\n", *numHLMACSentTotal + *numHelloSentTotal);
-        fprintf(statisticsCollector,"| Number of total sent HLMAC                                       | %d\n", *numHLMACSentTotal);
-        fprintf(statisticsCollector,"| Number of total sent Hello                                       | %d\n", *numHelloSentTotal);
-        fprintf(statisticsCollector,"| Number of total disjoint to DODAG                                | %d\n", *numNotJoinedTotal);
-        fprintf(statisticsCollector,"| Number of total without any neighbor                             | %d\n", *numWithoutNeighborTotal);
-        fprintf(statisticsCollector,"|__________________________________________________________________|__________________\n");
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./02_joiningTimeFinal.txt","a+t");
-        fprintf(statisticsCollector,"%f\n", joiningTimeTotal->dbl());
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./03_LimitedEntriesTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numAllowedNeighborsTotal + *numHLMACAssignedTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./04_AllEntriesTotal_2.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numNeighborsTotal + *numHLMACAssignedTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./05_HLMACAssignedTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numHLMACAssignedTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./06_NeighborsTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numAllowedNeighborsTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./07_NeighborsTotal_2.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numNeighborsTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./08_MessagesTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numHLMACSentTotal + *numHelloSentTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./09_HLMACSentTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numHLMACSentTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./10_HelloSentTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numHelloSentTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./11_NumNotJoinedTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numNotJoinedTotal);
-        fclose(statisticsCollector);
-
-        statisticsCollector = fopen("./12_NumWithoutNeighborTotal.txt","a+t");
-        fprintf(statisticsCollector,"%d\n", *numWithoutNeighborTotal);
-        fclose(statisticsCollector);
-
-        globalStatisticsMemoryDeallocation();
-    }
-
-
-
-    if (hlmacTable != nullptr)
-        hlmacTable->printState();
-
-    if (startCoreEvent != nullptr){
+    if (startCoreEvent){
         cancelEvent(startCoreEvent);
         delete startCoreEvent;
         startCoreEvent = nullptr;
     }
 
-    if (HelloTimer != nullptr){
+    if (HelloTimer){
         cancelEvent(HelloTimer);
         delete HelloTimer;
         HelloTimer = nullptr;

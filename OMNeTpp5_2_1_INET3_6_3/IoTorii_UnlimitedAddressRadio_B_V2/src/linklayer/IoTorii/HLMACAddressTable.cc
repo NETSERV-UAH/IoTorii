@@ -309,7 +309,6 @@ bool HLMACAddressTable::isPortInTable(int portno, unsigned int vid)
         return false;
 }
 
-//EXTRA BEGIN
 HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, unsigned int vid)
 {
     HLMACTable *table = getTableForVid(vid);
@@ -331,10 +330,16 @@ HLMACAddress HLMACAddressTable::getlongestMatchedPrefix(HLMACAddress address, un
         }//while
 
         return HLMACAddress::UNSPECIFIED_ADDRESS;
-
-
 }
-//EXTRA END
+
+unsigned int HLMACAddressTable::getNumberOfAddresses(unsigned int vid)
+{
+    HLMACTable *table = getTableForVid(vid);
+    if (table == nullptr)
+        return 0;
+
+    return table->size();
+}
 
 } // namespace iotorii
 

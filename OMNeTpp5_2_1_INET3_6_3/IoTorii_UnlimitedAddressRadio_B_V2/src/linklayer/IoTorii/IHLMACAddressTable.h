@@ -115,6 +115,8 @@ class IHLMACAddressTable
 
     //EXTRA BEGIN
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) = 0;
+
+    virtual unsigned int getNumberOfAddresses(unsigned int vid = 0) = 0;
     //EXTRA END
 
 };

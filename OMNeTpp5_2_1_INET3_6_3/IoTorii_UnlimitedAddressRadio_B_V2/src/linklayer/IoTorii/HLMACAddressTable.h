@@ -158,9 +158,9 @@ class HLMACAddressTable : public cSimpleModule, public IHLMACAddressTable
 
     //EXTRA BEGIN
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) override;
+
+    unsigned int getNumberOfAddresses(unsigned int vid = 0) override;
     //EXTRA END
-
-
 
 };
 

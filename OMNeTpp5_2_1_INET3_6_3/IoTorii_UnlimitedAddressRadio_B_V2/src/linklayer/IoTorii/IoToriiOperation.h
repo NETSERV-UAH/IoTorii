@@ -37,23 +37,7 @@
 namespace iotorii {
 using namespace inet;
 
-//Global statistics
-simtime_t *joiningTimeTotal = nullptr; //interval time between the first SetHLMAC generation time and the time of the last received (AND ASSIGNED) SetHLMAC in the network.
-simtime_t *firstGenerationTime = nullptr; //this is set by core start time
-simtime_t *lastReceivedTime = nullptr;
-int *numHLMACAssignedTotal = nullptr;
-int *numNeighborsTotal = nullptr;  //saves all available neighbors
-int *numAllowedNeighborsTotal = nullptr;  //saves neighbors as long as width of HLMAC address (i.e. 3 for this case)
-int *numHelloSentTotal = nullptr;
-int *numHLMACSentTotal = nullptr;
-int *numNotJoinedTotal = nullptr;   //The number of nodes which are not joined to DODAG
-//IPv6Address *listNotJoinedTotal = nullptr; //The List of nodes which are not joined to DODAG
-MACAddress *listNotJoinedTotal = nullptr; //The List of nodes which are not joined to DODAG
-int *numWithoutNeighborTotal = nullptr;
-
-FILE *statisticsCollector = nullptr;
-
-int finishCounter = 0; // to count number of calling finish() method. in all finish()s, numNotJoinedTotal is calculated, then at last finish(), statistics are saved to files.
+class StatisticCollector;
 
 class IoToriiOperation : public cSimpleModule, public ILifecycle
 {
@@ -67,13 +51,13 @@ public:
   //@}
 
   protected:
+    StatisticCollector *statisticCollector;
     /** @brief Length of the header*/
     int headerLength;
     int headerLengthPANID;
 
     int broadcastType;
 
-    int numHosts;
     //cModule *host;
     MACAddress myMACAddress;
 
@@ -108,6 +92,7 @@ public:
     //long hlmacAffectedByWidthIsLow;
     long numHelloRcvd;                 //Number of Hello messages received
     long numHelloSent;
+    int numAllowedNeighbors;  //saves neighbors as long as width of HLMAC address (i.e. 3 for 3-bit width)
     long numNeighbors; //number of neighbors discovered by Hello message
     long numHLMACRcvd;
     long numHLMACAssigned;
@@ -122,8 +107,6 @@ public:
     long numRoutedBroadcastFrames;
     long numDiscardedUnicastFrames;
     long numDiscardedBroadcastFrames;
-
-    simtime_t joiningTime;
 
     bool isOperational;    // for lifecycle
 
@@ -175,7 +158,7 @@ public:
     HLMACAddress extractMyAddress(cPacket *frame);
 
     //functionality of each node when it receives a SetHLMAC message
-    virtual void receiveSetHLMACMessage(HLMACAddress hlmac);
+    virtual void receiveSetHLMACMessage(HLMACAddress hlmac, simtime_t arrivalTime);
 
     //check whether received HLMAC address creates a loop or not.
     virtual bool hasLoop(HLMACAddress hlmac);
@@ -196,6 +179,11 @@ public:
     virtual void start();
 
     virtual void stop();
+  public:
+    virtual void getMessageStatistics(long &numHelloSent, long &numHLMACSent);
+
+    virtual void getTableStatistics(long &numAllowedNeighbors, long &numNeighbors);
+
 };
 
 } // namespace iotorii

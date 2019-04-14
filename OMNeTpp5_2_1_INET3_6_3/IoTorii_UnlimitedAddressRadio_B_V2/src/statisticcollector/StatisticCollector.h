@@ -45,8 +45,7 @@ class StatisticCollector : public cSimpleModule
         IoToriiOperation *ioToriiOperation;
         IHLMACAddressTable *hlmacAddressTable;
         MACAddress macAddress;
-        HLMACAddress hlmacAddress;
-        int nodeIndex; //According to RPL manager module
+        //HLMACAddress hlmacAddress;
 
         long hlmacLenIsLow;
         long hlmacWidthIsLow; //if numNeighbors > maxNeighbors, hlmacWidthIsLow++.
@@ -72,15 +71,13 @@ class StatisticCollector : public cSimpleModule
         bool isJoined;
         simtime_t joiningTime;
 
-
         NodeState()
             : host(nullptr)
             , moduleIndex(-1)
             , ioToriiOperation(nullptr)
             , hlmacAddressTable(nullptr)
             , macAddress(MACAddress::UNSPECIFIED_ADDRESS)
-            , hlmacAddress(HLMACAddress::UNSPECIFIED_ADDRESS)
-            , nodeIndex(-1)
+            //, hlmacAddress(HLMACAddress::UNSPECIFIED_ADDRESS)
             , hlmacLenIsLow(false)
             , hlmacWidthIsLow(false) //if numNeighbors > maxNeighbors, hlmacWidthIsLow++.
             //, hlmacAffectedByWidthIsLow;
@@ -124,29 +121,9 @@ class StatisticCollector : public cSimpleModule
     int numNotJoinedTotal;   //The number of nodes which are not joined to tree
     int numWithoutNeighborTotal;
 
+    //int **hopCount;
+    std::vector<std::vector <int>> hopCount;
     float averageNumberofHopCount;
-
-    int numberOfTreeformationNormal;
-
-    //Varibales to calculate Hop Count
-    std::vector <std::vector <int>> hopCountMat;
-
-    struct Node{
-        int nodeIndex;
-        int rank;
-    };
-    /*
-     * A map between the node IDs and hopCount matrix indices
-     * For the hopCount matrix, Indices are the ordered sequence of ranks
-     */
-    std::vector <struct Node> mapping;
-
-    /* Compares two Node according to nodeIndex.
-     * It's used to sort the mapping array.
-     */
-    struct compareNodes {
-      bool operator() (struct Node n1, struct Node n2) { return (n1.rank < n2.rank);}
-    } mapCompare;
 
 public:
     StatisticCollector()
@@ -163,7 +140,6 @@ public:
         , numNotJoinedTotal(0)   //The number of nodes which are not joined to tree
         , numWithoutNeighborTotal(0)
         , averageNumberofHopCount(0)
-        , numberOfTreeformationNormal(0)
             {};
 
     ~StatisticCollector();
@@ -179,7 +155,13 @@ protected:
 
     virtual void handleMessage(cMessage* msg);
 
+    virtual bool isConverged();
+
+    virtual void collectOtherMetrics();
+
     virtual void calculateHopCount();
+
+    virtual int findMinHopCount(unsigned int src_id, unsigned int dst_id);
 
 public:
     virtual void startStatistics(const MACAddress &sinkAddress, simtime_t time);
@@ -190,7 +172,7 @@ public:
 
     virtual void nodeJoined(const MACAddress &address, simtime_t time);
 
-    virtual void collectOtherMetrics();
+    virtual void receiveSetHLMACMessage(simtime_t time);
 
 };
 

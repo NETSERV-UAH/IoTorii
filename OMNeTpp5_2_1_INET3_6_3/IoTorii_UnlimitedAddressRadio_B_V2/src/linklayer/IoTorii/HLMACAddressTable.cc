@@ -341,5 +341,35 @@ unsigned int HLMACAddressTable::getNumberOfAddresses(unsigned int vid)
     return table->size();
 }
 
+//Used for hopCount metric
+HLMACAddress HLMACAddressTable::getAddress(unsigned int addressIndex, unsigned int vid)
+{
+    HLMACTable *table = getTableForVid(vid);
+    if ((table == nullptr) || (addressIndex < 0) || (addressIndex >= getNumberOfAddresses(vid)))
+        return HLMACAddress::UNSPECIFIED_ADDRESS;
+    auto iter = std::next(table->begin(), addressIndex);
+    return iter->first;
+}
+
+//Used for hopCount metric
+int HLMACAddressTable::getMinHopCount(HLMACAddress dstAddress, unsigned int vid)
+{
+    //EV << "-->HLMACAddressTable::getMinHopCount()" << endl;
+
+    int minHopCount = -1;
+    int hopCount = -1;
+    for (unsigned int i = 0; i < getNumberOfAddresses(vid); i++){
+        hopCount = getAddress(i).numHopsBetweenAddresses(dstAddress);
+        if (minHopCount == -1){
+            minHopCount = hopCount;
+        }else if(hopCount < minHopCount){
+            minHopCount = hopCount;
+        }
+    }
+    //EV << "hopCount = " << hopCount << "minHopCount = " << minHopCount << endl;
+
+    return minHopCount;
+}
+
 } // namespace iotorii
 

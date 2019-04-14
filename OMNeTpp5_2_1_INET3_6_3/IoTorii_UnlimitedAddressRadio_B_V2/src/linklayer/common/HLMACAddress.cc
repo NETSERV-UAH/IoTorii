@@ -79,6 +79,56 @@ unsigned short int HLMACAddress::getHLMACHier()
 }
 */
 
+//Used for hopCount metric
+/* To find common ancestor between two Addresses*/
+HLMACAddress HLMACAddress::getLongestCommonPrefix(const HLMACAddress &other)
+{
+    //EV << "-->HLMACAddress::getLongestCommonPrefix()" << endl;
+
+  unsigned int minLen = (getHLMACLength() < other.getHLMACLength()) ? getHLMACLength() : other.getHLMACLength();
+  unsigned int i = 0;
+  //EV << "minLen = " << minLen << " getHLMACLength = " << getHLMACLength() << ", other.getHLMACLength() = " << other.getHLMACLength() << endl;
+
+  /*
+   *  We dont use "HLMACAddress commonPrexif = HLMACAddress::UNSPECIFIED_ADDRESS;"
+   *  because HLMACLength is 8 for HLMACAddress::UNSPECIFIED_ADDRESS!
+   */
+  HLMACAddress commonPrexif;
+
+  while((i < minLen) && (getIndexValue(i) == other.getIndexValue(i)))
+  {
+      if (i == 0)
+          commonPrexif.setIndexValue(i, getIndexValue(i));
+      else
+          commonPrexif.addNewId(getIndexValue(i));
+      i++;
+  }
+  //EV << " commonPrexif = " << commonPrexif << endl;
+  if (i > 0){
+      //EV << "-->HLMACAddress::getLongestCommonPrefix(1)" << endl;
+      return commonPrexif;
+  }else{
+      //EV << "-->HLMACAddress::getLongestCommonPrefix(2)" << endl;
+      return HLMACAddress::UNSPECIFIED_ADDRESS;
+  }
+}
+
+//Used for hopCount metric
+int HLMACAddress::numHopsBetweenAddresses(const HLMACAddress &other)
+{
+    //EV << "-->HLMACAddress::numHopsBetweenAddresses()" << endl;
+
+    HLMACAddress ancestor = getLongestCommonPrefix(other);
+    unsigned int ancestorLen = ancestor.getHLMACLength();
+    if ((ancestorLen == 0) || (ancestor == HLMACAddress::UNSPECIFIED_ADDRESS))
+        //return -1;
+        throw cRuntimeError("HLMACAddress::numHopsBetweenAddresses(): (ancestorLen == 0) || (ancestor == HLMACAddress::UNSPECIFIED_ADDRESS)!");
+
+    //EV << "ancestor = " << ancestor << ", ancestorLen = " << ancestorLen << endl;
+    //return src.len - ancestor.len + dst.len - ancestor_len;
+    return getHLMACLength() + other.getHLMACLength() - 2 * ancestorLen;
+}
+
 } // namespace iotorii
 
 

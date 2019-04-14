@@ -94,6 +94,12 @@ public:
 
   void setCore(unsigned int newCoreId) {address.at(0) = newCoreId;}
 
+  //Used for hopCount metric
+  HLMACAddress getLongestCommonPrefix(const HLMACAddress &other);
+
+  //Used for hopCount metric
+  int numHopsBetweenAddresses(const HLMACAddress &other);
+
   //unsigned short int getHLMACHier();
   /**
    * Assignment.

@@ -24,6 +24,7 @@ import inet.networklayer.configurator.ipv6.FlatNetworkConfigurator6;
 //import inet.physicallayer.ieee802154.packetlevel.Ieee802154NarrowbandScalarRadioMedium;
 import iotorii.src.physicallayer.simpleidealradio.SimpleIdealRadioMedium;
 import iotorii.src.node.inet.WSNHostIoTorii;
+import iotorii.src.statisticcollector.StatisticCollector;
 
 
 network Net802154
@@ -37,7 +38,11 @@ network Net802154
         }
         radioMedium: SimpleIdealRadioMedium {
             parameters:
-                @display("p=57,19");
+                @display("p=73,17");
+        }
+        statisticCollector: StatisticCollector {
+            parameters:
+                @display("p=19,17");
         }
         host[numHosts]: WSNHostIoTorii {
             parameters:

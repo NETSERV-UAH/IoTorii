@@ -148,7 +148,6 @@ void IoToriiOperation::initialize(int stage)
         myMACAddress = check_and_cast<SimpleIdealWirelessMAC *>(getParentModule()->getSubmodule("simpleidealwirelessMAC"))->getMACAddress();
         corePrefix = par("corePrefix");
 
-    }else if (stage == NUM_INIT_STAGES){
         statisticCollector = check_and_cast<StatisticCollector *>(getSimulation()->getSystemModule()->getSubmodule("statisticCollector"));
 
         HelloTimer = new cMessage("HelloTimer");
@@ -168,6 +167,7 @@ void IoToriiOperation::initialize(int stage)
             WATCH(corePrefix);
 
         }
+    }
 /*
        //Testing HLMACAddress and eGA3 frame data structure
 
@@ -196,8 +196,6 @@ void IoToriiOperation::initialize(int stage)
         eGA3Frame c(2,a);
         EV << "eGA3 hlmac     " << c << endl;
 */
-
-    }
 }
 
 void IoToriiOperation::sendAndScheduleHello()
@@ -319,6 +317,7 @@ void IoToriiOperation::receiveSetHLMACMessage(HLMACAddress hlmac, simtime_t arri
         EV << "Because of loop creation, HLMAC address " << hlmac << " is not assigned to this node." << endl;
     }
 
+    statisticCollector->receiveSetHLMACMessage(arrivalTime);
     EV << "<-IoToriiOperation::receiveSetHLMACMessage()" << endl;
 }
 

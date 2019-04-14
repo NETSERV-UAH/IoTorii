@@ -159,7 +159,14 @@ class HLMACAddressTable : public cSimpleModule, public IHLMACAddressTable
     //EXTRA BEGIN
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) override;
 
-    unsigned int getNumberOfAddresses(unsigned int vid = 0) override;
+    virtual unsigned int getNumberOfAddresses(unsigned int vid = 0) override;
+
+    //Used for hopCount metric
+    virtual HLMACAddress getAddress(unsigned int addressIndex, unsigned int vid = 0) override;
+
+    //Used for hopCount metric
+    virtual int getMinHopCount(HLMACAddress dstAddress, unsigned int vid) override;
+
     //EXTRA END
 
 };

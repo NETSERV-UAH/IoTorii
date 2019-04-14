@@ -25,5 +25,5 @@ simple StatisticCollector
         @class(iotorii::StatisticCollector);
         @display("i=block/cogwheel_s");
         @labels(node);
-        double simulationTimeInterval @unit(s) = default(30s);        
+        double simulationTimeInterval @unit(s) = default(20s);        
 }

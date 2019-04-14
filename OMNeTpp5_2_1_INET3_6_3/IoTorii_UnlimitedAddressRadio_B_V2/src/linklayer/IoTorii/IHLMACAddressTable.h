@@ -117,6 +117,13 @@ class IHLMACAddressTable
     virtual HLMACAddress getlongestMatchedPrefix(HLMACAddress hlmac, unsigned int vid = 0) = 0;
 
     virtual unsigned int getNumberOfAddresses(unsigned int vid = 0) = 0;
+
+    //Used for hopCount metric
+    virtual HLMACAddress getAddress(unsigned int addressIndex, unsigned int vid = 0) = 0;
+
+    //Used for hopCount metric
+    virtual int getMinHopCount(HLMACAddress dstAddress, unsigned int vid = 0) = 0;
+
     //EXTRA END
 
 };

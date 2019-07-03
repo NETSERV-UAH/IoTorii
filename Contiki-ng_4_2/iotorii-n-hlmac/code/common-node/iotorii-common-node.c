@@ -47,7 +47,7 @@
 
 /*---------------------------------------------------------------------------*/
 PROCESS(start_iotorii_common_node, "Process to Start common node");
-AUTOSTART_PROCESSES(&start_iotorii_common_node);
+AUTOSTART_PROCESSES(&start_iotorii_common_node, &energy_tracking);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(start_iotorii_common_node, ev, data)
 {

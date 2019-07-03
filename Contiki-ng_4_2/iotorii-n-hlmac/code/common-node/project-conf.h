@@ -37,6 +37,7 @@
 /*---------------------------------------------------------------------------*/
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
+#define  TRACK_ENERGY
 /*---------------------------------------------------------------------------*/
 //#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
 /*---------------------------------------------------------------------------*/
@@ -108,4 +109,7 @@
 /* Configure the routing_driver for netstack.h */
 //#define NETSTACK_CONF_ROUTING      nullrouting_driver
 /*---------------------------------------------------------------------------*/
+#ifdef TRACK_ENERGY
+#define ENERGEST_CONF_ON 1
+#endif
 #endif /* PROJECT_CONF_H_ */

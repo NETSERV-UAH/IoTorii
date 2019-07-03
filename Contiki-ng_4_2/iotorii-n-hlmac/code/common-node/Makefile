@@ -8,6 +8,7 @@ PROJECT_SOURCEFILES += ../hlmacaddr.c
 PROJECT_SOURCEFILES += ../hlmac-table.c
 PROJECT_SOURCEFILES += ../csma-security.c
 PROJECT_SOURCEFILES += ../csma-output.c
+PROJECT_SOURCEFILES += ../energy-tracking.c
 
 
 # use a custom MAC driver: iotorii_mac_driver

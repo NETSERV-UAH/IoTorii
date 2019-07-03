@@ -22,7 +22,7 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
 
 * **[iotorii-all-in-one](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-all-in-one)** can use the advantages of iotorii-n-hlmac,  iotoriin-n-hlmac-2 and iotoriin-n-hlmac-3 together by setting the parameters of "HLMAC_CONF_MAX_HLMAC", "IOTORII_CONF_ENABLE_EXCHANGE_ADDRESS" and "IOTORII_CONF_MULTI_MESSAGE".  
 
-Note that we can define each version of IoTorii as an optimization problem, i.e. min Delay for iotorii-n-hlmac and ... , or a new optimization problem with a new metric.
+Note that we can define each version of IoTorii as an optimization problem, i.e. min Delay for iotorii-n-hlmac and ... , or we can customise each of them based on a new optimization problem with a new metric.
  
 ---                     
 ## Contiki-ng installation

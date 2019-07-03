@@ -1,6 +1,6 @@
 # IoTorii
 
-Implementation in Contiki-ng by Elisa Rojas, Hedayat Hosseini and David Carrascal :)
+Implementation in Contiki-ng by Elisa Rojas, Hedayat Hosseini and David Carrascal
 
 Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
 
@@ -8,8 +8,22 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
                      
                      (2) CEIT, Amirkabir University of Technology (Tehran Polytechnic), Iran.
                      
-                     
-                     
+
+---
+### The contents of this folder
+
+* **[iotorii-n-hlmac](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac)** is the current version of the original IoTorii which we used to collect our results. In this simulation, there is a configuration file ([here, for a root node](https://github.com/gistnetserv-uah/IoTorii/blob/master/Contiki-ng_4_2/iotorii-n-hlmac/code/root/project-conf.h#L56) and [here, for other nodes](https://github.com/gistnetserv-uah/IoTorii/blob/master/Contiki-ng_4_2/iotorii-n-hlmac/code/common-node/project-conf.h#L56)) to set parameters. One of the parameters is "HLMAC_CONF_MAX_HLMAC". This parameter is used to identify how many HLMAC addresses can be assigned to a node. For example, if "#define HLMAC_CONF_MAX_HLMAC 1", it means that one HLMAC address can be assigned to each node. If "#define HLMAC_CONF_MAX_HLMAC 3", it means that at most 3 HLMAC address can be assigned to each node.
+
+* **[iotorii-1-hlmac](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-1-hlmac)** is a simple version of the original IoTorii which is same as iotorii-n-hlmac using "#define HLMAC_CONF_MAX_HLMAC 1". This is the first version of the original IoTorii, but we didn't use this simulation to collect our results because it cannot assign 3 HLMAC addresses to each node. Note that the iotorii-n-hlmac version is more complete than iotorii-1-hlmac in terms of queuing the control packets (SetHLMAC) and ... .
+
+* **[iotorii-n-hlmac-2](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac-2)** is a new version of IoTorii and isn't the original version. Since the capacity of a packet is limited in IEEE802.11, a node may  not advertise its HLMAC address to a/some neighbor(s). Therefore, this neighbors may get a HLMAC address from another node and its hierarchy may increase. In this simulation, if a node has many neighbors, it sends several SetHlMACs to cover all its neighbors.
+
+* **[iotorii-n-hlmac-3](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac-3)** another version of IoTorii and isn't the original version. If a node has a HLMAC address, it may get a better address after a while. In this simulation, a node can update its address if it receives a better address.
+
+* **[iotorii-all-in-one](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-all-in-one)** can use the advantages of iotorii-n-hlmac,  iotoriin-n-hlmac-2 and iotoriin-n-hlmac-3 together by setting the parameters of "HLMAC_CONF_MAX_HLMAC", "IOTORII_CONF_ENABLE_EXCHANGE_ADDRESS" and "IOTORII_CONF_MULTI_MESSAGE".  
+
+Note that we can define each version of IoTorii as an optimization problem, i.e. min Delay for iotorii-n-hlmac and ... , or a new optimization problem with a new metric.
+ 
 ---                     
 ## Contiki-ng installation
 

@@ -18,7 +18,7 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
 
 * **[iotorii-n-hlmac-2](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac-2)** is a new version of IoTorii and isn't the original version. Since the capacity of a packet is limited in IEEE802.11, a node may  not advertise its HLMAC address to a/some neighbor(s). Therefore, this neighbors may get a HLMAC address from another node and its hierarchy may increase. In this simulation, if a node has many neighbors, it sends several SetHlMACs to cover all its neighbors.
 
-* **[iotorii-n-hlmac-3](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac-3)** another version of IoTorii and isn't the original version. If a node has a HLMAC address, it may get a better address after a while. In this simulation, a node can update its address if it receives a better address.
+* **[iotorii-n-hlmac-3](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-n-hlmac-3)** is another version of IoTorii and isn't the original version. If a node has a HLMAC address, it may get a better address after a while. In this simulation, a node can update its address if it receives a better address.
 
 * **[iotorii-all-in-one](https://github.com/gistnetserv-uah/IoTorii/tree/master/Contiki-ng_4_2/iotorii-all-in-one)** can use the advantages of iotorii-n-hlmac,  iotoriin-n-hlmac-2 and iotoriin-n-hlmac-3 together by setting the parameters of "HLMAC_CONF_MAX_HLMAC", "IOTORII_CONF_ENABLE_EXCHANGE_ADDRESS" and "IOTORII_CONF_MULTI_MESSAGE".  
 

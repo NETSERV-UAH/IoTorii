@@ -1,15 +1,13 @@
 CONTIKI_PROJECT = iotorii-common-node
 all: $(CONTIKI_PROJECT)
 
-CONTIKI = ../../../..
+CONTIKI = ../../../../..
 
 PROJECT_SOURCEFILES += ../iotorii-csma.c
 PROJECT_SOURCEFILES += ../hlmacaddr.c
 PROJECT_SOURCEFILES += ../hlmac-table.c
 PROJECT_SOURCEFILES += ../csma-security.c
 PROJECT_SOURCEFILES += ../csma-output.c
-PROJECT_SOURCEFILES += ../energy-tracking.c
-
 
 # use a custom MAC driver: iotorii_mac_driver
 MAKE_MAC = MAKE_MAC_OTHER

@@ -1,3 +1,11 @@
+Build:
+
+Change current directori to ~/contiki-ng/examples/iotorii-n-hlmac-mobility/code/common-node
+To build for sky mote: make TARGET=sky
+To clean: make clean TARGET=sky
+
+
+---
 Repeatedly run the simulation(in Docker):
 
 If you use Docker, log in to Docker.

@@ -48,9 +48,22 @@
 #include "contiki.h"
 #include "hlmacaddr.h"
 
+/* Aging time of each entry
+ * Unit : second
+ */
+#ifdef IOTORII_CONF_TABLE_ENTRY_AGING_TIME
+#define IOTORII_TABLE_ENTRY_AGING_TIME IOTORII_CONF_TABLE_ENTRY_AGING_TIME
+#else
+#define IOTORII_TABLE_ENTRY_AGING_TIME 1 //Default life time is 1 s
+#endif
+
+
 struct hlmac_table_entery{
   struct hlmac_table_entery *next;
   hlmacaddr_t address;
+  //Arival time of the table entry
+  clock_time_t insertion_time;  //Insertion time in ticks. Function to get the time is clock_time(). The number of ticks per second is CLOCK_SECOND.
+  //unsigned long insert_time; //Insertion time in seconds. Function to get the time is clock_seconds().
 };
 
 typedef struct hlmac_table_entery hlmac_table_entery_t;
@@ -64,11 +77,27 @@ uint8_t number_of_hlmac_addresses;
 void hlmac_table_init(void);
 
 /**
+ * \brief      search in the table to find the address
+ * \param address The HLMAC address to be found in the table.
+ * \return  return NULL if the address is not in the table. Otherwise, a pointer to the entry including the address.
+ */
+
+hlmac_table_entery_t * hlmac_table_is_in_table(const hlmacaddr_t address);
+
+/**
+ * \brief                Update an enrty in the table.
+ * \param entry          A pointer to the entry whoes fields we want to update
+ * \param insertion_time This field of the entry is updated
+ */
+
+void hlmac_table_update_entry(hlmac_table_entery_t *entry, clock_time_t insertion_time);
+
+/**
  * \brief      Add a HLMAC address to the end of the table
  * \param addr The HLMAC address
  */
 
-uint8_t hlmactable_add(const hlmacaddr_t addr);
+uint8_t hlmactable_add(const hlmacaddr_t addr, const clock_time_t insertion_time);
 
 /**
  * \brief      Check whether a given HLMAC address creats a loop or not

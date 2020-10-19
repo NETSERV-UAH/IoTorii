@@ -729,8 +729,12 @@ iotorii_handle_incoming_sethlamc()
     free(new_hlmac_addr_str);
     //#endif
 
-    if(!hlmactable_has_loop(*received_hlmac_addr)){
-      uint8_t is_added = hlmactable_add(*received_hlmac_addr);
+    hlmac_table_entery_t *entry_in_table = hlmac_table_is_in_table(*received_hlmac_addr);
+    if(entry_in_table){
+      hlmac_table_update_entry(entry_in_table, clock_time());
+      iotorii_send_sethlmac(*received_hlmac_addr, sender_link_address); //To advertise the prefix
+    }else if(!hlmactable_has_loop(*received_hlmac_addr)){
+      uint8_t is_added = hlmactable_add(*received_hlmac_addr, clock_time());
       if (is_added){
         //#if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address is assigned to the node.\n");

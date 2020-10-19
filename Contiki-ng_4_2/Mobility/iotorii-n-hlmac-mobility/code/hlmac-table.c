@@ -63,9 +63,63 @@ hlmac_table_init(void)
 }
 
 /*---------------------------------------------------------------------------*/
-uint8_t
-hlmactable_add(const hlmacaddr_t addr)
+void
+hlmac_table_remove_aged_entries(void)
 {
+  hlmac_table_entery_t *table_entry;
+  for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){
+    //If insertion time + aging time <= now, the table entry is expired.
+    if(table_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
+      #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+      char *addr_str = hlmac_addr_to_str(table_entry->address);
+      LOG_DBG("Aged HLMAC address removed: address: %s, insertion time: %lu\n", addr_str, (unsigned long)(table_entry->insertion_time));
+      free(addr_str);
+      addr_str = NULL;
+      #endif
+      list_remove(hlmac_table_entery_list, table_entry);
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+hlmac_table_entery_t *
+hlmac_table_is_in_table(const hlmacaddr_t address)
+{
+  hlmac_table_remove_aged_entries();
+
+  if (list_length(hlmac_table_entery_list) == 0)
+      return NULL; //Table is empty.
+
+  /* Find address in the table */
+  hlmac_table_entery_t *table_entry;
+  for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){
+    if (hlmac_cmp(table_entry->address, address) == 0){ //This condithion can be merged with the "for" condition.
+      return table_entry;
+    }
+  }
+  //Address is not in the table
+  return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
+void
+hlmac_table_update_entry(hlmac_table_entery_t *entry, clock_time_t insertion_time)
+{
+  entry->insertion_time = insertion_time;
+  #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+  char *addr_str = hlmac_addr_to_str(entry->address);
+  LOG_DBG("Aged HLMAC address updated: address: %s, insertion time: %lu\n", addr_str, (unsigned long)(entry->insertion_time));
+  free(addr_str);
+  addr_str = NULL;
+  #endif
+}
+
+/*---------------------------------------------------------------------------*/
+uint8_t
+hlmactable_add(const hlmacaddr_t addr, const clock_time_t insertion_time)
+{
+  hlmac_table_remove_aged_entries();
+
   if (number_of_hlmac_addresses >= 255){ //1~255, 0 is not used in the simulation
     #if LOG_DBG_DEVELOPER == 1
     LOG_DBG("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
@@ -76,6 +130,7 @@ hlmactable_add(const hlmacaddr_t addr)
   if((HLMAC_MAX_HLMAC == -1) || ((HLMAC_MAX_HLMAC != -1) && (number_of_hlmac_addresses < HLMAC_MAX_HLMAC))){
     hlmac_table_entery_t *entry = (hlmac_table_entery_t *)malloc(sizeof(hlmac_table_entery_t));
     entry->address = addr;
+    entry->insertion_time = insertion_time;
     list_add(hlmac_table_entery_list, entry);
     number_of_hlmac_addresses ++;
 
@@ -152,6 +207,7 @@ hlmactable_has_loop(const hlmacaddr_t addr)
 hlmacaddr_t *
 hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t address)
 {
+  hlmac_table_remove_aged_entries();
 
   //if (list_length(hlmac_table_entery_list) == 0)
       //return UNSPECIFIED_HLMAC_ADDRESS;
@@ -187,6 +243,7 @@ hlmactable_get_longest_matchhed_prefix(const hlmacaddr_t address)
 int
 hlmactable_calculate_sum_hop(void)
 {
+  hlmac_table_remove_aged_entries();
   int sum = 0;
   hlmac_table_entery_t *table_entry;
   for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){

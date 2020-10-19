@@ -10,7 +10,7 @@ Copyright (C) 2018 Elisa Rojas(1), Hedayat Hosseini(2), David Carrascal (1);
                      
 
 ---
-## Installing the mobility plugin in Contiki-ng
+### Installing the mobility plugin in Contiki-ng
 
 ---
 ### Introduction
@@ -54,4 +54,4 @@ sudo ant clean
 sudo ant jar
 
 ---                     
-## Using the mobility plugin in Cooja
+### Using the mobility plugin in Cooja

@@ -129,7 +129,6 @@
 #define IOTORII_STATISTICS_TIME 20 //Default Delay is 20 s
 #endif
 
-//EXTRA BEGIN
 /* Aging time of each entry
  * Unit : second
  */

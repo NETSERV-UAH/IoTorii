@@ -97,6 +97,7 @@
 #define CSMA_MAC_LEN 127 - 2
 #endif
 
+//EXTRA BEGIN
 struct neighbour_table_entry{
   struct neighbour_table_entry *next;
   linkaddr_t addr;

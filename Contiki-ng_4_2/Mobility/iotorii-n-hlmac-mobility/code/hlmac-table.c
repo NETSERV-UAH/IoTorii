@@ -77,6 +77,10 @@ hlmac_table_remove_aged_entries(void)
       addr_str = NULL;
       #endif
       list_remove(hlmac_table_entery_list, table_entry);
+      number_of_hlmac_addresses--;
+      #if LOG_DBG_DEVELOPER == 1
+      LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
+      #endif
     }
   }
 }

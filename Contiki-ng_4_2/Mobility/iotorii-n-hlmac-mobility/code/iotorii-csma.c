@@ -129,6 +129,15 @@
 #define IOTORII_STATISTICS_TIME 20 //Default Delay is 20 s
 #endif
 
+//EXTRA BEGIN
+/* Aging time of each entry
+ * Unit : second
+ */
+#ifdef IOTORII_CONF_TABLE_ENTRY_AGING_TIME
+#define IOTORII_TABLE_ENTRY_AGING_TIME IOTORII_CONF_TABLE_ENTRY_AGING_TIME
+#else
+#define IOTORII_TABLE_ENTRY_AGING_TIME 1 //Default life time is 1 s
+#endif
 
 #if IOTORII_NODE_TYPE == 1 //only root
 static struct ctimer sethlmac_timer;
@@ -210,9 +219,43 @@ max_payload(void)
 
   return CSMA_MAC_LEN - framer_hdrlen;
 }
-/*---------------------------------------------------------------------------*/
+
 //EXTRA BEGIN
 #if IOTORII_NODE_TYPE > 0 //The root or common nodes
+/*---------------------------------------------------------------------------*/
+void
+iotorii_remove_aged_neighbour_entries(void)
+{
+  neighbour_table_entry_t *table_entry;
+  uint8_t update_ids = 0;
+  for(table_entry=list_head(neighbour_table_entry_list); table_entry!=NULL; table_entry=table_entry->next){
+    //If insertion time + aging time <= now, the table entry is expired.
+    if(table_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
+      #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+      LOG_DBG("Aged neighbour removed: address:");
+      LOG_DBG_LLADDR(&(table_entry->addr));
+      LOG_DBG(", insertion time: %lu\n", (unsigned long)(table_entry->insertion_time));
+      #endif
+      list_remove(neighbour_table_entry_list, table_entry);
+      number_of_neighbours--;
+      #if LOG_DBG_DEVELOPER == 1
+      LOG_DBG("Number of neighbours: %d.\n", number_of_neighbours);
+      #endif
+      update_ids = 1;
+    }
+    if(update_ids){
+      #if LOG_DBG_DEVELOPER == 1
+      LOG_DBG("Update id %d", table_entry->id);
+      #endif
+      table_entry->id--;
+      #if LOG_DBG_DEVELOPER == 1
+      LOG_DBG(" to %d.\n", table_entry->id);
+      #endif
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 static void
 iotorii_handle_hello_timer()
 {
@@ -296,14 +339,14 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
   }else{
 
     neighbour_table_entry_t *neighbour_entry;
-
+    iotorii_remove_aged_neighbour_entries();
      #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
      LOG_DBG("Info before sending SetHLMAC: ");
      LOG_DBG("Number of neighbours: %d, mac_max_payload: %d, LINKADDR_SIZE: %d.\n", number_of_neighbours, mac_max_payload, LINKADDR_SIZE);
      #endif
 
      /*
-      * Eliminating the sender of the resceived SetHLMAC message from the new payload.
+      * Eliminating the sender of the received SetHLMAC message from the new payload.
       */
      uint8_t number_of_neighbours_new = number_of_neighbours;
 
@@ -467,7 +510,7 @@ iotorii_handle_sethlmac_timer()
   //uint8_t id = 1;
   hlmacaddr_t root_addr;
   hlmac_create_root_addr(&root_addr, 1);
-  hlmactable_add(root_addr);
+  hlmactable_add(root_addr, clock_time());
   #if LOG_DBG_STATISTIC == 1
   printf("Periodic Statistics: node_id: %u, convergence_time_start\n", node_id);
   #endif
@@ -565,6 +608,8 @@ init(void)
 void
 iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast packet received from other nodes
 {
+  iotorii_remove_aged_neighbour_entries();
+
   const linkaddr_t *sender_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
 
   LOG_DBG("A Hello message received from ");
@@ -584,6 +629,7 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
       new_nb = (neighbour_table_entry_t *)malloc(sizeof(neighbour_table_entry_t));
       new_nb->id = ++number_of_neighbours;
       new_nb->addr = *sender_addr;
+      new_nb->insertion_time = clock_time();
       list_add(neighbour_table_entry_list, new_nb);
       LOG_DBG("A new neighbour added to IoTorii neighbour table, address: ");
       LOG_DBG_LLADDR(sender_addr);

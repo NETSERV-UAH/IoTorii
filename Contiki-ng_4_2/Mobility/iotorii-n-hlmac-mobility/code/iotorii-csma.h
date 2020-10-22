@@ -97,11 +97,14 @@
 #define CSMA_MAC_LEN 127 - 2
 #endif
 
-//EXTRA BEGIN
 struct neighbour_table_entry{
   struct neighbour_table_entry *next;
   linkaddr_t addr;
   uint8_t id;
+  //Arival time of the table entry
+  clock_time_t insertion_time;  //Insertion time in ticks. Function to get the time is clock_time(). The number of ticks per second is CLOCK_SECOND.
+  //unsigned long insert_time; //Insertion time in seconds. Function to get the time is clock_seconds().
+
 };
 typedef struct neighbour_table_entry neighbour_table_entry_t;
 uint8_t number_of_neighbours;

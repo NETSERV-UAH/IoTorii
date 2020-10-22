@@ -44,14 +44,27 @@ The downloaded plugin includes a directory named mobility. Copy all contents of 
 
 * **build.xml** Navigate the current directory to ~/contiki-ng/tools/cooja/apps/mobility/ and open build.xml and change ../../../contiki-2.x/tools/cooja/dist/cooja.jar to ../../dist/cooja.jar at line 7 and save the update.
 
-* **Mobility.java** Navigate the current directory to ~/contiki-ng/tools/cooja/apps/mobility/java/ and open Mobility.java and update the following changes. change "import org.contikios.cooja.GUI;" to "import org.contikios.cooja.Cooja;". Then, change all of "import se.sics.cooja." to "import org.contikios.cooja."
-change getGUI() to getCooja(). change "GUI" to "Cooja". Change MessageList to MessageListUI.
+* **Mobility.java** Navigate the current directory to ~/contiki-ng/tools/cooja/apps/mobility/java/ and open Mobility.java and update the following changes. 
+1. Change all of "import se.sics.cooja." to "import org.contikios.cooja."
+1. Change "import org.contikios.cooja.GUI;" to "import org.contikios.cooja.Cooja;".
+1. Change all "getGUI()" to "getCooja()".
+1. Change all "GUI" to "Cooja".
+1. Change all "MessageList" to "MessageListUI".
 
-* **cooja.config** Navigate the current directory to ~/contiki-ng/tools/cooja/apps/mobility/ and open build.xml and change all "se.sics.cooja.GUI" to "org.contikios.cooja.Cooja" =>tools menu
+* **cooja.config** Navigate the current directory to ~/contiki-ng/tools/cooja/apps/mobility/ and open cooja.config and change all "se.sics.cooja.GUI" to "org.contikios.cooja.Cooja" =>tools menu
 
+Now, the current directory is ~/contiki-ng/tools/cooja/apps/mobility/.
+
+> If you built the project before updating the changes, it is better to clean it:
+```bash
 sudo ant clean
+```
 
+> Built the project:
+```bash
 sudo ant jar
+```
+
 
 ---                     
 ### Using the mobility plugin in Cooja

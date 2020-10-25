@@ -43,7 +43,7 @@
 //#define RTIMER_CONF_CLOCK_SIZE 4
 /*---------------------------------------------------------------------------*/
 /* Configuring the developer debug log */
-#define LOG_CONF_DBG_DEVELOPER 0
+#define LOG_CONF_DBG_DEVELOPER 1
 /*---------------------------------------------------------------------------*/
 /* Configuring the statistics debug log */
 #define LOG_CONF_DBG_STATISTIC 1
@@ -52,8 +52,8 @@
  * -1 is unlimited
  * default value is 1
  */
-#define HLMAC_CONF_MAX_HLMAC 1
-//#define HLMAC_CONF_MAX_HLMAC 3
+//#define HLMAC_CONF_MAX_HLMAC 1
+#define HLMAC_CONF_MAX_HLMAC 3
 /*---------------------------------------------------------------------------*/
 /* Configure the IoTorii root node for iotoriicsma.h */
 //#define IOTORII_CONF_NODE_TYPE 1
@@ -67,7 +67,7 @@
  * [IOTORII_CONF_HELLO_START_TIME/2 IOTORII_CONF_HELLO_START_TIME]
  * after initializing a node.
  */
-#define IOTORII_CONF_HELLO_START_TIME 4
+#define IOTORII_CONF_HELLO_START_TIME 2
 /*---------------------------------------------------------------------------*/
 /* Time to send the first SetHLMAC message by a root node
  * Unit : second
@@ -75,7 +75,7 @@
  * at t = IOTORII_CONF_SETHLMAC_START_TIME
  * after initializing the root node.
  */
-#define IOTORII_CONF_SETHLMAC_START_TIME 10
+#define IOTORII_CONF_SETHLMAC_START_TIME 2
 /*---------------------------------------------------------------------------*/
 /* Delay before sending a SetHLMAC message
  * Unit : tick
@@ -92,7 +92,12 @@
  * at t = IOTORII_CONF_SETHLMAC_START_TIME
  * after initializing a node.
  */
-#define IOTORII_CONF_STATISTICS_TIME 20
+#define IOTORII_CONF_STATISTICS_TIME 2
+/*---------------------------------------------------------------------------*/
+/* Aging time of each entry
+ * Unit : second
+ */
+#define IOTORII_CONF_TABLE_ENTRY_AGING_TIME 2
 /*---------------------------------------------------------------------------*/
 /* Configure the csma_driver for netstack.h */
 #ifndef IOTORII_CONF_NODE_TYPE

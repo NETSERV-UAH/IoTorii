@@ -88,8 +88,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>28.0</x>
-        <y>28.0</y>
+        <x>33.16</x>
+        <y>15.96</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -106,8 +106,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>56.0</x>
-        <y>56.0</y>
+        <x>31.92</x>
+        <y>49.12</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -140,7 +140,7 @@
       <viewport>3.2034592213149966 0.0 0.0 3.2034592213149966 110.4657981413913 66.28949809934855</viewport>
     </plugin_config>
     <width>400</width>
-    <z>1</z>
+    <z>2</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -190,13 +190,13 @@
   <plugin>
     Mobility
     <plugin_config>
-      <positions EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-n-hlmac-mobility/test/positions1.dat</positions>
+      <positions EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-n-hlmac-mobility/test/posisions1.dat</positions>
     </plugin_config>
     <width>500</width>
-    <z>2</z>
+    <z>1</z>
     <height>200</height>
-    <location_x>749</location_x>
-    <location_y>369</location_y>
+    <location_x>517</location_x>
+    <location_y>432</location_y>
   </plugin>
 </simconf>
 

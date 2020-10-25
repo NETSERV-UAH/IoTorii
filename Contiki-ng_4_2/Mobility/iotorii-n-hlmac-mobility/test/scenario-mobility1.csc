@@ -88,8 +88,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>33.16</x>
-        <y>15.96</y>
+        <x>28.12</x>
+        <y>27.72</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -106,8 +106,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>31.92</x>
-        <y>49.12</y>
+        <x>55.44</x>
+        <y>55.84</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -124,7 +124,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>0</z>
+    <z>1</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -148,12 +148,12 @@
   <plugin>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
-      <filter />
+      <filter>Periodic</filter>
       <formatted_time />
       <coloring />
     </plugin_config>
     <width>895</width>
-    <z>5</z>
+    <z>0</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -170,7 +170,7 @@
       <zoomfactor>500.0</zoomfactor>
     </plugin_config>
     <width>1295</width>
-    <z>4</z>
+    <z>5</z>
     <height>166</height>
     <location_x>0</location_x>
     <location_y>450</location_y>
@@ -182,7 +182,7 @@
       <decorations>true</decorations>
     </plugin_config>
     <width>615</width>
-    <z>3</z>
+    <z>4</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -190,13 +190,13 @@
   <plugin>
     Mobility
     <plugin_config>
-      <positions EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-n-hlmac-mobility/test/posisions1.dat</positions>
+      <positions EXPORT="copy">[CONTIKI_DIR]/examples/iotorii-n-hlmac-mobility/test/positions1.dat</positions>
     </plugin_config>
     <width>500</width>
-    <z>1</z>
+    <z>3</z>
     <height>200</height>
-    <location_x>517</location_x>
-    <location_y>432</location_y>
+    <location_x>452</location_x>
+    <location_y>409</location_y>
   </plugin>
 </simconf>
 

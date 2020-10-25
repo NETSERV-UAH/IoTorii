@@ -91,6 +91,14 @@
 #else
 #define IOTORII_HELLO_START_TIME 2 //Default Delay is 2 s
 #endif
+/* Time to send next Hello messages
+ * Unit : second
+ */
+#ifdef IOTORII_CONF_HELLO_NEXT_TIME
+#define IOTORII_HELLO_NEXT_TIME IOTORII_CONF_HELLO_NEXT_TIME
+#else
+#define IOTORII_HELLO_NEXT_TIME 2 //Default Delay is 2 s
+#endif
 
 /* Time to send the first SetHLMAC message by a root node
  * Unit : second
@@ -102,6 +110,14 @@
 #define IOTORII_SETHLMAC_START_TIME IOTORII_CONF_SETHLMAC_START_TIME
 #else
 #define IOTORII_SETHLMAC_START_TIME 10 //Default Delay is 10 s
+#endif
+/* Time to send next SetHLMAC messages by a root node
+ * Unit : second
+ */
+#ifdef IOTORII_CONF_SETHLMAC_NEXT_TIME
+#define IOTORII_SETHLMAC_NEXT_TIME IOTORII_CONF_SETHLMAC_NEXT_TIME
+#else
+#define IOTORII_SETHLMAC_NEXT_TIME 2 //Default Delay is 2 s
 #endif
 
 /* Delay before sending a SetHLMAC message
@@ -144,6 +160,7 @@ static struct ctimer sethlmac_timer;
 #if IOTORII_NODE_TYPE > 0 //root and common node
 static struct ctimer hello_timer;
 static struct ctimer send_sethlmac_timer;
+
 #if LOG_DBG_STATISTIC == 1
 static struct ctimer statistic_timer;
 int number_of_hello_messages = 0;
@@ -225,35 +242,37 @@ max_payload(void)
 void
 iotorii_remove_aged_neighbour_entries(void)
 {
-  neighbour_table_entry_t *table_entry;
-  uint8_t update_ids = 0;
-  for(table_entry=list_head(neighbour_table_entry_list); table_entry!=NULL; table_entry=table_entry->next){
+  neighbour_table_entry_t *current_entry = list_head(neighbour_table_entry_list);
+  uint8_t update_ids = 0, i;
+  for(i=0; i<list_length(neighbour_table_entry_list); i++){
+    neighbour_table_entry_t *next_entry = current_entry->next; //neighbour_table_entry_t *next_entry = list_item_next(current_entry);
     //If insertion time + aging time <= now, the table entry is expired.
-    if(table_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
+    if(current_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
       #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
-      LOG_DBG("Aged neighbour removed: address:");
-      LOG_DBG_LLADDR(&(table_entry->addr));
-      LOG_DBG(", insertion time: %lu\n", (unsigned long)(table_entry->insertion_time));
+      printf("Aged neighbour removed: address:");
+      //LOG_DBG_LLADDR(&(current_entry->addr));
+      log_lladdr(&(current_entry->addr));
+      printf(", inserted at tick %lu\n", (unsigned long)(current_entry->insertion_time));
       #endif
-      list_remove(neighbour_table_entry_list, table_entry);
+      list_remove(neighbour_table_entry_list, current_entry);
+      update_ids++;
       number_of_neighbours--;
       #if LOG_DBG_DEVELOPER == 1
-      LOG_DBG("Number of neighbours: %d.\n", number_of_neighbours);
+      printf("Number of neighbours: %d.\n", number_of_neighbours);
       #endif
-      update_ids = 1;
     }
-    if(update_ids){
+    current_entry = next_entry;
+    if (update_ids){
       #if LOG_DBG_DEVELOPER == 1
-      LOG_DBG("Update id %d", table_entry->id);
+      printf("Update id %d", current_entry->id);
       #endif
-      table_entry->id--;
+      current_entry->id -= update_ids;
       #if LOG_DBG_DEVELOPER == 1
-      LOG_DBG(" to %d.\n", table_entry->id);
+      printf(" to %d.\n", current_entry->id);
       #endif
     }
   }
 }
-
 /*---------------------------------------------------------------------------*/
 static void
 iotorii_handle_hello_timer()
@@ -277,10 +296,16 @@ iotorii_handle_hello_timer()
     #endif
 
     send_packet(NULL,NULL);
-    //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
-    //ctimer_restart(&hello_timer); //Restart the timer from current time.
-    //ctimer_stop(&hello_timer); //Stop the timer.
   }
+  //ctimer_reset(&hello_timer); //Restart the timer from the previous expire time.
+  //ctimer_restart(&hello_timer); //Restart the timer from current time.
+  //ctimer_stop(&hello_timer); //Stop the timer.
+  clock_time_t hello_next_time = IOTORII_HELLO_NEXT_TIME * CLOCK_SECOND;
+  LOG_DBG("Scheduling a Hello message after %u ticks in the future\n", (unsigned)hello_next_time);
+  ctimer_set(&hello_timer, hello_next_time, iotorii_handle_hello_timer, NULL);
+  #if LOG_DBG_DEVELOPER == 1
+  printf("Resatart the hello timer after %d tiks.\n", (unsigned)hello_next_time);
+  #endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -319,7 +344,7 @@ iotorii_handle_send_sethlmac_timer(){
       clock_time_t sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
       sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
       #if LOG_DBG_DEVELOPER == 1
-      LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+      printf("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
       #endif
       ctimer_set(&send_sethlmac_timer, sethlmac_delay_time, iotorii_handle_send_sethlmac_timer, NULL);
     }
@@ -340,8 +365,8 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
     neighbour_table_entry_t *neighbour_entry;
     iotorii_remove_aged_neighbour_entries();
      #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
-     LOG_DBG("Info before sending SetHLMAC: ");
-     LOG_DBG("Number of neighbours: %d, mac_max_payload: %d, LINKADDR_SIZE: %d.\n", number_of_neighbours, mac_max_payload, LINKADDR_SIZE);
+     printf("Info before sending SetHLMAC: ");
+     printf("Number of neighbours: %d, mac_max_payload: %d, LINKADDR_SIZE: %d.\n", number_of_neighbours, mac_max_payload, LINKADDR_SIZE);
      #endif
 
      /*
@@ -353,7 +378,7 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
        if(linkaddr_cmp(&neighbour_entry->addr, &sender_link_address)){
          number_of_neighbours_new = number_of_neighbours - 1;
          #if LOG_DBG_DEVELOPER == 1
-         LOG_DBG("Sender node is in neighbor list, number_of_neighbours: %u, number_of_neighbours_new: %u.\n", number_of_neighbours, number_of_neighbours_new);
+         printf("Sender node is in neighbor list, number_of_neighbours: %u, number_of_neighbours_new: %u.\n", number_of_neighbours, number_of_neighbours_new);
          #endif
 
        }
@@ -377,11 +402,11 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
            while(random_list[r=random_rand()%(number_of_neighbours_new)] != NULL); //Each r per each neighbor must be unic
            random_list[r] = neighbour_entry;
            #if LOG_DBG_DEVELOPER == 1
-           LOG_DBG("number_of_neighbours_new = %u Neighbor (ID = %u) gets random priority %u\n", number_of_neighbours_new, random_list[r]->id, r);
+           printf("number_of_neighbours_new = %u Neighbor (ID = %u) gets random priority %u\n", number_of_neighbours_new, random_list[r]->id, r);
            #endif
          }else{
            #if LOG_DBG_DEVELOPER == 1
-           LOG_DBG("Sender node is eliminated in random list!\n");
+           printf("Sender node is eliminated in random list!\n");
            #endif
          }
        }
@@ -460,12 +485,12 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
              sethlmac_delay_time = IOTORII_SETHLMAC_DELAY/2 * (CLOCK_SECOND / 128);
              sethlmac_delay_time = sethlmac_delay_time + (random_rand() % sethlmac_delay_time);
              #if LOG_DBG_DEVELOPER == 1
-             LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+             printf("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
              #endif
           #elif IOTORII_NODE_TYPE == 1
              //sethlmac_delay_time = 0;
              #if LOG_DBG_DEVELOPER == 1
-             LOG_DBG("Scheduling a SetHLMAC message by the root node after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
+             printf("Scheduling a SetHLMAC message by the root node after %u ticks in the future\n", (unsigned)sethlmac_delay_time);
              #endif
           #endif
           //First, add the payload to the end of the queue/list, then set the timer
@@ -477,7 +502,7 @@ iotorii_send_sethlmac(hlmacaddr_t addr, linkaddr_t sender_link_address)
 
         #if LOG_DBG_DEVELOPER == 1
         char *neighbour_hlmac_addr_str = hlmac_addr_to_str(addr);
-        LOG_DBG("SetHLMAC prefix (addr:%s) added to queue to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);
+        printf("SetHLMAC prefix (addr:%s) added to queue to advertise to %d nodes.\n", neighbour_hlmac_addr_str, i-1);
         free(neighbour_hlmac_addr_str);
         #endif
 
@@ -516,9 +541,18 @@ iotorii_handle_sethlmac_timer()
   iotorii_send_sethlmac(root_addr, linkaddr_node_addr);
   free(root_addr.address); //malloc() in hlmac_create_root_addr()
   root_addr.address = NULL;
+  #if LOG_DBG_DEVELOPER == 1
+  printf("Resatart the SETHLMAC timer.\n");
+  #endif
   //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
   //ctimer_restart(&sethlmac_timer); //Restart the timer from current time.
   //ctimer_stop(&sethlmac_timer); //Stop the timer.
+  clock_time_t sethlmac_next_time = IOTORII_SETHLMAC_NEXT_TIME * CLOCK_SECOND;
+  LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_next_time);
+  ctimer_set(&sethlmac_timer, sethlmac_next_time, iotorii_handle_sethlmac_timer, NULL);
+  #if LOG_DBG_DEVELOPER == 1
+  printf("Resatart the SetHLMAC timer after %d tiks.\n", (unsigned)sethlmac_next_time);
+  #endif
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -529,9 +563,9 @@ iotorii_handle_statistic_timer()
 {
   printf("Periodic Statistics: node_id: %u, number_of_hello_messages: %d, number_of_sethlmac_messages: %d, number_of_neighbours: %d, number_of_hlmac_addresses: %d, sum_hop: %d\n", node_id, number_of_hello_messages, number_of_sethlmac_messages, number_of_neighbours, number_of_hlmac_addresses, hlmactable_calculate_sum_hop());
 
-  //ctimer_reset(&sethlmac_timer); //Restart the timer from the previous expire time.
-  //ctimer_restart(&sethlmac_timer); //Restart the timer from current time.
-  //ctimer_stop(&sethlmac_timer); //Stop the timer.
+  //ctimer_reset(&statistic_timer); //Restart the timer from the previous expire time.
+  ctimer_restart(&statistic_timer); //Restart the timer from current time.
+  //ctimer_stop(&statistic_timer); //Stop the timer.
 }
 #endif
 #endif
@@ -573,7 +607,7 @@ init(void)
   memcpy(&seed_number, &linkaddr_node_addr, min_len_seed);
   random_init(seed_number);
   #if LOG_DBG_DEVELOPER == 1
-  LOG_DBG("Seed is %2.2X (%d), sizeof(Seed) is %u\n", seed_number, seed_number, min_len_seed);
+  printf("Seed is %2.2X (%d), sizeof(Seed) is %u\n", seed_number, seed_number, min_len_seed);
   #endif
 //#endif /* CONTIKI_TARGET_SKY */
 
@@ -594,8 +628,7 @@ init(void)
 #endif
 
 #if IOTORII_NODE_TYPE == 1 //Root node, we set a timer to send a SetHLMAC address.
-  clock_time_t sethlmac_start_time;
-  sethlmac_start_time = IOTORII_SETHLMAC_START_TIME * CLOCK_SECOND;
+  clock_time_t sethlmac_start_time = IOTORII_SETHLMAC_START_TIME * CLOCK_SECOND;
   LOG_DBG("Scheduling a SetHLMAC message after %u ticks in the future\n", (unsigned)sethlmac_start_time);
   ctimer_set(&sethlmac_timer, sethlmac_start_time, iotorii_handle_sethlmac_timer, NULL);
 #endif
@@ -645,13 +678,14 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
   #if LOG_DBG_DEVELOPER == 1// || LOG_DBG_STATISTIC == 1
   //Write neighbour table
   neighbour_table_entry_t *nb;
-  LOG_DBG("Naighbour Table:");
+  printf("Naighbour Table:");
   for(nb=list_head(neighbour_table_entry_list); nb!=NULL; nb=list_item_next(nb)){
-    LOG_DBG("Id: %d, MAC addr:",nb->id);
-    LOG_DBG_LLADDR(&nb->addr);
-    LOG_DBG(" - ");
+    printf("Id: %d, MAC addr:",nb->id);
+    //LOG_DBG_LLADDR(&nb->addr);
+    log_lladdr(&nb->addr);
+    printf(" - ");
   }
-  LOG_DBG("\n");
+  printf("\n");
   #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -784,7 +818,7 @@ iotorii_handle_incoming_sethlamc()
         //#if LOG_DBG_DEVELOPER == 1
         LOG_DBG("New HLMAC address is assigned to the node.\n");
         #if LOG_DBG_DEVELOPER == 1
-        LOG_DBG("New HLMAC address is sent to the neighbours.\n");
+        printf("New HLMAC address is sent to the neighbours.\n");
         #endif
         iotorii_send_sethlmac(*received_hlmac_addr, sender_link_address); //To advertise the prefix
       }else{

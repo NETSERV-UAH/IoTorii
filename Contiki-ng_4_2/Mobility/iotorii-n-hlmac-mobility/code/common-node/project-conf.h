@@ -69,6 +69,11 @@
  */
 #define IOTORII_CONF_HELLO_START_TIME 2
 /*---------------------------------------------------------------------------*/
+/* Time to send next Hello messages
+ * Unit : second
+ */
+#define IOTORII_CONF_HELLO_NEXT_TIME 2
+/*---------------------------------------------------------------------------*/
 /* Time to send the first SetHLMAC message by a root node
  * Unit : second
  * IoTorii starts to send a SetHLMAC message
@@ -76,6 +81,11 @@
  * after initializing the root node.
  */
 #define IOTORII_CONF_SETHLMAC_START_TIME 2
+/*---------------------------------------------------------------------------*/
+/* Time to send next SetHLMAC messages by a root node
+ * Unit : second
+ */
+#define IOTORII_CONF_SETHLMAC_NEXT_TIME 2
 /*---------------------------------------------------------------------------*/
 /* Delay before sending a SetHLMAC message
  * Unit : tick

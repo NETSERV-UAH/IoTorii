@@ -66,22 +66,25 @@ hlmac_table_init(void)
 void
 hlmac_table_remove_aged_entries(void)
 {
-  hlmac_table_entery_t *table_entry;
-  for(table_entry=list_head(hlmac_table_entery_list); table_entry!=NULL; table_entry=table_entry->next){
+  hlmac_table_entery_t *current_entry = list_head(hlmac_table_entery_list);
+  int i;
+  for(i=0; i<list_length(hlmac_table_entery_list); i++){
+    hlmac_table_entery_t *next_entry = current_entry->next; //hlmac_table_entery_t *next_entry = list_item_next(current_entry);
     //If insertion time + aging time <= now, the table entry is expired.
-    if(table_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
+    if(current_entry->insertion_time + IOTORII_TABLE_ENTRY_AGING_TIME * CLOCK_SECOND <= clock_time()){
       #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
-      char *addr_str = hlmac_addr_to_str(table_entry->address);
-      LOG_DBG("Aged HLMAC address removed: address: %s, insertion time: %lu\n", addr_str, (unsigned long)(table_entry->insertion_time));
+      char *addr_str = hlmac_addr_to_str(current_entry->address);
+      printf("Aged HLMAC address removed: address: %s, insertion time: at tick %lu\n", addr_str, (unsigned long)(current_entry->insertion_time));
       free(addr_str);
       addr_str = NULL;
       #endif
-      list_remove(hlmac_table_entery_list, table_entry);
+      list_remove(hlmac_table_entery_list, current_entry);
       number_of_hlmac_addresses--;
       #if LOG_DBG_DEVELOPER == 1
-      LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
+      printf("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
       #endif
     }
+    current_entry = next_entry;
   }
 }
 
@@ -112,7 +115,7 @@ hlmac_table_update_entry(hlmac_table_entery_t *entry, clock_time_t insertion_tim
   entry->insertion_time = insertion_time;
   #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
   char *addr_str = hlmac_addr_to_str(entry->address);
-  LOG_DBG("Aged HLMAC address updated: address: %s, insertion time: %lu\n", addr_str, (unsigned long)(entry->insertion_time));
+  printf("Aged HLMAC address updated: address: %s, insertion time: %lu\n", addr_str, (unsigned long)(entry->insertion_time));
   free(addr_str);
   addr_str = NULL;
   #endif
@@ -126,7 +129,7 @@ hlmactable_add(const hlmacaddr_t addr, const clock_time_t insertion_time)
 
   if (number_of_hlmac_addresses >= 255){ //1~255, 0 is not used in the simulation
     #if LOG_DBG_DEVELOPER == 1
-    LOG_DBG("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
+    printf("Number of HLMAC addresses: %d, table is full.\n", number_of_hlmac_addresses);
     #endif
     return 0;
   }
@@ -146,7 +149,7 @@ hlmactable_add(const hlmacaddr_t addr, const clock_time_t insertion_time)
     #endif
 
     #if LOG_DBG_DEVELOPER == 1
-    LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
+    printf("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
     #endif
 
     return 1;
@@ -154,13 +157,13 @@ hlmactable_add(const hlmacaddr_t addr, const clock_time_t insertion_time)
 
     #if LOG_DBG_DEVELOPER == 1
     char *addr_str = hlmac_addr_to_str(addr);
-    LOG_DBG("HLMAC address %s is not saved to HLMAC table, MAX_HLMAC: %d, number of entries: %d, \n", addr_str, HLMAC_MAX_HLMAC, number_of_hlmac_addresses);
+    printf("HLMAC address %s is not saved to HLMAC table, MAX_HLMAC: %d, number of entries: %d, \n", addr_str, HLMAC_MAX_HLMAC, number_of_hlmac_addresses);
     free(addr_str);
     addr_str = NULL;
     #endif
 
     #if LOG_DBG_DEVELOPER == 1
-    LOG_DBG("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
+    printf("Number of HLMAC address: %d saved to HLMAC table.\n", number_of_hlmac_addresses);
     #endif
 
     return 0;
@@ -177,7 +180,7 @@ hlmactable_has_loop(const hlmacaddr_t addr)
   #if LOG_DBG_DEVELOPER == 1
   char *addr_str = hlmac_addr_to_str(addr);
   char *pref_str = hlmac_addr_to_str(*longest_prefix);
-  LOG_DBG("Check Loop: HLMAC address: %s, Longest Prefix: %s \n", addr_str, pref_str);
+  printf("Check Loop: HLMAC address: %s, Longest Prefix: %s \n", addr_str, pref_str);
   free(pref_str);
   pref_str = NULL;
   #endif
@@ -185,7 +188,7 @@ hlmactable_has_loop(const hlmacaddr_t addr)
 
   if (hlmac_is_unspecified_addr(*longest_prefix)){
     #if LOG_DBG_DEVELOPER == 1
-    LOG_DBG("HLMAC address %s doesn't create a loop\n", addr_str);
+    printf("HLMAC address %s doesn't create a loop\n", addr_str);
     free(addr_str);
     addr_str = NULL;
     #endif
@@ -194,7 +197,7 @@ hlmactable_has_loop(const hlmacaddr_t addr)
     return 0;
   }else{
     #if LOG_DBG_DEVELOPER == 1
-    LOG_DBG("HLMAC address %s creates a loop\n", addr_str);
+    printf("HLMAC address %s creates a loop\n", addr_str);
     free(addr_str);
     addr_str = NULL;
     #endif

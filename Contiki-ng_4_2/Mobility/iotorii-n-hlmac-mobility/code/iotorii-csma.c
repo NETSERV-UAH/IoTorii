@@ -262,7 +262,7 @@ iotorii_remove_aged_neighbour_entries(void)
       #endif
     }
     current_entry = next_entry;
-    if (update_ids){
+    if (update_ids && current_entry){
       #if LOG_DBG_DEVELOPER == 1
       printf("Update id %d", current_entry->id);
       #endif
@@ -655,6 +655,13 @@ iotorii_handle_incoming_hello() //To process an IoTorii Hello control broadcast 
     for(new_nb=list_head(neighbour_table_entry_list); new_nb!=NULL; new_nb=new_nb->next){
       if (linkaddr_cmp(&(new_nb->addr), sender_addr)){ //This condithion can be merged with the "for" condition.
         address_is_in_table = 1;
+        //Update aging time
+        new_nb->insertion_time = clock_time();
+        #if LOG_DBG_DEVELOPER == 1 || LOG_DBG_STATISTIC == 1
+        printf("Neighbour updated: address: ");
+        log_lladdr(&new_nb->addr);
+        printf(", insertion time: %lu\n", new_nb->insertion_time);
+        #endif
       }
     }
     if (!address_is_in_table){
